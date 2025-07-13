@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villa Ester Resort</title>
+    <link rel="icon" href="images/logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="images/logo.png" alt="Villa Ester Resort" class="navbar-logo">
+            <div class="navbar-menu">
+                <a href="#rooms">&#127968; Cottages</a>
+                <a href="#gallery">&#128247; Gallery</a>
+                <a href="#contact">&#9742; Contact</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <button class="btn btn-primary" id="open-booking-modal">Book Now</button>
+
+        </div>
+    </nav>
+    <div class="hero">
+        <div class="hero-content">
+            <h3 class="hero-title">Rain or shine, Villa Ester is open for you to splash, relax, and unwind 🌞</h3>
+            <div class="hero-subtitle">Book your stay and visit our resort today! 🏊</div>
+        </div>
+    </div>
+    <section class="booking-section">
+        <div class="booking-header">
+            <h2>Find Your Perfect Cottage</h2>
+            <p>Check availability and book your dream getaway</p>
+        </div>
+        <form class="booking-form" id="availability-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="booking-type">Booking Type</label>
+                    <select id="booking-type" name="booking-type" required>
+                        <option value="">Select booking type</option>
+                        <option value="daytour">Day Tour (8am–6pm)</option>
+                        <option value="overnight">Overnight Stay</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="guests">Number of Guests</label>
+                    <input type="number" id="guests" name="guests" min="1" max="20" value="2" required>
+                </div>
+            </div>
+            
+            <div id="daytour-fields" class="date-fields">
+                <div class="form-group">
+                    <label for="schedule-date">Schedule Date</label>
+                    <input type="date" id="schedule-date" name="schedule-date">
+                </div>
+            </div>
+            
+            <div id="overnight-fields" class="date-fields" style="display:none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="checkin-date">Check-in Date</label>
+                        <input type="date" id="checkin-date" name="checkin-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkout-date">Check-out Date</label>
+                        <input type="date" id="checkout-date" name="checkout-date">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="search-btn">
+                <span class="search-icon">🔍</span>
+                Search Availability
+            </button>
+        </form>
+        
+        <!-- Availability Results -->
+        <div id="availability-results" class="availability-results" style="display: none;">
+            <div class="results-header">
+                <h3>Available Cottages</h3>
+                <div class="results-count">
+                    <span id="results-count">0</span> cottages available
+                </div>
+            </div>
+            
+            <div id="cottages-grid" class="cottages-grid">
+                <!-- Cottage cards will be dynamically loaded here -->
+            </div>
+            
+            <div id="no-results" class="no-results" style="display: none;">
+                <div class="no-results-icon">🏖️</div>
+                <h4>No cottages available for selected dates</h4>
+                <p>Try different dates or contact us for assistance</p>
+                <button class="btn btn-primary" onclick="document.getElementById('availability-form').scrollIntoView()">
+                    Try Different Dates
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Searching for available cottages...</p>
+        </div>
+    </section>
+    <section class="recommend-section">
+        <h2>AI Recommended for You</h2>
+        <div class="recommend-cards">
+            <div class="recommend-card">
+                <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">★</span></div>
+                <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">BEST VALUE</div>
+                <div class="recommend-title">Deluxe Ocean View</div>
+                <div class="recommend-desc">Enjoy panoramic ocean views with our AI-recommended package based on your preferences.</div>
+                <div class="recommend-actions">
+                    <button class="btn btn-primary">Book Now</button>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+            </div>
+            <div class="recommend-card">
+                <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🏷️</span></div>
+                <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">SPECIAL OFFER</div>
+                <div class="recommend-title">Garden Suite</div>
+                <div class="recommend-desc">20% off for your selected dates with complimentary breakfast and spa access.</div>
+                <div class="recommend-actions">
+                    <button class="btn btn-primary">Book Now</button>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+            </div>
+            <div class="recommend-card">
+                <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">❤</span></div>
+                <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">POPULAR CHOICE</div>
+                <div class="recommend-title">Family Villa</div>
+                <div class="recommend-desc">Perfect for families with spacious accommodations and kid-friendly amenities.</div>
+                <div class="recommend-actions">
+                    <button class="btn btn-primary">Book Now</button>
+                    <button class="btn btn-secondary">View Details</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="featured-rooms-section" id="rooms">
+        <h2>Featured Rooms</h2>
+        <div class="featured-rooms">
+            <img src="images/room1.jpg" alt="Deluxe Ocean View Room">
+            <img src="images/room2.jpg" alt="Garden Suite">
+            <img src="images/room3.jpg" alt="Family Villa">
+        </div>
+    </section>
+    <section class="gallery-section" id="gallery">
+        <h2>Gallery</h2>
+        <div class="photo-collage">
+            <div class="collage-item"><img src="images/VillaEster1.jpg" alt="Villa Ester 1" class="collage-img"></div>
+            <div class="collage-item"><img src="images/VillaEster2.jpg" alt="Villa Ester 2" class="collage-img"></div>
+            <div class="collage-item"><img src="images/VillaEster3.jpg" alt="Villa Ester 3" class="collage-img"></div>
+            <div class="collage-item"><img src="images/VillaEster4.jpg" alt="Villa Ester 4" class="collage-img"></div>
+            <div class="collage-item"><img src="images/VillaEster5.jpg" alt="Villa Ester 5" class="collage-img"></div>
+            <div class="collage-item"><img src="images/VillaEster6.jpg" alt="Villa Ester 6" class="collage-img"></div>
+            <div class="collage-item"><img src="images/VillaEster7.jpg" alt="Villa Ester 7" class="collage-img"></div>
+            <div class="collage-item"><img src="images/gardentable.jpg" alt="Garden Table" class="collage-img"></div>
+            <div class="collage-item"><img src="images/kubo.jpg" alt="Kubo" class="collage-img"></div>
+            <div class="collage-item"><img src="images/room1.jpg" alt="Room 1" class="collage-img"></div>
+            <div class="collage-item"><img src="images/room2.jpg" alt="Room 2" class="collage-img"></div>
+            <div class="collage-item"><img src="images/room3.jpg" alt="Room 3" class="collage-img"></div>
+        </div>
+    </section>
+    <section class="reviews-section">
+        <h2>What Our Guests Say</h2>
+        <div class="reviews-container" id="reviews-container">
+            <!-- Reviews will be dynamically loaded here -->
+        </div>
+        <div class="review-carousel-controls">
+            <button class="carousel-btn prev-btn" onclick="prevReviewSet()">‹</button>
+            <div class="carousel-indicators" id="review-indicators">
+                <!-- Indicators will be generated here -->
+            </div>
+            <button class="carousel-btn next-btn" onclick="nextReviewSet()">›</button>
+        </div>
+        <button id="open-review-modal" class="btn btn-primary" style="margin: 24px auto 0 auto; display: block;">Share Your Experience</button>
+    </section>
+    <!-- Review Modal -->
+    <div id="review-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 400px;">
+            <span class="close-booking-modal" id="close-review-modal">&times;</span>
+            <h2>Share Your Experience</h2>
+            <form id="review-form">
+                <div class="modal-form-group">
+                    <label for="review-name">Your Name</label>
+                    <input type="text" id="review-name" placeholder="Enter your name" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="review-rating">Rating</label>
+                    <div class="rating-stars">
+                        <input type="radio" id="star5" name="rating" value="5" checked>
+                        <label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4">
+                        <label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3">
+                        <label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2">
+                        <label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1">
+                        <label for="star1">★</label>
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label for="review-comment">Your Comment</label>
+                    <textarea id="review-comment" placeholder="Share your experience..." rows="4" required style="width:100%;padding:10px;"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="review-image">Profile Image (optional, filename in images/)</label>
+                    <input type="text" id="review-image" placeholder="e.g. reviewer1.jpg">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">Submit Review</button>
+            </form>
+        </div>
+    </div>
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p>📍 Natunuan South, San Pascual, Batangas City, Philippines</p>
+                <p>📞 (043) 781 0496</p>
+                <p>✉️ info@villaester.com</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#rooms">Rooms & Suites</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/VillaEsterResort" class="social-link" target="_blank" rel="noopener">📱 Facebook</a>
+
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Villa Ester Resort. All rights reserved.</p>
+            <div class="footer-logo">Villa Ester Resort</div>
+        </div>
+    </footer>
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="booking-modal-overlay" style="display:none; overflow-y: auto; align-items: flex-start; scrollbar-width: none; -ms-overflow-style: none;">
+        <div class="booking-modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <span class="close-booking-modal" id="close-booking-modal">&times;</span>
+            <h2>Quick Booking</h2>
+            <form class="modal-booking-form">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-full-name">Full Name</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="modal-full-name" placeholder="Enter guest name" required>
+                         
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-phone">Phone Number</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="modal-phone" placeholder="Enter phone number" required>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-email">Email</label>
+                        <div class="input-with-icon">
+                            <input type="email" id="modal-email" placeholder="Enter email address" required>
+                            
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-special-requests">Special Requests</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="modal-special-requests" placeholder="Add notes or requests">
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-booking-type">Booking Type</label>
+                        <select id="modal-booking-type" required>
+                            <option value="">Select booking type</option>
+                            <option value="daytour">Day Tour (8am–6pm)</option>
+                            <option value="overnight">Overnight Stay</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <div id="modal-daytour-fields">
+                            <label for="modal-schedule-date">Schedule Date</label>
+                            <input type="date" id="modal-schedule-date">
+                        </div>
+                        <div id="modal-overnight-fields" style="display:none;">
+                            <label for="modal-checkin-date">Check-in Date</label>
+                            <input type="date" id="modal-checkin-date">
+                            <label for="modal-checkout-date">Check-out Date</label>
+                            <input type="date" id="modal-checkout-date">
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-cottage-type">Cottage Type</label>
+                        <select id="modal-cottage-type" required>
+                            <option value="">Select a cottage type</option>
+                            <option value="kubo">Kubo Type - ₱800 (10-15 guests)</option>
+                            <option value="With Videoke">VE Cottage with Videoke - ₱2,500 (20-25 guests)</option>
+                            <option value="Without Videoke">VE Cottage without Videoke - ₱2,000 (20-25 guests)</option>
+                            <option value="garden">Garden Table - ₱300 (5 guests)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-adults">Adults</label>
+                        <div class="input-with-icon">
+                            <input type="number" id="modal-adults" placeholder="Number of adults" min="1" required>
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-children">Children</label>
+                        <div class="input-with-icon">
+                            <input type="number" id="modal-children" placeholder="Number of children" min="0">
+                        </div>
+                    </div>
+                </div>
+                <!-- Proof of Payment Upload -->
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-proof">Proof of Payment (screenshot/image)</label>
+                        <input type="file" id="modal-proof" accept="image/*" required>
+                        <div id="modal-proof-preview" style="margin-top:8px;"></div>
+                    </div>
+                </div>
+                <div class="modal-ai-room-assignment" id="modal-ai-cottage-assignment" style="display: none;">
+                    <div class="modal-ai-room-card">
+                        <div class="modal-ai-room-icon">🤖</div>
+                        <div class="modal-ai-room-content">
+                            <span class="modal-ai-suggestion-label">AI Suggestion</span>
+                            <h3>Suggested Cottage</h3>
+                            <p id="modal-ai-cottage-suggestion">Based on your guest count, we recommend the best cottage for your stay.</p>
+                            <div class="modal-ai-room-actions">
+                                <button type="button" class="btn assign-room-btn" id="modal-assign-cottage-btn">Select This Cottage</button>
+                                <button type="button" class="btn view-options-btn" id="modal-view-cottage-options">View All Options</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-form-actions">
+                    <button type="submit" class="btn book-checkin-btn">Schedule Booking</button>
+                    <button type="button" class="btn cancel-btn" id="modal-cancel-btn">Cancel</button>
+                </div>
+            </form>
+            <!-- Booking Note -->
+            <div class="modal-booking-note" style="margin-top:18px; color:#6c63ff; font-size:1.05em; background:#f8f8ff; border-radius:8px; padding:12px 16px;">
+                <strong>Note:</strong> To place a booking, you must pay the price of the cottage. Entrance fees will be collected on the day of arrival.
+            </div>
+        </div>
+    </div>
+    <style>
+        #booking-modal::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</body>
+</html>

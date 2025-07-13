@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Booking Flow Test</h1>
+    
+    <div class="test-section info">
+        <h3>1. Test Server Connection</h3>
+        <button onclick="testServerConnection()">Test Server</button>
+        <div id="server-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>2. Create Test Booking</h3>
+        <button onclick="createTestBooking()">Create Test Booking</button>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>3. Fetch All Bookings</h3>
+        <button onclick="fetchAllBookings()">Fetch Bookings</button>
+        <div id="fetch-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>4. Test Clerk Panel Data</h3>
+        <button onclick="testClerkData()">Test Clerk Data</button>
+        <div id="clerk-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        async function testServerConnection() {
+            const resultDiv = document.getElementById('server-result');
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ Server connected! Response: <pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Server connection failed: ${error.message}</div>`;
+            }
+        }
+
+        async function createTestBooking() {
+            const resultDiv = document.getElementById('create-result');
+            try {
+                // Create FormData like the actual booking form
+                const formData = new FormData();
+                formData.append('fullName', 'Test User ' + Date.now());
+                formData.append('contactPhone', '09123456789');
+                formData.append('contactEmail', 'test@example.com');
+                formData.append('cottageType', 'kubo');
+                // Use a future date (next month)
+                const futureDate = new Date();
+                futureDate.setMonth(futureDate.getMonth() + 1);
+                const futureDateString = futureDate.toISOString().split('T')[0];
+                formData.append('bookingDate', futureDateString);
+                
+                // Use a unique time slot for each test run
+                const uniqueHour = (Date.now() % 12) + 8; // Random hour between 8-19
+                const uniqueTime = `${uniqueHour.toString().padStart(2, '0')}:00`;
+                formData.append('bookingTime', uniqueTime);
+                formData.append('duration', '600');
+                formData.append('numberOfPeople', '5');
+                formData.append('specialRequests', 'Test booking from debug page');
+                formData.append('notes', 'Booking Type: daytour; Adults: 3; Children: 2');
+
+                console.log('Sending FormData:', formData);
+                
+                const response = await fetch(`${API_BASE}/api/bookings`, {
+                    method: 'POST',
+                    body: formData // No Content-Type header for FormData
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const result = await response.json();
+                console.log('Response result:', result);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Test booking created! <pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to create booking (Status: ${response.status}): <pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error creating booking: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchAllBookings() {
+            const resultDiv = document.getElementById('fetch-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/bookings`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const bookings = result.data || result;
+                    const pendingBookings = bookings.filter(b => b.status === 'pending');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Fetched ${bookings.length} total bookings
+                            <br>📋 Pending bookings: ${pendingBookings.length}
+                            <br><strong>All Bookings:</strong>
+                            <pre>${JSON.stringify(bookings, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to fetch bookings: <pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error fetching bookings: ${error.message}</div>`;
+            }
+        }
+
+        async function testClerkData() {
+            const resultDiv = document.getElementById('clerk-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/bookings`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const bookings = result.data || result;
+                    const pendingBookings = bookings.filter(b => b.status === 'pending');
+                    
+                    // Simulate what the clerk panel does
+                    const clerkData = {
+                        totalBookings: bookings.length,
+                        pendingBookings: pendingBookings.length,
+                        pendingDetails: pendingBookings.map(b => ({
+                            id: b._id,
+                            name: b.fullName || b.name,
+                            status: b.status,
+                            cottageType: b.cottageType,
+                            bookingDate: b.bookingDate
+                        }))
+                    };
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Clerk Panel Data Analysis:
+                            <br>📊 Total bookings: ${clerkData.totalBookings}
+                            <br>⏳ Pending bookings: ${clerkData.pendingBookings}
+                            <br><strong>Pending Details:</strong>
+                            <pre>${JSON.stringify(clerkData.pendingDetails, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to test clerk data: <pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error testing clerk data: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html> 

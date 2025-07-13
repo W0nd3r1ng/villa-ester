@@ -1,0 +1,31 @@
+services:
+  # Backend API Service
+  - type: web
+    name: villa-ester-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://villa-ester-frontend.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: villa-ester-frontend
+    env: static
+    plan: free
+    buildCommand: echo "Static site - no build needed"
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 
