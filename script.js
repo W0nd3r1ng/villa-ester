@@ -1,5 +1,5 @@
 // Socket.IO connection
-const socket = io('http://localhost:3000', {
+const socket = io('https://villa-ester-backend.onrender.com', {
   transports: ['websocket', 'polling']
 });
 
@@ -222,7 +222,7 @@ if (modalBookingForm) {
         });
         // Send to backend
         try {
-            const response = await fetch('http://localhost:3000/api/bookings', {
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
                 method: 'POST',
                 body: formData
             });
@@ -276,7 +276,7 @@ if (reviewForm) {
         const reviewData = { name, comment, image, rating };
         
         try {
-            const response = await fetch('http://localhost:3000/api/reviews', {
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(reviewData)
@@ -315,7 +315,7 @@ let reviewCarouselInterval;
 async function fetchAndDisplayReviews() {
     if (!reviewsContainer) return;
     try {
-        const response = await fetch('http://localhost:3000/api/reviews');
+        const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews');
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
             allReviews = data.data;
@@ -463,7 +463,7 @@ if (availabilityForm) {
         try {
             // Fetch available cottages
             console.log('Fetching cottages from API...');
-            const response = await fetch('http://localhost:3000/api/cottages');
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
             console.log('Response status:', response.status);
             
             const data = await response.json();
@@ -601,7 +601,7 @@ async function loadAIRecommendations() {
                            new Date().toISOString().split('T')[0];
         
         // Fetch AI recommendations
-        const response = await fetch(`http://localhost:3000/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`);
+        const response = await fetch(`https://villa-ester-backend.onrender.com/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`);
         const recommendations = await response.json();
         
         if (Array.isArray(recommendations) && recommendations.length > 0) {
@@ -847,7 +847,7 @@ async function loadGalleryImages() {
     if (!collage) return;
     collage.innerHTML = '<div style="padding:32px;text-align:center;color:#888;">Loading gallery...</div>';
     try {
-        const res = await fetch('/api/recommendations/gallery-images');
+        const res = await fetch(' /api/recommendations/gallery-images');
         const data = await res.json();
         if (data.success && Array.isArray(data.images)) {
             if (data.images.length === 0) {
