@@ -22,7 +22,7 @@ exports.createReview = async (req, res) => {
     const review = new Review({
       name: name.trim(),
       comment: comment.trim(),
-      image: image || 'reviewer1.jpg',
+      image: image || '',
       rating: rating || 5,
       isApproved: true // Set to false if you want admin approval
     });

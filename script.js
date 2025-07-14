@@ -270,10 +270,9 @@ if (reviewForm) {
         e.preventDefault();
         const name = document.getElementById('review-name').value.trim();
         const comment = document.getElementById('review-comment').value.trim();
-        const image = document.getElementById('review-image').value.trim() || 'reviewer1.jpg';
         const rating = parseInt(document.querySelector('input[name="rating"]:checked').value, 10);
         
-        const reviewData = { name, comment, image, rating };
+        const reviewData = { name, comment, rating };
         
         try {
             const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews', {
@@ -349,13 +348,11 @@ function displayReviewSet() {
     reviewsContainer.innerHTML = '';
     const reviewsToShow = allReviews.slice(currentReviewIndex, currentReviewIndex + 3);
     reviewsToShow.forEach(review => {
-        const reviewerImage = review.image ? `images/${review.image}` : 'images/default-avatar.png';
         const reviewCard = document.createElement('div');
         reviewCard.className = 'review-card';
         reviewCard.innerHTML = `
             <div class="review-header">
                 <div class="reviewer-info">
-                    <img src="${reviewerImage}" alt="${review.name}" class="reviewer-avatar" onerror="this.onerror=null;this.src='images/default-avatar.png';">
                     <div>
                         <div class="reviewer-name">${review.name}</div>
                         <div class="review-stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
@@ -572,6 +569,8 @@ function showNoResults() {
 }
 
 function openBookingModal(cottageId, cottageType) {
+    console.log('openBookingModal called with:', { cottageId, cottageType });
+    
     // Map cottage titles to actual cottage type values
     const cottageTypeMap = {
         'Deluxe Ocean View': 'kubo',
@@ -587,7 +586,10 @@ function openBookingModal(cottageId, cottageType) {
     const modalCottageType = document.getElementById('modal-cottage-type');
     if (modalCottageType) {
         const mappedCottageType = cottageTypeMap[cottageType] || cottageType;
+        console.log('Setting cottage type to:', mappedCottageType);
         modalCottageType.value = mappedCottageType;
+    } else {
+        console.error('modal-cottage-type element not found');
     }
     
     // Open the booking modal
@@ -595,6 +597,8 @@ function openBookingModal(cottageId, cottageType) {
     if (bookingModal) {
         bookingModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+    } else {
+        console.error('booking-modal element not found');
     }
 }
 
@@ -719,12 +723,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add event listeners for static AI recommendation "Book Now" buttons
     const staticRecommendCards = document.querySelectorAll('.recommend-cards .recommend-card');
-    staticRecommendCards.forEach(card => {
+    console.log('Found', staticRecommendCards.length, 'static recommendation cards');
+    
+    staticRecommendCards.forEach((card, index) => {
         const bookNowBtn = card.querySelector('.btn-primary');
         const cottageTitle = card.querySelector('.recommend-title').textContent;
         
+        console.log(`Card ${index + 1}:`, { cottageTitle, hasButton: !!bookNowBtn });
+        
         if (bookNowBtn) {
             bookNowBtn.addEventListener('click', () => {
+                console.log(`Clicked Book Now for: ${cottageTitle}`);
                 openBookingModal('', cottageTitle);
             });
         }
@@ -899,30 +908,8 @@ document.addEventListener('DOMContentLoaded', loadGalleryImages);
 
 // Gallery functionality
 function setupGallery() {
-    // Category filtering
-    const categoryBtns = document.querySelectorAll('.category-btn');
-    const galleryItems = document.querySelectorAll('.collage-item');
-    
-    categoryBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const category = btn.getAttribute('data-category');
-            
-            // Update active button
-            categoryBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Filter items
-            galleryItems.forEach(item => {
-                const itemCategory = item.getAttribute('data-category');
-                if (category === 'all' || itemCategory === category) {
-                    item.style.display = 'block';
-                    item.style.animation = 'fadeIn 0.5s ease-in';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    });
+    // Simple gallery setup - just enable lightbox functionality
+    console.log('Gallery initialized');
 }
 
 // Lightbox functionality

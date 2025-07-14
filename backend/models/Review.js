@@ -15,14 +15,8 @@ const reviewSchema = new mongoose.Schema({
   },
   image: { 
     type: String, 
-    default: 'reviewer1.jpg',
-    validate: {
-      validator: function(v) {
-        // Allow empty string or valid image filename
-        return v === '' || /^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|gif)$/.test(v);
-      },
-      message: 'Invalid image filename format'
-    }
+    default: '',
+    required: false
   },
   rating: {
     type: Number,

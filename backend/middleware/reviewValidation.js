@@ -16,14 +16,9 @@ exports.validateCreateReview = [
     .isLength({ min: 10, max: 500 })
     .withMessage('Comment must be between 10 and 500 characters'),
   
-  body('image')
-    .optional()
-    .trim()
-    .matches(/^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|gif)$/)
-    .withMessage('Invalid image filename format'),
-  
   body('rating')
-    .optional()
+    .notEmpty()
+    .withMessage('Rating is required')
     .isInt({ min: 1, max: 5 })
     .withMessage('Rating must be between 1 and 5')
 ];
@@ -45,12 +40,6 @@ exports.validateUpdateReview = [
     .trim()
     .isLength({ min: 10, max: 500 })
     .withMessage('Comment must be between 10 and 500 characters'),
-  
-  body('image')
-    .optional()
-    .trim()
-    .matches(/^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|gif)$/)
-    .withMessage('Invalid image filename format'),
   
   body('rating')
     .optional()

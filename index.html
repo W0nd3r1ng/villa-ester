@@ -150,82 +150,74 @@
         <h2>Photo Gallery</h2>
         <p class="gallery-subtitle">Explore the beauty and comfort of Villa Ester Resort</p>
         
-        <!-- Gallery Categories -->
-        <div class="gallery-categories">
-            <button class="category-btn active" data-category="all">All Photos</button>
-            <button class="category-btn" data-category="resort">Resort Views</button>
-            <button class="category-btn" data-category="cottages">Cottages</button>
-            <button class="category-btn" data-category="rooms">Rooms</button>
-        </div>
-        
         <div class="photo-collage">
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster1.jpg" alt="Villa Ester Resort View 1" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Resort Overview</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster2.jpg" alt="Villa Ester Resort View 2" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Scenic View</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster3.jpg" alt="Villa Ester Resort View 3" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Resort Grounds</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster4.jpg" alt="Villa Ester Resort View 4" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Outdoor Area</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster5.jpg" alt="Villa Ester Resort View 5" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Resort Entrance</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster6.jpg" alt="Villa Ester Resort View 6" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Garden View</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="resort">
+            <div class="collage-item">
                 <img src="images/VillaEster7.jpg" alt="Villa Ester Resort View 7" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Resort Landscape</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="cottages">
+            <div class="collage-item">
                 <img src="images/gardentable.jpg" alt="Garden Table Cottage" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Garden Table</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="cottages">
+            <div class="collage-item">
                 <img src="images/kubo.jpg" alt="Kubo Cottage" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Kubo Type</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="rooms">
+            <div class="collage-item">
                 <img src="images/room1.jpg" alt="Deluxe Room 1" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Deluxe Room</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="rooms">
+            <div class="collage-item">
                 <img src="images/room2.jpg" alt="Garden Suite" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Garden Suite</span>
                 </div>
             </div>
-            <div class="collage-item" data-category="rooms">
+            <div class="collage-item">
                 <img src="images/room3.jpg" alt="Family Villa" class="collage-img" onclick="openLightbox(this)">
                 <div class="image-overlay">
                     <span class="image-title">Family Villa</span>
@@ -284,10 +276,6 @@
                 <div class="modal-form-group">
                     <label for="review-comment">Your Comment</label>
                     <textarea id="review-comment" placeholder="Share your experience..." rows="4" required style="width:100%;padding:10px;"></textarea>
-                </div>
-                <div class="modal-form-group">
-                    <label for="review-image">Profile Image (optional, filename in images/)</label>
-                    <input type="text" id="review-image" placeholder="e.g. reviewer1.jpg">
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">Submit Review</button>
             </form>
