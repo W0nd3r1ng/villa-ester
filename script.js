@@ -572,10 +572,22 @@ function showNoResults() {
 }
 
 function openBookingModal(cottageId, cottageType) {
+    // Map cottage titles to actual cottage type values
+    const cottageTypeMap = {
+        'Deluxe Ocean View': 'kubo',
+        'Garden Suite': 'garden',
+        'Family Villa': 'With Videoke',
+        'VE Cottage with Videoke': 'With Videoke',
+        'VE Cottage without Videoke': 'Without Videoke',
+        'Kubo Type': 'kubo',
+        'Garden Table': 'garden'
+    };
+    
     // Pre-fill the booking modal with cottage details
     const modalCottageType = document.getElementById('modal-cottage-type');
     if (modalCottageType) {
-        modalCottageType.value = cottageType;
+        const mappedCottageType = cottageTypeMap[cottageType] || cottageType;
+        modalCottageType.value = mappedCottageType;
     }
     
     // Open the booking modal
@@ -640,9 +652,6 @@ function displayRecommendations(recommendations) {
                 <button class="btn btn-primary" onclick="openBookingModal('${rec.cottage_id || ''}', '${rec.title}')">
                     Book Now
                 </button>
-                <button class="btn btn-secondary" onclick="viewCottageDetails('${rec.cottage_id || ''}')">
-                    View Details
-                </button>
             </div>
         </div>
     `).join('');
@@ -697,7 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalSpecialRequestsInput.addEventListener('input', updateModalCottageSuggestion);
     }
     
-    // Add event listeners for modal cottage suggestion buttons
+        // Add event listeners for modal cottage suggestion buttons
     const assignCottageBtn = document.getElementById('modal-assign-cottage-btn');
     const viewCottageOptionsBtn = document.getElementById('modal-view-cottage-options');
     
@@ -707,6 +716,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (viewCottageOptionsBtn) {
         viewCottageOptionsBtn.addEventListener('click', viewAllCottageOptions);
     }
+    
+    // Add event listeners for static AI recommendation "Book Now" buttons
+    const staticRecommendCards = document.querySelectorAll('.recommend-cards .recommend-card');
+    staticRecommendCards.forEach(card => {
+        const bookNowBtn = card.querySelector('.btn-primary');
+        const cottageTitle = card.querySelector('.recommend-title').textContent;
+        
+        if (bookNowBtn) {
+            bookNowBtn.addEventListener('click', () => {
+                openBookingModal('', cottageTitle);
+            });
+        }
+    });
 });
 
 // Function to update modal cottage suggestion based on guest count
