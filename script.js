@@ -341,11 +341,11 @@ if (reviewForm) {
                 // Force refresh reviews with a small delay to ensure the review is saved
                 setTimeout(() => {
                     console.log('Refreshing reviews after submission...');
-                    // Clear the carousel interval and restart with new data
-                    if (reviewCarouselInterval) {
-                        clearInterval(reviewCarouselInterval);
-                    }
-                    fetchAndDisplayReviews();
+                // Clear the carousel interval and restart with new data
+                if (reviewCarouselInterval) {
+                    clearInterval(reviewCarouselInterval);
+                }
+                fetchAndDisplayReviews();
                 }, 1000);
             } else {
                 const errorMessage = result.message || result.errors?.[0]?.msg || 'Unknown error';
@@ -380,8 +380,8 @@ async function fetchAndDisplayReviews() {
             console.log('Found reviews:', data.data.length);
             allReviews = data.data;
             if (allReviews.length > 0) {
-                startReviewCarousel();
-            } else {
+            startReviewCarousel();
+        } else {
                 reviewsContainer.innerHTML = '<p>No reviews yet. Be the first to share your experience!</p>';
             }
         } else {
@@ -898,7 +898,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalSpecialRequestsInput.addEventListener('input', updateModalCottageSuggestion);
     }
     
-        // Add event listeners for modal cottage suggestion buttons
+    // Add event listeners for modal cottage suggestion buttons
     const assignCottageBtn = document.getElementById('modal-assign-cottage-btn');
     const viewCottageOptionsBtn = document.getElementById('modal-view-cottage-options');
     
