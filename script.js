@@ -272,6 +272,27 @@ if (reviewForm) {
         const comment = document.getElementById('review-comment').value.trim();
         const rating = parseInt(document.querySelector('input[name="rating"]:checked').value, 10);
         
+        // Client-side validation
+        if (name.length < 2) {
+            showNotification('Name must be at least 2 characters long', 'error');
+            return;
+        }
+        
+        if (name.length > 50) {
+            showNotification('Name must be less than 50 characters', 'error');
+            return;
+        }
+        
+        if (comment.length < 5) {
+            showNotification('Comment must be at least 5 characters long', 'error');
+            return;
+        }
+        
+        if (comment.length > 500) {
+            showNotification('Comment must be less than 500 characters', 'error');
+            return;
+        }
+        
         const reviewData = { name, comment, rating };
         
         try {
@@ -289,11 +310,16 @@ if (reviewForm) {
                 // Reset rating to 5 stars
                 document.getElementById('star5').checked = true;
                 closeReviewModal();
-                // Clear the carousel interval and restart with new data
-                if (reviewCarouselInterval) {
-                    clearInterval(reviewCarouselInterval);
-                }
-                fetchAndDisplayReviews();
+                
+                // Force refresh reviews with a small delay to ensure the review is saved
+                setTimeout(() => {
+                    console.log('Refreshing reviews after submission...');
+                    // Clear the carousel interval and restart with new data
+                    if (reviewCarouselInterval) {
+                        clearInterval(reviewCarouselInterval);
+                    }
+                    fetchAndDisplayReviews();
+                }, 1000);
             } else {
                 const errorMessage = result.message || result.errors?.[0]?.msg || 'Unknown error';
                 showNotification('Failed to submit review: ' + errorMessage, 'error');
@@ -358,9 +384,15 @@ function startReviewCarousel() {
 function displayReviewSet() {
     const reviewsContainer = document.getElementById('reviews-container');
     if (!reviewsContainer) return;
+    
+    console.log('Displaying review set. Total reviews:', allReviews.length);
+    console.log('Current index:', currentReviewIndex);
+    console.log('Reviews to show:', allReviews.slice(currentReviewIndex, currentReviewIndex + 3));
+    
     reviewsContainer.innerHTML = '';
     const reviewsToShow = allReviews.slice(currentReviewIndex, currentReviewIndex + 3);
     reviewsToShow.forEach(review => {
+        console.log('Creating review card for:', review.name, review.comment);
         const reviewCard = document.createElement('div');
         reviewCard.className = 'review-card';
         reviewCard.innerHTML = `
@@ -419,6 +451,25 @@ function prevReviewSet() {
 
 // Fetch reviews on page load
 fetchAndDisplayReviews();
+
+// Add manual refresh button for reviews
+const reviewsSection = document.querySelector('.reviews-section');
+if (reviewsSection) {
+    const refreshButton = document.createElement('button');
+    refreshButton.textContent = '🔄 Refresh Reviews';
+    refreshButton.className = 'btn btn-secondary';
+    refreshButton.style.cssText = 'margin: 10px auto; display: block; font-size: 0.9rem; padding: 8px 16px;';
+    refreshButton.onclick = function() {
+        showNotification('Refreshing reviews...', 'info');
+        fetchAndDisplayReviews();
+    };
+    
+    // Insert after the "Share Your Experience" button
+    const shareButton = document.getElementById('open-review-modal');
+    if (shareButton && shareButton.parentNode) {
+        shareButton.parentNode.insertBefore(refreshButton, shareButton.nextSibling);
+    }
+}
 
 // --- Availability Search Functionality ---
 const availabilityForm = document.getElementById('availability-form');

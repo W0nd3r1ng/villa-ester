@@ -13,8 +13,8 @@ exports.validateCreateReview = [
     .notEmpty()
     .withMessage('Comment is required')
     .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Comment must be between 10 and 500 characters'),
+    .isLength({ min: 5, max: 500 })
+    .withMessage('Comment must be between 5 and 500 characters'),
   
   body('rating')
     .notEmpty()
@@ -38,8 +38,8 @@ exports.validateUpdateReview = [
   body('comment')
     .optional()
     .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Comment must be between 10 and 500 characters'),
+    .isLength({ min: 5, max: 500 })
+    .withMessage('Comment must be between 5 and 500 characters'),
   
   body('rating')
     .optional()

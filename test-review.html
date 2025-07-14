@@ -75,7 +75,7 @@
     
     <form id="review-form">
         <div class="form-group">
-            <label for="name">Name:</label>
+            <label for="name">Name (2-50 characters):</label>
             <input type="text" id="name" required>
         </div>
         
@@ -96,7 +96,7 @@
         </div>
         
         <div class="form-group">
-            <label for="comment">Comment:</label>
+            <label for="comment">Comment (5-500 characters):</label>
             <textarea id="comment" rows="4" required></textarea>
         </div>
         
@@ -112,6 +112,31 @@
             const name = document.getElementById('name').value.trim();
             const comment = document.getElementById('comment').value.trim();
             const rating = parseInt(document.querySelector('input[name="rating"]:checked').value, 10);
+            
+            // Client-side validation
+            if (name.length < 2) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>Validation Error</h3><p>Name must be at least 2 characters long</p>';
+                return;
+            }
+            
+            if (name.length > 50) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>Validation Error</h3><p>Name must be less than 50 characters</p>';
+                return;
+            }
+            
+            if (comment.length < 5) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>Validation Error</h3><p>Comment must be at least 5 characters long</p>';
+                return;
+            }
+            
+            if (comment.length > 500) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>Validation Error</h3><p>Comment must be less than 500 characters</p>';
+                return;
+            }
             
             const reviewData = { name, comment, rating };
             
