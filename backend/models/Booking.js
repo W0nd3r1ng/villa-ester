@@ -208,6 +208,10 @@ bookingSchema.statics.checkAvailabilityByType = async function(cottageType, book
     return false; // No cottages of this type available
   }
 
+  // Calculate total quantity of cottages of this type
+  const totalQuantity = cottages.reduce((sum, cottage) => sum + (cottage.quantity || 1), 0);
+  console.log('Total quantity of cottages for type', cottageType, ':', totalQuantity);
+
   // Check how many bookings exist for this cottage type on this date/time
   const filter = {
     cottageType,
@@ -224,15 +228,40 @@ bookingSchema.statics.checkAvailabilityByType = async function(cottageType, book
   const existingBookings = await this.countDocuments(filter);
   console.log('Existing bookings count:', existingBookings);
   
-  // Allow bookings up to the number of available cottages of this type
-  // For now, we'll allow up to 5 bookings per cottage type per time slot
-  // This can be adjusted based on actual cottage quantities
-  const maxBookingsPerTimeSlot = 5;
-  const isAvailable = existingBookings < maxBookingsPerTimeSlot;
+  // Check if there are still cottages available
+  const availableCottages = totalQuantity - existingBookings;
+  const isAvailable = availableCottages > 0;
   
-  console.log('Max bookings allowed:', maxBookingsPerTimeSlot, 'Available:', isAvailable);
+  console.log('Total cottages:', totalQuantity, 'Booked:', existingBookings, 'Available:', availableCottages, 'Can book:', isAvailable);
   
   return isAvailable;
+};
+
+// Static method to get available quantity for a cottage type
+bookingSchema.statics.getAvailableQuantity = async function(cottageType, bookingDate, bookingTime) {
+  // Get all cottages of this type
+  const Cottage = require('./cottage');
+  const cottages = await Cottage.find({ type: cottageType, available: true });
+  
+  if (cottages.length === 0) {
+    return 0; // No cottages of this type available
+  }
+
+  // Calculate total quantity of cottages of this type
+  const totalQuantity = cottages.reduce((sum, cottage) => sum + (cottage.quantity || 1), 0);
+
+  // Check how many bookings exist for this cottage type on this date/time
+  const filter = {
+    cottageType,
+    bookingDate: new Date(bookingDate),
+    bookingTime,
+    status: { $nin: ['cancelled', 'rejected'] }
+  };
+
+  const existingBookings = await this.countDocuments(filter);
+  
+  // Return available quantity
+  return Math.max(0, totalQuantity - existingBookings);
 };
 
 // Static method to get bookings by date range

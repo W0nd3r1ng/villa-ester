@@ -280,10 +280,14 @@ exports.validateGetBookingStats = [
 // Validation rules for checking availability
 exports.validateCheckAvailability = [
   query('cottageId')
-    .notEmpty()
-    .withMessage('Cottage ID is required')
+    .optional()
     .isMongoId()
     .withMessage('Invalid cottage ID format'),
+  
+  query('cottageType')
+    .optional()
+    .isIn(['kubo', 'With Videoke', 'Without Videoke', 'garden'])
+    .withMessage('Invalid cottage type'),
   
   query('bookingDate')
     .notEmpty()
@@ -296,6 +300,13 @@ exports.validateCheckAvailability = [
     .withMessage('Booking time is required')
     .matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
     .withMessage('Invalid time format. Use HH:MM format')
+    .custom((value, { req }) => {
+      // Ensure either cottageId or cottageType is provided
+      if (!req.query.cottageId && !req.query.cottageType) {
+        throw new Error('Either cottage ID or cottage type is required');
+      }
+      return true;
+    })
 ];
 
 // Validation rules for date range

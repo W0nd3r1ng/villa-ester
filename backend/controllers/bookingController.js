@@ -176,9 +176,9 @@ exports.createBooking = async (req, res) => {
       fullName
     } = req.body;
 
-    // Find cottages of the specified type
-    const cottages = await Cottage.find({ type: cottageType, available: true });
-    if (!cottages || cottages.length === 0) {
+    // Find cottage of the specified type
+    const cottage = await Cottage.findOne({ type: cottageType, available: true });
+    if (!cottage) {
       return res.status(404).json({
         success: false,
         message: 'Cottage type not found or not available'
@@ -196,10 +196,6 @@ exports.createBooking = async (req, res) => {
         message: 'No cottages of this type are available for the selected date and time'
       });
     }
-
-    // For now, assign the first available cottage of this type
-    // In a more sophisticated system, you might want to assign based on actual availability
-    const cottage = cottages[0];
 
     // Create new booking
     const booking = new Booking({
@@ -595,20 +591,36 @@ exports.getBookingsByDateRange = async (req, res) => {
  */
 exports.checkAvailability = async (req, res) => {
   try {
-    const { cottageId, bookingDate, bookingTime } = req.query;
+    const { cottageId, cottageType, bookingDate, bookingTime } = req.query;
 
-    if (!cottageId || !bookingDate || !bookingTime) {
+    if (!bookingDate || !bookingTime) {
       return res.status(400).json({
         success: false,
-        message: 'Cottage ID, booking date, and booking time are required'
+        message: 'Booking date and booking time are required'
       });
     }
 
-    const isAvailable = await Booking.checkAvailability(cottageId, bookingDate, bookingTime);
+    let isAvailable = false;
+    let availableQuantity = 0;
+
+    if (cottageId) {
+      // Check availability for specific cottage
+      isAvailable = await Booking.checkAvailability(cottageId, bookingDate, bookingTime);
+    } else if (cottageType) {
+      // Check availability for cottage type
+      isAvailable = await Booking.checkAvailabilityByType(cottageType, bookingDate, bookingTime);
+      availableQuantity = await Booking.getAvailableQuantity(cottageType, bookingDate, bookingTime);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Either cottage ID or cottage type is required'
+      });
+    }
 
     res.json({
       success: true,
-      available: isAvailable
+      available: isAvailable,
+      availableQuantity: availableQuantity
     });
   } catch (error) {
     console.error('Error checking availability:', error);
