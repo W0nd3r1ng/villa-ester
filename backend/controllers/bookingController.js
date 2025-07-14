@@ -176,23 +176,30 @@ exports.createBooking = async (req, res) => {
       fullName
     } = req.body;
 
-    // Find the cottage based on type
-    const cottage = await Cottage.findOne({ type: cottageType, available: true });
-    if (!cottage) {
+    // Find cottages of the specified type
+    const cottages = await Cottage.find({ type: cottageType, available: true });
+    if (!cottages || cottages.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Cottage type not found or not available'
       });
     }
 
-    // Check if the time slot is available
-    const isAvailable = await Booking.checkAvailability(cottage._id, bookingDate, bookingTime);
+    // Check if any cottage of this type is available for the time slot
+    console.log('Checking availability for:', { cottageType, bookingDate, bookingTime });
+    const isAvailable = await Booking.checkAvailabilityByType(cottageType, bookingDate, bookingTime);
+    console.log('Availability result:', isAvailable);
+    
     if (!isAvailable) {
       return res.status(409).json({
         success: false,
-        message: 'Cottage is not available for the selected date and time'
+        message: 'No cottages of this type are available for the selected date and time'
       });
     }
+
+    // For now, assign the first available cottage of this type
+    // In a more sophisticated system, you might want to assign based on actual availability
+    const cottage = cottages[0];
 
     // Create new booking
     const booking = new Booking({

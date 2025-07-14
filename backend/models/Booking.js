@@ -177,7 +177,7 @@ bookingSchema.pre('save', function(next) {
   next();
 });
 
-// Static method to check availability
+// Static method to check availability by cottage ID
 bookingSchema.statics.checkAvailability = async function(cottageId, bookingDate, bookingTime, excludeBookingId = null) {
   const filter = {
     cottageId,
@@ -192,6 +192,47 @@ bookingSchema.statics.checkAvailability = async function(cottageId, bookingDate,
 
   const existingBooking = await this.findOne(filter);
   return !existingBooking;
+};
+
+// Static method to check availability by cottage type
+bookingSchema.statics.checkAvailabilityByType = async function(cottageType, bookingDate, bookingTime, excludeBookingId = null) {
+  console.log('checkAvailabilityByType called with:', { cottageType, bookingDate, bookingTime });
+  
+  // Get all cottages of this type
+  const Cottage = require('./cottage');
+  const cottages = await Cottage.find({ type: cottageType, available: true });
+  console.log('Found cottages of type', cottageType, ':', cottages.length);
+  
+  if (cottages.length === 0) {
+    console.log('No cottages of this type available');
+    return false; // No cottages of this type available
+  }
+
+  // Check how many bookings exist for this cottage type on this date/time
+  const filter = {
+    cottageType,
+    bookingDate: new Date(bookingDate),
+    bookingTime,
+    status: { $nin: ['cancelled', 'rejected'] }
+  };
+
+  if (excludeBookingId) {
+    filter._id = { $ne: excludeBookingId };
+  }
+
+  console.log('Checking existing bookings with filter:', filter);
+  const existingBookings = await this.countDocuments(filter);
+  console.log('Existing bookings count:', existingBookings);
+  
+  // Allow bookings up to the number of available cottages of this type
+  // For now, we'll allow up to 5 bookings per cottage type per time slot
+  // This can be adjusted based on actual cottage quantities
+  const maxBookingsPerTimeSlot = 5;
+  const isAvailable = existingBookings < maxBookingsPerTimeSlot;
+  
+  console.log('Max bookings allowed:', maxBookingsPerTimeSlot, 'Available:', isAvailable);
+  
+  return isAvailable;
 };
 
 // Static method to get bookings by date range
