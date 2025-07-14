@@ -479,25 +479,6 @@ function prevReviewSet() {
 // Fetch reviews on page load
 fetchAndDisplayReviews();
 
-// Add manual refresh button for reviews
-const reviewsSection = document.querySelector('.reviews-section');
-if (reviewsSection) {
-    const refreshButton = document.createElement('button');
-    refreshButton.textContent = '🔄 Refresh Reviews';
-    refreshButton.className = 'btn btn-secondary';
-    refreshButton.style.cssText = 'margin: 10px auto; display: block; font-size: 0.9rem; padding: 8px 16px;';
-    refreshButton.onclick = function() {
-        showNotification('Refreshing reviews...', 'info');
-        fetchAndDisplayReviews();
-    };
-    
-    // Insert after the "Share Your Experience" button
-    const shareButton = document.getElementById('open-review-modal');
-    if (shareButton && shareButton.parentNode) {
-        shareButton.parentNode.insertBefore(refreshButton, shareButton.nextSibling);
-    }
-}
-
 // --- Availability Search Functionality ---
 const availabilityForm = document.getElementById('availability-form');
 const availabilityResults = document.getElementById('availability-results');

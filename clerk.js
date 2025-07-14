@@ -291,32 +291,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // Add manual refresh button for testing real-time updates
-    const refreshBtn = document.createElement('button');
-    refreshBtn.textContent = '🔄 Refresh Data';
-    refreshBtn.style.cssText = `
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 9999;
-        background: #6c63ff;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-    `;
-    refreshBtn.addEventListener('click', async () => {
-        console.log('Manual refresh triggered');
-        await fetchBookings();
-        renderBookingList();
-        renderCheckoutList && renderCheckoutList();
-        renderPendingBookingList && renderPendingBookingList();
-        updateDashboardOverview && updateDashboardOverview();
-        updateCottageOccupancyTable && updateCottageOccupancyTable();
-        showNotification('Data refreshed manually', 'info');
-    });
-    document.body.appendChild(refreshBtn);
+    const sidebarRefreshBtn = document.getElementById('refresh-data-btn');
+    if (sidebarRefreshBtn) {
+        sidebarRefreshBtn.addEventListener('click', async () => {
+            console.log('Sidebar refresh triggered');
+            await fetchBookings();
+            renderBookingList();
+            renderCheckoutList && renderCheckoutList();
+            renderPendingBookingList && renderPendingBookingList();
+            updateDashboardOverview && updateDashboardOverview();
+            updateCottageOccupancyTable && updateCottageOccupancyTable();
+            showNotification('Data refreshed manually', 'info');
+        });
+    }
 
     // --- Dashboard Data ---
     let cottagesData = [];
