@@ -514,10 +514,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             const adults = booking.adults || booking.numberOfPeople || 1;
             const children = booking.children || 0;
             const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `https://villa-ester-backend.onrender.com${booking.proofOfPayment}`) : '';
+            const isWalkIn = booking.notes?.includes('Walk-in booking');
+            
             item.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;">
                     <i class="material-icons">person</i>
                     <span style="font-weight:600;">${guestName}</span>
+                    ${isWalkIn ? '<span style="color: #e67e22; font-size: 0.8em; font-weight: 600; margin-left: 8px; padding: 2px 6px; background: #fdf2e9; border-radius: 4px;">WALK-IN</span>' : ''}
                 </div>
                 <div style="margin-left:32px;min-width:180px;">${roomType}<br><span style="font-size:0.95em;color:#888;">Check-in: ${checkin}<br>Check-out: ${checkout}</span></div>
                 <div style="margin-left:32px;min-width:120px;">${adults} Adult${adults>1?'s':''}, ${children} Child${children!==1?'ren':''}</div>
@@ -678,8 +681,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 bookingTime,
                 duration,
                 numberOfPeople: adults + children,
-                notes: `Booking Type: ${bookingType}; Adults: ${adults}; Children: ${children}`,
-                status: 'pending',
+                notes: `Booking Type: ${bookingType}; Adults: ${adults}; Children: ${children}; Walk-in booking`,
+                status: 'completed', // Automatically set to completed for walk-in bookings
                 createdAt: new Date()
             };
             if (email) {
@@ -701,13 +704,29 @@ document.addEventListener('DOMContentLoaded', async function() {
                     if (quickBookingAlert) {
                         quickBookingAlert.style.display = 'block';
                         quickBookingAlert.style.color = '#4CAF50';
-                        quickBookingAlert.textContent = 'Booking successful!';
+                        quickBookingAlert.textContent = 'Walk-in booking successful! Guest automatically checked in.';
                         setTimeout(() => { quickBookingAlert.style.display = 'none'; }, 3000);
                     }
-                    // No automatic tab switch; just update the data
+                    
+                    // Update the data
                     await fetchBookings();
                     renderBookingList();
                     renderCheckoutList && renderCheckoutList();
+                    
+                    // Automatically redirect to Check-in & Check-out panel and show checkout tab
+                    const checkInOutLink = document.querySelector('.sidebar-nav ul li a[data-panel="check-in-out-panel"]');
+                    if (checkInOutLink) {
+                        checkInOutLink.click();
+                        
+                        // Switch to checkout tab after a short delay
+                        setTimeout(() => {
+                            const checkoutTab = document.querySelector('.arrival-tab[data-tab="checkout"]');
+                            if (checkoutTab) {
+                                checkoutTab.click();
+                            }
+                        }, 300);
+                    }
+                    
                     return;
                 } else {
                     const error = await response.json();
@@ -1252,6 +1271,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
         checkedIn.forEach(booking => {
+            const isWalkIn = booking.notes?.includes('Walk-in booking');
             const card = document.createElement('div');
             card.className = 'arrival-card';
             card.innerHTML = `
@@ -1263,6 +1283,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <p><strong>Guests:</strong> ${booking.numberOfPeople || 'N/A'}</p>
                     <p><strong>Phone:</strong> ${booking.contactPhone || 'N/A'}</p>
                     <p><strong>Status:</strong> <span class="status completed">Checked In</span></p>
+                    ${isWalkIn ? '<p><strong>Type:</strong> <span style="color: #e67e22; font-weight: 600;">Walk-in Booking</span></p>' : ''}
                 </div>
                 <div class="arrival-actions">
                     <button class="btn btn-primary check-out-btn" data-booking-id="${booking._id}">Check Out</button>

@@ -213,9 +213,14 @@ exports.createBooking = async (req, res) => {
       fullName,
       proofOfPayment: proofOfPaymentUrl,
       totalPrice: cottage.price,
-      status: 'pending',
+      status: req.body.status || 'pending',
       createdAt: new Date()
     });
+
+    // Log if this is a walk-in booking
+    if (booking.status === 'completed') {
+      console.log('Creating walk-in booking - guest automatically checked in');
+    }
 
     const savedBooking = await booking.save();
 
@@ -234,9 +239,13 @@ exports.createBooking = async (req, res) => {
       });
     }
 
+    const message = booking.status === 'completed' 
+      ? 'Walk-in booking created successfully - guest automatically checked in'
+      : 'Booking created successfully';
+
     res.status(201).json({
       success: true,
-      message: 'Booking created successfully',
+      message: message,
       data: populatedBooking
     });
   } catch (error) {
