@@ -895,4 +895,119 @@ async function loadGalleryImages() {
         collage.innerHTML = '<div style="padding:32px;text-align:center;color:#888;">Failed to load gallery.</div>';
     }
 }
-document.addEventListener('DOMContentLoaded', loadGalleryImages); 
+document.addEventListener('DOMContentLoaded', loadGalleryImages);
+
+// Gallery functionality
+function setupGallery() {
+    // Category filtering
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const galleryItems = document.querySelectorAll('.collage-item');
+    
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const category = btn.getAttribute('data-category');
+            
+            // Update active button
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Filter items
+            galleryItems.forEach(item => {
+                const itemCategory = item.getAttribute('data-category');
+                if (category === 'all' || itemCategory === category) {
+                    item.style.display = 'block';
+                    item.style.animation = 'fadeIn 0.5s ease-in';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
+// Lightbox functionality
+let currentImageIndex = 0;
+let galleryImages = [];
+
+function openLightbox(imgElement) {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    
+    // Get all visible images
+    const visibleItems = Array.from(document.querySelectorAll('.collage-item[style*="display: block"], .collage-item:not([style*="display: none"])'));
+    galleryImages = visibleItems.map(item => ({
+        src: item.querySelector('img').src,
+        alt: item.querySelector('img').alt,
+        title: item.querySelector('.image-title')?.textContent || ''
+    }));
+    
+    // Find current image index
+    currentImageIndex = galleryImages.findIndex(img => img.src === imgElement.src);
+    if (currentImageIndex === -1) currentImageIndex = 0;
+    
+    // Display image
+    lightboxImg.src = galleryImages[currentImageIndex].src;
+    lightboxImg.alt = galleryImages[currentImageIndex].alt;
+    lightboxCaption.textContent = galleryImages[currentImageIndex].title;
+    
+    // Show lightbox
+    lightbox.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', handleLightboxKeys);
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    lightbox.style.display = 'none';
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', handleLightboxKeys);
+}
+
+function changeImage(direction) {
+    event.stopPropagation(); // Prevent closing lightbox
+    
+    currentImageIndex += direction;
+    
+    if (currentImageIndex >= galleryImages.length) {
+        currentImageIndex = 0;
+    } else if (currentImageIndex < 0) {
+        currentImageIndex = galleryImages.length - 1;
+    }
+    
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    
+    lightboxImg.src = galleryImages[currentImageIndex].src;
+    lightboxImg.alt = galleryImages[currentImageIndex].alt;
+    lightboxCaption.textContent = galleryImages[currentImageIndex].title;
+}
+
+function handleLightboxKeys(event) {
+    switch(event.key) {
+        case 'Escape':
+            closeLightbox();
+            break;
+        case 'ArrowLeft':
+            changeImage(-1);
+            break;
+        case 'ArrowRight':
+            changeImage(1);
+            break;
+    }
+}
+
+// Initialize gallery when DOM is loaded
+document.addEventListener('DOMContentLoaded', setupGallery);
+
+// Add fadeIn animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(style); 
