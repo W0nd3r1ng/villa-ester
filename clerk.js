@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     await confirmBooking(booking._id);
                 };
                 item.querySelector('.btn-reject').onclick = async () => {
-                    await updateBookingStatus(booking._id, 'rejected');
+                    await rejectBooking(booking._id);
                 };
             }
             container.appendChild(item);
@@ -2373,6 +2373,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function confirmBooking(bookingId) {
         try {
             const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            console.log('Confirming booking:', bookingId);
+            console.log('Token:', token ? 'Present' : 'Missing');
+            console.log('User role:', user.role);
+            
+            if (!token) {
+                showAlert('Authentication required. Please log in again.', 'error');
+                return;
+            }
+            
             const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}/confirm`, {
                 method: 'PATCH',
                 headers: {
@@ -2380,6 +2390,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     'Authorization': 'Bearer ' + token
                 }
             });
+            
+            console.log('Response status:', response.status);
+            
             if (response.ok) {
                 await fetchBookings();
                 renderPendingBookingList();
@@ -2387,10 +2400,53 @@ document.addEventListener('DOMContentLoaded', async function() {
                 showAlert('Booking confirmed successfully!', 'success');
             } else {
                 const result = await response.json();
+                console.log('Error response:', result);
                 showAlert('Failed to confirm booking: ' + (result.message || response.status), 'error');
             }
         } catch (err) {
+            console.error('Error in confirmBooking:', err);
             showAlert('Error confirming booking: ' + err.message, 'error');
+        }
+    }
+
+    // Add reject booking function:
+    async function rejectBooking(bookingId) {
+        try {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            console.log('Rejecting booking:', bookingId);
+            console.log('Token:', token ? 'Present' : 'Missing');
+            console.log('User role:', user.role);
+            
+            if (!token) {
+                showAlert('Authentication required. Please log in again.', 'error');
+                return;
+            }
+            
+            const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}/reject`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ reason: 'Booking rejected by staff' })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (response.ok) {
+                await fetchBookings();
+                renderPendingBookingList();
+                renderBookingList();
+                showAlert('Booking rejected successfully!', 'success');
+            } else {
+                const result = await response.json();
+                console.log('Error response:', result);
+                showAlert('Failed to reject booking: ' + (result.message || response.status), 'error');
+            }
+        } catch (err) {
+            console.error('Error in rejectBooking:', err);
+            showAlert('Error rejecting booking: ' + err.message, 'error');
         }
     }
 }); 

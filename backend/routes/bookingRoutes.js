@@ -14,7 +14,7 @@ const {
   validateBookingTimeSlot
 } = require('../middleware/bookingValidation');
 const { auth } = require('../middleware/auth');
-const { admin } = require('../middleware/admin');
+const { admin, requireRole } = require('../middleware/admin');
 
 /**
  * @route   GET /api/bookings
@@ -113,11 +113,11 @@ router.patch('/:id/cancel',
 /**
  * @route   PATCH /api/bookings/:id/confirm
  * @desc    Confirm a booking
- * @access  Private (Admin)
+ * @access  Private (Admin/Clerk)
  */
 router.patch('/:id/confirm',
   auth,
-  admin,
+  requireRole(['admin', 'clerk']),
   handleValidationErrors,
   bookingController.confirmBooking
 );
@@ -125,13 +125,25 @@ router.patch('/:id/confirm',
 /**
  * @route   PATCH /api/bookings/:id/complete
  * @desc    Complete a booking
- * @access  Private (Admin)
+ * @access  Private (Admin/Clerk)
  */
 router.patch('/:id/complete',
   auth,
-  admin,
+  requireRole(['admin', 'clerk']),
   handleValidationErrors,
   bookingController.completeBooking
+);
+
+/**
+ * @route   PATCH /api/bookings/:id/reject
+ * @desc    Reject a booking
+ * @access  Private (Admin/Clerk)
+ */
+router.patch('/:id/reject',
+  auth,
+  requireRole(['admin', 'clerk']),
+  handleValidationErrors,
+  bookingController.rejectBooking
 );
 
 /**

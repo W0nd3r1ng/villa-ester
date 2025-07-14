@@ -511,6 +511,49 @@ exports.completeBooking = async (req, res) => {
 };
 
 /**
+ * Reject a booking
+ */
+exports.rejectBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    await booking.reject(reason);
+
+    // Emit Socket.IO event for booking rejection
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('booking-updated', {
+        booking,
+        message: 'Booking rejected',
+        timestamp: new Date()
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Booking rejected successfully',
+      data: booking
+    });
+  } catch (error) {
+    console.error('Error rejecting booking:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reject booking',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Get bookings by date range
  */
 exports.getBookingsByDateRange = async (req, res) => {

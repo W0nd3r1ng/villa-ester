@@ -257,6 +257,21 @@ bookingSchema.methods.complete = async function() {
   return await this.save();
 };
 
+// Instance method to reject booking
+bookingSchema.methods.reject = async function(reason) {
+  if (this.status === 'rejected') {
+    throw new Error('Booking is already rejected');
+  }
+  if (this.status === 'completed') {
+    throw new Error('Cannot reject a completed booking');
+  }
+
+  this.status = 'rejected';
+  this.cancellationReason = reason || 'Booking rejected by staff';
+  this.cancelledAt = new Date();
+  return await this.save();
+};
+
 // Instance method to calculate total price
 bookingSchema.methods.calculateTotalPrice = async function() {
   // This would typically fetch the cottage price and apply any discounts
