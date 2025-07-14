@@ -103,6 +103,33 @@ const closeBookingModalBtn = document.getElementById('close-booking-modal');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
 function openMainBookingModal() {
+    // Reset the entire booking form
+    const modalBookingForm = document.querySelector('.modal-booking-form');
+    if (modalBookingForm) {
+        modalBookingForm.reset();
+        console.log('Reset entire booking form');
+    }
+    
+    // Reset the cottage type dropdown to blank specifically
+    const modalCottageType = document.getElementById('modal-cottage-type');
+    if (modalCottageType) {
+        modalCottageType.value = '';
+        console.log('Reset cottage type dropdown to blank');
+    }
+    
+    // Clear proof of payment preview
+    const proofPreview = document.getElementById('modal-proof-preview');
+    if (proofPreview) {
+        proofPreview.innerHTML = '';
+    }
+    
+    // Reset date fields visibility
+    const modalDaytourFields = document.getElementById('modal-daytour-fields');
+    const modalOvernightFields = document.getElementById('modal-overnight-fields');
+    if (modalDaytourFields) modalDaytourFields.style.display = 'none';
+    if (modalOvernightFields) modalOvernightFields.style.display = 'none';
+    
+    // Open the booking modal
     bookingModal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
