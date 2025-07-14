@@ -741,24 +741,36 @@ function viewCottageDetails(cottageId) {
 // --- AI Recommendation Functions ---
 async function loadAIRecommendations() {
     try {
+        console.log('Loading AI recommendations...');
+        
         // Get current form values for personalized recommendations
         const guests = parseInt(document.getElementById('guests')?.value || '2', 10);
         const bookingDate = document.getElementById('schedule-date')?.value || 
                            document.getElementById('checkin-date')?.value || 
                            new Date().toISOString().split('T')[0];
         
+        console.log('Recommendation parameters:', { guests, bookingDate });
+        
         // Fetch AI recommendations
-        const response = await fetch(`https://villa-ester-backend.onrender.com/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`);
+        const apiUrl = `https://villa-ester-backend.onrender.com/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
+        console.log('Fetching from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        console.log('Response status:', response.status);
+        
         const recommendations = await response.json();
+        console.log('API response:', recommendations);
         
         if (Array.isArray(recommendations) && recommendations.length > 0) {
+            console.log('Displaying AI recommendations:', recommendations.length);
             displayRecommendations(recommendations);
         } else {
-            console.log('No recommendations available');
+            console.log('No AI recommendations available, showing default');
             displayDefaultRecommendations();
         }
     } catch (error) {
         console.error('Error loading AI recommendations:', error);
+        console.log('Falling back to default recommendations');
         // Fallback to default recommendations
         displayDefaultRecommendations();
     }
@@ -795,7 +807,52 @@ function displayRecommendations(recommendations) {
 function displayDefaultRecommendations() {
     const recommendCards = document.querySelector('.recommend-cards');
     if (!recommendCards) return;
-    recommendCards.innerHTML = `<div style="padding: 32px; text-align: center; color: #888; font-size: 1.1em;">No recommendations available at the moment. Please adjust your search or try again later.</div>`;
+    
+    // Show static recommendations instead of error message
+    recommendCards.innerHTML = `
+        <div class="recommend-card">
+            <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🏷️</span></div>
+            <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">BEST VALUE</div>
+            <div class="recommend-title">Garden Table</div>
+            <div class="recommend-desc">Perfect for small groups and intimate gatherings. Cozy garden setting with great value.</div>
+            <div class="recommend-reasons">
+                <span class="reason-tag">Perfect for small groups</span>
+                <span class="reason-tag">Great value</span>
+                <span class="reason-tag">Garden setting</span>
+            </div>
+            <div class="recommend-actions">
+                <button class="btn btn-primary" onclick="openBookingModal('', 'Garden Table')">Book Now</button>
+            </div>
+        </div>
+        <div class="recommend-card">
+            <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🏖️</span></div>
+            <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">POPULAR CHOICE</div>
+            <div class="recommend-title">Kubo Type</div>
+            <div class="recommend-desc">Traditional Filipino kubo perfect for medium-sized groups and family gatherings.</div>
+            <div class="recommend-reasons">
+                <span class="reason-tag">Traditional setting</span>
+                <span class="reason-tag">Great for families</span>
+                <span class="reason-tag">Comfortable space</span>
+            </div>
+            <div class="recommend-actions">
+                <button class="btn btn-primary" onclick="openBookingModal('', 'Kubo Type')">Book Now</button>
+            </div>
+        </div>
+        <div class="recommend-card">
+            <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🎉</span></div>
+            <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">CELEBRATION SPECIAL</div>
+            <div class="recommend-title">VE Cottage with Videoke</div>
+            <div class="recommend-desc">Perfect for celebrations, parties, and large groups. Includes videoke system for entertainment.</div>
+            <div class="recommend-reasons">
+                <span class="reason-tag">Perfect for celebrations</span>
+                <span class="reason-tag">Includes videoke</span>
+                <span class="reason-tag">Large capacity</span>
+            </div>
+            <div class="recommend-actions">
+                <button class="btn btn-primary" onclick="openBookingModal('', 'VE Cottage with Videoke')">Book Now</button>
+            </div>
+        </div>
+    `;
 }
 
 // Ensure recommendations are loaded on page load
