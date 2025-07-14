@@ -365,6 +365,16 @@ exports.deleteBooking = async (req, res) => {
 
     await Booking.findByIdAndDelete(id);
 
+    // Emit Socket.IO event for booking deletion
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('booking-deleted', {
+        bookingId: id,
+        message: 'Booking deleted',
+        timestamp: new Date()
+      });
+    }
+
     res.json({
       success: true,
       message: 'Booking deleted successfully'

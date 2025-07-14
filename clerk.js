@@ -99,12 +99,99 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Listen for real-time booking events
-    socket.on('booking-created', (data) => {
-        fetchBookings().then(renderBookingList);
+    socket.on('booking-created', async (data) => {
+        console.log('New booking created:', data);
+        await fetchBookings();
+        renderBookingList();
+        renderCheckoutList && renderCheckoutList();
+        renderPendingBookingList && renderPendingBookingList();
+        updateDashboardOverview && updateDashboardOverview();
+        updateCottageOccupancyTable && updateCottageOccupancyTable();
+        showNotification('New booking received!', 'success');
     });
-    socket.on('booking-updated', (data) => {
-        fetchBookings().then(renderBookingList);
+    
+    socket.on('booking-updated', async (data) => {
+        console.log('Booking updated:', data);
+        await fetchBookings();
+        renderBookingList();
+        renderCheckoutList && renderCheckoutList();
+        renderPendingBookingList && renderPendingBookingList();
+        updateDashboardOverview && updateDashboardOverview();
+        updateCottageOccupancyTable && updateCottageOccupancyTable();
+        showNotification('Booking status updated!', 'info');
     });
+    
+    socket.on('booking-deleted', async (data) => {
+        console.log('Booking deleted:', data);
+        await fetchBookings();
+        renderBookingList();
+        renderCheckoutList && renderCheckoutList();
+        renderPendingBookingList && renderPendingBookingList();
+        updateDashboardOverview && updateDashboardOverview();
+        updateCottageOccupancyTable && updateCottageOccupancyTable();
+        showNotification('Booking deleted!', 'warning');
+    });
+    
+    // Socket connection status
+    socket.on('connect', () => {
+        console.log('Connected to server via Socket.IO');
+        showNotification('Connected to real-time updates', 'success');
+        
+        // Test real-time connection by emitting a test event
+        socket.emit('test-connection', { message: 'Clerk panel connected' });
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+        showNotification('Lost connection to real-time updates', 'error');
+    });
+    
+    socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        showNotification('Connection error - real-time updates may not work', 'error');
+    });
+    
+    // Test event to verify real-time communication
+    socket.on('test-response', (data) => {
+        console.log('Real-time test successful:', data);
+    });
+    
+    // Debug: Log all incoming socket events
+    socket.onAny((eventName, ...args) => {
+        console.log('Socket event received:', eventName, args);
+    });
+
+    // Notification function for real-time updates
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : type === 'warning' ? '#ff9800' : '#2196F3'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+            font-weight: 600;
+            font-size: 14px;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
 
     // --- Walk-in Guest List State ---
     let walkinGuests = [
@@ -202,6 +289,34 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         });
     }
+    
+    // Add manual refresh button for testing real-time updates
+    const refreshBtn = document.createElement('button');
+    refreshBtn.textContent = '🔄 Refresh Data';
+    refreshBtn.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 9999;
+        background: #6c63ff;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    `;
+    refreshBtn.addEventListener('click', async () => {
+        console.log('Manual refresh triggered');
+        await fetchBookings();
+        renderBookingList();
+        renderCheckoutList && renderCheckoutList();
+        renderPendingBookingList && renderPendingBookingList();
+        updateDashboardOverview && updateDashboardOverview();
+        updateCottageOccupancyTable && updateCottageOccupancyTable();
+        showNotification('Data refreshed manually', 'info');
+    });
+    document.body.appendChild(refreshBtn);
 
     // --- Dashboard Data ---
     let cottagesData = [];
@@ -383,6 +498,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             showPanel(defaultPanel, null);
         }
         updateDashboardAndTable();
+        
+        // Set up periodic refresh as fallback (every 30 seconds)
+        setInterval(async () => {
+            console.log('Periodic refresh triggered');
+            await fetchBookings();
+            renderBookingList();
+            renderCheckoutList && renderCheckoutList();
+            renderPendingBookingList && renderPendingBookingList();
+        }, 30000);
     }
 
     function renderBookingList() {

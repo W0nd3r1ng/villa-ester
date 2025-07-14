@@ -91,6 +91,16 @@ app.use(express.static(path.join(__dirname, '../'))); // for favicon.ico in root
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   
+  // Test connection event
+  socket.on('test-connection', (data) => {
+    console.log('Test connection from client:', data);
+    socket.emit('test-response', { 
+      message: 'Server received test connection',
+      timestamp: new Date(),
+      clientId: socket.id
+    });
+  });
+  
   // Join booking room for real-time updates
   socket.on('join-booking-room', (bookingId) => {
     socket.join(`booking-${bookingId}`);
