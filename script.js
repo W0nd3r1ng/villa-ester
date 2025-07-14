@@ -312,14 +312,27 @@ let reviewCarouselInterval;
 
 // --- Fetch and Display Reviews ---
 async function fetchAndDisplayReviews() {
-    if (!reviewsContainer) return;
+    if (!reviewsContainer) {
+        console.log('Reviews container not found');
+        return;
+    }
     try {
+        console.log('Fetching reviews from API...');
         const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews');
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Reviews API response:', data);
+        
         if (data.success && Array.isArray(data.data)) {
+            console.log('Found reviews:', data.data.length);
             allReviews = data.data;
-            startReviewCarousel();
+            if (allReviews.length > 0) {
+                startReviewCarousel();
+            } else {
+                reviewsContainer.innerHTML = '<p>No reviews yet. Be the first to share your experience!</p>';
+            }
         } else {
+            console.log('No reviews found or invalid response format');
             reviewsContainer.innerHTML = '<p>No reviews yet. Be the first to share your experience!</p>';
         }
     } catch (err) {
@@ -872,39 +885,7 @@ function enableCollageTouchEffects() {
 }
 document.addEventListener('DOMContentLoaded', enableCollageTouchEffects); 
 
-// Dynamic Gallery Loader
-async function loadGalleryImages() {
-    const collage = document.querySelector('.photo-collage');
-    if (!collage) return;
-    collage.innerHTML = '<div style="padding:32px;text-align:center;color:#888;">Loading gallery...</div>';
-    try {
-        const res = await fetch(' /api/recommendations/gallery-images');
-        const data = await res.json();
-        if (data.success && Array.isArray(data.images)) {
-            if (data.images.length === 0) {
-                collage.innerHTML = '<div style="padding:32px;text-align:center;color:#888;">No images found.</div>';
-                return;
-            }
-            collage.innerHTML = '';
-            data.images.forEach((img, i) => {
-                // Random rotation between -6deg and 6deg, and random vertical offset
-                const rot = (Math.random() * 12 - 6).toFixed(2);
-                const y = Math.random() * 12 - 6;
-                const item = document.createElement('div');
-                item.className = 'collage-item';
-                item.style.transform = `rotate(${rot}deg) translateY(${y}px)`;
-                item.innerHTML = `<img src="images/${img}" alt="Gallery Image" class="collage-img">`;
-                collage.appendChild(item);
-            });
-            enableCollageTouchEffects();
-        } else {
-            collage.innerHTML = '<div style="padding:32px;text-align:center;color:#888;">No images found.</div>';
-        }
-    } catch (e) {
-        collage.innerHTML = '<div style="padding:32px;text-align:center;color:#888;">Failed to load gallery.</div>';
-    }
-}
-document.addEventListener('DOMContentLoaded', loadGalleryImages);
+// Gallery is now static HTML - no dynamic loading needed
 
 // Gallery functionality
 function setupGallery() {
