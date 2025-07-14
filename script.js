@@ -642,6 +642,7 @@ function openBookingModal(cottageId, cottageType) {
         'Family Villa': 'With Videoke',
         'VE Cottage with Videoke': 'With Videoke',
         'VE Cottage without Videoke': 'Without Videoke',
+        'VE Cottage': 'With Videoke', // Default VE Cottage to With Videoke
         'Kubo Type': 'kubo',
         'Garden Table': 'garden'
     };
@@ -651,7 +652,46 @@ function openBookingModal(cottageId, cottageType) {
     if (modalCottageType) {
         const mappedCottageType = cottageTypeMap[cottageType] || cottageType;
         console.log('Setting cottage type to:', mappedCottageType);
-        modalCottageType.value = mappedCottageType;
+        console.log('Available options:', Array.from(modalCottageType.options).map(opt => opt.value));
+        
+        // Check if the mapped value exists in the select options
+        const optionExists = Array.from(modalCottageType.options).some(opt => opt.value === mappedCottageType);
+        if (optionExists) {
+            modalCottageType.value = mappedCottageType;
+            console.log('Successfully set cottage type to:', mappedCottageType);
+            
+            // Add visual feedback
+            modalCottageType.style.borderColor = '#4CAF50';
+            modalCottageType.style.backgroundColor = '#f0f8f0';
+            setTimeout(() => {
+                modalCottageType.style.borderColor = '';
+                modalCottageType.style.backgroundColor = '';
+            }, 2000);
+        } else {
+            console.error('Cottage type not found in options:', mappedCottageType);
+            console.log('Available options:', Array.from(modalCottageType.options).map(opt => ({ value: opt.value, text: opt.text })));
+            
+            // Try to find a partial match
+            const partialMatch = Array.from(modalCottageType.options).find(opt => 
+                opt.value.toLowerCase().includes(cottageType.toLowerCase()) ||
+                opt.text.toLowerCase().includes(cottageType.toLowerCase())
+            );
+            
+            if (partialMatch) {
+                modalCottageType.value = partialMatch.value;
+                console.log('Found partial match, set to:', partialMatch.value);
+                
+                // Add visual feedback
+                modalCottageType.style.borderColor = '#FF9800';
+                modalCottageType.style.backgroundColor = '#fff3e0';
+                setTimeout(() => {
+                    modalCottageType.style.borderColor = '';
+                    modalCottageType.style.backgroundColor = '';
+                }, 2000);
+            } else {
+                console.error('No match found for cottage type:', cottageType);
+            }
+        }
     } else {
         console.error('modal-cottage-type element not found');
     }
