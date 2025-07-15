@@ -737,13 +737,43 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Prefer fullName, then userId.name, then name/contactName, then 'Guest'
             let guestName = booking.fullName || (booking.userId && booking.userId.name) || booking.name || booking.contactName || 'Guest';
             const roomType = booking.cottageType || booking.roomType || 'Cottage';
-            const checkin = booking.checkinDate || booking.bookingDate || '-';
-            const checkout = booking.checkoutDate || '-';
+            // Determine booking type
+            const bookingType = booking.bookingType || (booking.notes && booking.notes.toLowerCase().includes('overnight') ? 'Overnight' : 'Day Tour');
+            let checkinTime = '-';
+            let checkoutTime = '-';
+            if (bookingType.toLowerCase() === 'day tour') {
+                checkinTime = '8:00 AM';
+                checkoutTime = '6:00 PM';
+            } else if (bookingType.toLowerCase() === 'overnight') {
+                checkinTime = '6:00 PM';
+                checkoutTime = '7:00 AM (next day)';
+            }
+            // Format date to MM/DD/YYYY (or your preferred format)
+            function formatDate(dateStr) {
+                if (!dateStr || dateStr === '-') return '-';
+                const d = new Date(dateStr);
+                if (isNaN(d)) return dateStr;
+                return d.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+            }
+            let checkin = formatDate(booking.checkinDate || booking.bookingDate || '-') + ' ' + checkinTime;
+            let checkout;
+            if (bookingType.toLowerCase() === 'overnight') {
+                // Calculate next day for checkout
+                let checkinDate = booking.checkinDate || booking.bookingDate;
+                if (checkinDate) {
+                    let d = new Date(checkinDate);
+                    d.setDate(d.getDate() + 1);
+                    checkout = formatDate(d.toISOString()) + ' 7:00 AM';
+                } else {
+                    checkout = '- 7:00 AM';
+                }
+            } else {
+                checkout = formatDate(booking.checkoutDate || '-') + ' ' + checkoutTime;
+            }
             const adults = booking.adults || booking.numberOfPeople || 1;
             const children = booking.children || 0;
             const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `https://villa-ester-backend.onrender.com${booking.proofOfPayment}`) : '';
             const isWalkIn = booking.notes?.includes('Walk-in booking');
-            
             item.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;">
                     <i class="material-icons">person</i>
