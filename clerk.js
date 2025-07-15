@@ -1499,29 +1499,68 @@ document.addEventListener('DOMContentLoaded', async function() {
             checkoutListContainer.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">No guests currently checked in.</p>';
             return;
         }
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const sixPM = 18 * 60;
         checkedIn.forEach(booking => {
-            const isWalkIn = booking.notes?.includes('Walk-in booking');
+            const isDayTour = booking.notes?.includes('daytour');
+            let cardColor = '';
+            let statusMsg = '';
+            let showForceCheckout = false;
+            if (isDayTour) {
+                // Calculate time to 6pm
+                const bookingDate = new Date(booking.bookingDate);
+                const today = new Date();
+                let minutesTo6pm = sixPM - (now.getHours() * 60 + now.getMinutes());
+                let isToday = bookingDate.toDateString() === today.toDateString();
+                if (isToday) {
+                    if (currentMinutes < sixPM) {
+                        if (minutesTo6pm > 30) {
+                            cardColor = 'daytour-green';
+                            statusMsg = 'At 6:00 PM';
+                        } else if (minutesTo6pm > 0) {
+                            cardColor = 'daytour-orange';
+                            statusMsg = `In ${minutesTo6pm} minute${minutesTo6pm !== 1 ? 's' : ''}`;
+                        }
+                    } else {
+                        cardColor = 'daytour-red';
+                        statusMsg = 'OVERDUE - Will auto-checkout';
+                        showForceCheckout = true;
+                    }
+                } else {
+                    cardColor = 'daytour-green';
+                    statusMsg = 'At 6:00 PM';
+                }
+            }
             const card = document.createElement('div');
-            card.className = 'arrival-card';
+            card.className = 'arrival-card' + (isDayTour ? ' ' + cardColor : '');
             card.innerHTML = `
                 <div class="arrival-info">
                     <h3>${booking.fullName || 'Guest'}</h3>
                     <p><strong>Cottage:</strong> ${booking.cottageType}</p>
-                    <p><strong>Booking Type:</strong> ${booking.notes?.includes('daytour') ? 'Day Tour' : 'Overnight'}</p>
+                    <p><strong>Booking Type:</strong> ${isDayTour ? 'Day Tour' : 'Overnight'}</p>
                     <p><strong>Time:</strong> ${booking.bookingTime || 'N/A'}</p>
                     <p><strong>Guests:</strong> ${booking.numberOfPeople || 'N/A'}</p>
                     <p><strong>Phone:</strong> ${booking.contactPhone || 'N/A'}</p>
                     <p><strong>Status:</strong> <span class="status completed">Checked In</span></p>
-                    ${isWalkIn ? '<p><strong>Type:</strong> <span style="color: #e67e22; font-weight: 600;">Walk-in Booking</span></p>' : ''}
+                    ${isDayTour ? `<p style="font-weight:600;margin-top:8px;">Day Tour Status: <span class="daytour-status-msg">${statusMsg}</span></p>` : ''}
                 </div>
                 <div class="arrival-actions">
                     <button class="btn btn-primary check-out-btn" data-booking-id="${booking._id}">Check Out</button>
+                    ${showForceCheckout ? `<button class="btn btn-danger force-checkout-btn" data-booking-id="${booking._id}">Force Checkout</button>` : ''}
                 </div>
             `;
             checkoutListContainer.appendChild(card);
         });
         // Add event listeners for check-out buttons
         document.querySelectorAll('.check-out-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const bookingId = e.target.getAttribute('data-booking-id');
+                await markBookingAsCheckedOut(bookingId);
+            });
+        });
+        // Add event listeners for force checkout buttons
+        document.querySelectorAll('.force-checkout-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const bookingId = e.target.getAttribute('data-booking-id');
                 await markBookingAsCheckedOut(bookingId);

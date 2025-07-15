@@ -3147,3 +3147,36 @@ body {
     max-height: 98vh;
   }
 }
+
+/* Day Tour Card Colors for Checkout List */
+.arrival-card.daytour-green {
+  border-left: 8px solid #27ae60;
+  background: #f6fff7;
+}
+.arrival-card.daytour-orange {
+  border-left: 8px solid #f39c12;
+  background: #fffaf3;
+}
+.arrival-card.daytour-red {
+  border-left: 8px solid #e74c3c;
+  background: #fff6f6;
+}
+.arrival-card .daytour-status-msg {
+  font-weight: bold;
+  font-size: 1.05em;
+}
+.arrival-card .btn.force-checkout-btn {
+  background: #e74c3c;
+  color: #fff;
+  margin-left: 8px;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-size: 0.95em;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(231,76,60,0.08);
+  transition: background 0.2s;
+}
+.arrival-card .btn.force-checkout-btn:hover {
+  background: #c0392b;
+}
