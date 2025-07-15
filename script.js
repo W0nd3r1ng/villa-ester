@@ -83,6 +83,44 @@ handleScrollHighlight();
 // Load AI recommendations on page load
 loadAIRecommendations();
 
+// Set minimum date for all date inputs to prevent selecting past dates
+function setMinimumDates() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Get all date inputs
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    
+    dateInputs.forEach(input => {
+        input.setAttribute('min', today);
+        
+        // Add event listener to prevent manual entry of past dates
+        input.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0); // Reset time to start of day
+            
+            if (selectedDate < todayDate) {
+                alert('Please select a date from today onwards.');
+                this.value = today;
+            }
+        });
+    });
+    
+    console.log('Set minimum date to today for all date inputs:', today);
+}
+
+// Initialize minimum dates when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    setMinimumDates();
+});
+
+// Also set minimum dates when the page loads (in case DOMContentLoaded already fired)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setMinimumDates);
+} else {
+    setMinimumDates();
+}
+
 // Background Slideshow
 const hero = document.querySelector('.hero');
 let currentImage = 1;
@@ -704,6 +742,9 @@ function openBookingModal(cottageId, cottageType) {
         console.error('modal-cottage-type element not found');
     }
     
+    // Pre-fill booking modal with availability form data
+    prefillBookingModalFromAvailabilityForm();
+    
     // Open the booking modal
     const bookingModal = document.getElementById('booking-modal');
     if (bookingModal) {
@@ -712,6 +753,63 @@ function openBookingModal(cottageId, cottageType) {
     } else {
         console.error('booking-modal element not found');
     }
+}
+
+// Function to pre-fill booking modal with availability form data
+function prefillBookingModalFromAvailabilityForm() {
+    // Get availability form values
+    const availabilityBookingType = document.getElementById('booking-type')?.value;
+    const availabilityGuests = document.getElementById('guests')?.value;
+    const availabilityScheduleDate = document.getElementById('schedule-date')?.value;
+    const availabilityCheckinDate = document.getElementById('checkin-date')?.value;
+    const availabilityCheckoutDate = document.getElementById('checkout-date')?.value;
+    
+    // Pre-fill modal booking type
+    const modalBookingType = document.getElementById('modal-booking-type');
+    if (modalBookingType && availabilityBookingType) {
+        modalBookingType.value = availabilityBookingType;
+        
+        // Trigger the change event to show/hide appropriate date fields
+        const event = new Event('change', { bubbles: true });
+        modalBookingType.dispatchEvent(event);
+    }
+    
+    // Pre-fill modal date fields based on booking type
+    if (availabilityBookingType === 'daytour' && availabilityScheduleDate) {
+        const modalScheduleDate = document.getElementById('modal-schedule-date');
+        if (modalScheduleDate) {
+            modalScheduleDate.value = availabilityScheduleDate;
+        }
+    } else if (availabilityBookingType === 'overnight') {
+        if (availabilityCheckinDate) {
+            const modalCheckinDate = document.getElementById('modal-checkin-date');
+            if (modalCheckinDate) {
+                modalCheckinDate.value = availabilityCheckinDate;
+            }
+        }
+        if (availabilityCheckoutDate) {
+            const modalCheckoutDate = document.getElementById('modal-checkout-date');
+            if (modalCheckoutDate) {
+                modalCheckoutDate.value = availabilityCheckoutDate;
+            }
+        }
+    }
+    
+    // Pre-fill guest count (adults)
+    if (availabilityGuests) {
+        const modalAdults = document.getElementById('modal-adults');
+        if (modalAdults) {
+            modalAdults.value = availabilityGuests;
+        }
+    }
+    
+    console.log('Prefilled booking modal with availability form data:', {
+        bookingType: availabilityBookingType,
+        guests: availabilityGuests,
+        scheduleDate: availabilityScheduleDate,
+        checkinDate: availabilityCheckinDate,
+        checkoutDate: availabilityCheckoutDate
+    });
 }
 
 function viewCottageDetails(cottageId) {

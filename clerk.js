@@ -96,6 +96,31 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.error('Failed to fetch bookings:', err);
             bookingsData = [];
         }
+        updatePendingBookingsBadge();
+    }
+
+    // --- Utility Functions ---
+    function updatePendingBookingsBadge() {
+        const badge = document.getElementById('pending-bookings-badge');
+        if (!badge) return;
+        const pendingCount = bookingsData.filter(b => b.status === 'pending').length;
+        if (pendingCount > 0) {
+            badge.textContent = pendingCount;
+            badge.style.display = 'inline-block';
+            // Optionally, add color classes for high/medium/low
+            badge.classList.remove('high', 'medium', 'low');
+            if (pendingCount >= 10) {
+                badge.classList.add('high');
+            } else if (pendingCount >= 5) {
+                badge.classList.add('medium');
+            } else {
+                badge.classList.add('low');
+            }
+        } else {
+            badge.textContent = '0';
+            badge.style.display = 'none';
+            badge.classList.remove('high', 'medium', 'low');
+        }
     }
 
     // Listen for real-time booking events
@@ -107,6 +132,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderPendingBookingList && renderPendingBookingList();
         updateDashboardOverview && updateDashboardOverview();
         updateCottageOccupancyTable && updateCottageOccupancyTable();
+        updatePendingBookingsBadge();
         showNotification('New booking received!', 'success');
     });
     
@@ -118,6 +144,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderPendingBookingList && renderPendingBookingList();
         updateDashboardOverview && updateDashboardOverview();
         updateCottageOccupancyTable && updateCottageOccupancyTable();
+        updatePendingBookingsBadge();
         showNotification('Booking status updated!', 'info');
     });
     
@@ -129,6 +156,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderPendingBookingList && renderPendingBookingList();
         updateDashboardOverview && updateDashboardOverview();
         updateCottageOccupancyTable && updateCottageOccupancyTable();
+        updatePendingBookingsBadge();
         showNotification('Booking deleted!', 'warning');
     });
     
@@ -160,6 +188,94 @@ document.addEventListener('DOMContentLoaded', async function() {
     socket.onAny((eventName, ...args) => {
         console.log('Socket event received:', eventName, args);
     });
+
+    // Function to automatically check out day tour bookings at 6pm
+    function startDayTourAutoCheckout() {
+        // Check every minute for day tour bookings that need to be checked out
+        setInterval(async () => {
+            await checkAndAutoCheckoutDayTours();
+        }, 60000); // Check every minute
+
+        // Also check immediately when the function is called
+        checkAndAutoCheckoutDayTours();
+        
+        console.log('Day tour auto-checkout monitoring started');
+    }
+
+    // Function to check and automatically check out day tour bookings at 6pm
+    async function checkAndAutoCheckoutDayTours() {
+        try {
+            // Get current time
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes
+            const sixPM = 18 * 60; // 6pm in minutes
+            
+            // Only proceed if it's 6pm or later
+            if (currentTime < sixPM) {
+                return;
+            }
+
+            // Fetch latest bookings data
+            await fetchBookings();
+            
+            // Find day tour bookings that are still checked in
+            const dayTourBookings = bookingsData.filter(booking => {
+                return booking.status === 'completed' && 
+                       booking.notes?.includes('daytour') &&
+                       booking.bookingDate;
+            });
+
+            if (dayTourBookings.length === 0) {
+                return;
+            }
+
+            console.log(`Found ${dayTourBookings.length} day tour bookings to auto-checkout`);
+
+            // Check out each day tour booking
+            for (const booking of dayTourBookings) {
+                const bookingDate = new Date(booking.bookingDate);
+                const today = new Date();
+                
+                // Only auto-checkout if it's the same day
+                if (bookingDate.toDateString() === today.toDateString()) {
+                    console.log(`Auto-checking out day tour booking: ${booking.fullName}`);
+                    
+                    try {
+                        const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${booking._id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                status: 'checked_out',
+                                notes: `${booking.notes || ''}; Auto-checked out at 6pm (day tour)`
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            console.log(`Successfully auto-checked out: ${booking.fullName}`);
+                            showNotification(`Day tour guest ${booking.fullName} automatically checked out at 6pm`, 'info');
+                        } else {
+                            console.error(`Failed to auto-checkout: ${booking.fullName}`);
+                        }
+                    } catch (error) {
+                        console.error(`Error auto-checking out ${booking.fullName}:`, error);
+                    }
+                }
+            }
+
+            // Refresh the checkout list if it's currently visible
+            const checkoutTab = document.querySelector('.arrival-tab[data-tab="checkout"]');
+            if (checkoutTab && checkoutTab.classList.contains('active')) {
+                await fetchBookings();
+                renderCheckoutList();
+            }
+
+        } catch (error) {
+            console.error('Error in day tour auto-checkout:', error);
+        }
+    }
+
+    // Start day tour auto-checkout monitoring
+    startDayTourAutoCheckout();
 
     // Notification function for real-time updates
     function showNotification(message, type = 'info') {
@@ -618,7 +734,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         filteredBookings.forEach(booking => {
             const item = document.createElement('div');
             item.classList.add('pending-booking-item');
-            const guestName = booking.guestName || booking.name || booking.contactName || 'Guest';
+            // Prefer fullName, then userId.name, then name/contactName, then 'Guest'
+            let guestName = booking.fullName || (booking.userId && booking.userId.name) || booking.name || booking.contactName || 'Guest';
             const roomType = booking.cottageType || booking.roomType || 'Cottage';
             const checkin = booking.checkinDate || booking.bookingDate || '-';
             const checkout = booking.checkoutDate || '-';
@@ -668,6 +785,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 await fetchBookings();
                 renderPendingBookingList();
                 renderBookingList(); // update arrivals too
+                updatePendingBookingsBadge();
                 showAlert(`Booking ${status} successfully!`, 'success');
             } else {
                 const result = await response.json();
@@ -2529,6 +2647,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 await fetchBookings();
                 renderPendingBookingList();
                 renderBookingList();
+                updatePendingBookingsBadge();
                 showAlert('Booking confirmed successfully!', 'success');
             } else {
                 const result = await response.json();
@@ -2570,6 +2689,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 await fetchBookings();
                 renderPendingBookingList();
                 renderBookingList();
+                updatePendingBookingsBadge();
                 showAlert('Booking rejected successfully!', 'success');
             } else {
                 const result = await response.json();

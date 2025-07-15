@@ -3002,3 +3002,50 @@ body {
 .analytics-cards-row .icon {
     align-self: center;
 }
+
+/* Notification badge styling for pending bookings */
+.notification-badge {
+  background: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-left: 8px;
+  min-width: 20px;
+  text-align: center;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(231,76,60,0.15);
+  vertical-align: middle;
+  animation: pulse-badge 2s infinite;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+@keyframes pulse-badge {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+  50% { transform: scale(1.12); box-shadow: 0 0 8px 4px rgba(231,76,60,0.18); }
+  100% { transform: scale(1); box-shadow: 0 2px 8px rgba(231,76,60,0.15); }
+}
+
+.notification-badge.high {
+  background: #e74c3c;
+  animation: pulse-badge 1s infinite;
+  color: #fff;
+}
+
+.notification-badge.medium {
+  background: #f39c12;
+  color: #fff;
+}
+
+.notification-badge.low {
+  background: #27ae60;
+  color: #fff;
+}
+
+/* Ensure badge is vertically centered with sidebar text */
+.sidebar-nav ul li a .notification-badge {
+  margin-left: 8px;
+  position: relative;
+  top: -2px;
+}

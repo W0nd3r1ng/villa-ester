@@ -25,7 +25,7 @@
                     <li><a href="#" data-panel="dashboard-overview-panel" class="active"><i class="material-icons">dashboard</i> Dashboard</a></li>
                     <li><a href="#" data-panel="check-in-out-panel"><i class="material-icons">event</i> Today's Arrivals</a></li>
                     <li><a href="#" data-panel="quick-booking-panel"><i class="material-icons">add_circle</i> Walk-in</a></li>
-                    <li><a href="#" data-panel="guest-management-panel"><i class="material-icons">people</i> Guest Management</a></li>
+                    <li><a href="#" data-panel="guest-management-panel"><i class="material-icons">people</i> Guest Management <span id="pending-bookings-badge" class="notification-badge" style="display:none;">0</span></a></li>
                     <li><a href="#" data-panel="clerk-reports-panel"><i class="material-icons">bar_chart</i> Reports & Analytics</a></li>
                     <li><a href="#" data-panel="user-management-panel" id="user-management-link" style="display:none;"><i class="material-icons">manage_accounts</i> User Management</a></li>
                 </ul>
@@ -401,6 +401,8 @@
                     <button class="btn btn-primary" id="change-number-btn">Change Number</button>
                     <button class="btn btn-danger" id="signout-btn">Sign Out</button>
                 </div>
+                
+
             </div>
 
             <!-- User Management Panel (admin only) -->
