@@ -2701,4 +2701,99 @@ document.addEventListener('DOMContentLoaded', async function() {
             showAlert('Error rejecting booking: ' + err.message, 'error');
         }
     }
+
+    // Clerk change password button logic
+    const clerkChangePasswordBtn = document.getElementById('clerk-change-password-btn');
+    if (clerkChangePasswordBtn && changeUserPasswordModal && changeUserPasswordForm) {
+        clerkChangePasswordBtn.addEventListener('click', function() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('change-password-user-id').value = user._id || '';
+            changeUserPasswordForm.reset();
+            changeUserPasswordModal.style.display = 'flex';
+        });
+    }
+
+    // Password Change Modal Integration
+    const changePasswordBtn = document.getElementById('change-password-btn');
+    const changeOwnPasswordModal = document.getElementById('change-own-password-modal');
+    const closeChangeOwnPasswordModal = document.getElementById('close-change-own-password-modal');
+    const changeOwnPasswordForm = document.getElementById('change-own-password-form');
+    const passwordChangeAlert = document.getElementById('password-change-alert');
+
+    function showPasswordAlert(msg, type) {
+        if (!passwordChangeAlert) return;
+        passwordChangeAlert.textContent = msg;
+        passwordChangeAlert.style.display = 'block';
+        passwordChangeAlert.style.background = type === 'success' ? '#27ae60' : '#e74c3c';
+        passwordChangeAlert.style.color = '#fff';
+        passwordChangeAlert.style.padding = '10px 16px';
+        passwordChangeAlert.style.borderRadius = '6px';
+        passwordChangeAlert.style.marginTop = '12px';
+        passwordChangeAlert.style.textAlign = 'center';
+        setTimeout(() => { passwordChangeAlert.style.display = 'none'; }, 5000);
+    }
+
+    if (changePasswordBtn && changeOwnPasswordModal) {
+        changePasswordBtn.addEventListener('click', function() {
+            changeOwnPasswordModal.style.display = 'flex';
+        });
+    }
+    if (closeChangeOwnPasswordModal && changeOwnPasswordModal) {
+        closeChangeOwnPasswordModal.addEventListener('click', function() {
+            changeOwnPasswordModal.style.display = 'none';
+            if (changeOwnPasswordForm) changeOwnPasswordForm.reset();
+            if (passwordChangeAlert) passwordChangeAlert.style.display = 'none';
+        });
+    }
+    if (changeOwnPasswordForm) {
+        changeOwnPasswordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+            // Validation
+            if (newPassword !== confirmNewPassword) {
+                showPasswordAlert('New passwords do not match.', 'error');
+                return;
+            }
+            if (newPassword.length < 6) {
+                showPasswordAlert('New password must be at least 6 characters long.', 'error');
+                return;
+            }
+            const hasLetter = /[a-zA-Z]/.test(newPassword);
+            const hasNumber = /\d/.test(newPassword);
+            if (!hasLetter || !hasNumber) {
+                showPasswordAlert('Password must contain at least one letter and one number.', 'error');
+                return;
+            }
+            // API call
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('https://villa-ester-backend.onrender.com/api/users/me/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    showPasswordAlert('Password changed successfully!', 'success');
+                    changeOwnPasswordForm.reset();
+                    setTimeout(() => {
+                        changeOwnPasswordModal.style.display = 'none';
+                        passwordChangeAlert.style.display = 'none';
+                    }, 1200);
+                } else {
+                    showPasswordAlert(result.message || 'Failed to change password.', 'error');
+                }
+            } catch (err) {
+                showPasswordAlert('Network error. Please try again.', 'error');
+            }
+        });
+    }
 }); 

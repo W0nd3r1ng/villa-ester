@@ -3049,3 +3049,101 @@ body {
   position: relative;
   top: -2px;
 }
+
+/* Custom styles for the change password modal */
+#change-user-password-modal .modal-content {
+  border-top: 6px solid #007bff;
+  box-shadow: 0 8px 32px rgba(0,123,255,0.10), 0 2px 8px rgba(80,80,120,0.10);
+  padding-top: 36px;
+  position: relative;
+  width: 400px;
+  height: 400px;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow-y: auto;
+}
+@media (max-width: 500px), (max-height: 500px) {
+  #change-user-password-modal .modal-content {
+    width: 98vw;
+    height: auto;
+    min-height: 0;
+    max-width: 98vw;
+    max-height: 98vh;
+  }
+}
+#change-user-password-modal .modal-content h3 {
+  color: #007bff;
+  font-size: 1.3em;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#change-user-password-modal .modal-content h3::before {
+  content: '\1F512'; /* lock emoji */
+  font-size: 1.2em;
+  margin-right: 6px;
+}
+#change-user-password-modal label {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+  margin-top: 8px;
+  display: block;
+}
+#change-user-password-modal input[type="password"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 7px;
+  font-size: 1em;
+  margin-bottom: 10px;
+  background: #f8fafd;
+  transition: border 0.2s;
+}
+#change-user-password-modal input[type="password"]:focus {
+  border: 1.5px solid #007bff;
+  outline: none;
+  background: #fff;
+}
+#change-user-password-modal .btn.btn-primary {
+  background: #007bff;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 7px;
+  margin-top: 10px;
+  padding: 10px 0;
+  width: 100%;
+  font-size: 1.08em;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.08);
+  transition: background 0.2s;
+}
+#change-user-password-modal .btn.btn-primary:hover {
+  background: #0056b3;
+}
+#change-user-password-modal .close-modal {
+  top: 10px;
+  right: 16px;
+  color: #007bff;
+  font-size: 1.5em;
+}
+#change-user-password-modal .close-modal:hover {
+  color: #e74c3c;
+}
+
+#change-user-password-modal .modal-content {
+  width: 320px !important;
+  height: 400px;
+  max-width: 90vw !important;
+  max-height: 95vh;
+  overflow-y: auto;
+}
+@media (max-width: 400px), (max-height: 500px) {
+  #change-user-password-modal .modal-content {
+    width: 98vw;
+    height: auto;
+    min-height: 0;
+    max-width: 98vw;
+    max-height: 98vh;
+  }
+}

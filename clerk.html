@@ -398,6 +398,7 @@
                         <label>Phone number</label>
                         <input type="text" id="profile-phone" value="+63 900 000 0000" readonly>
                     </div>
+                    <button class="btn btn-secondary" id="change-password-btn">Change Password</button>
                     <button class="btn btn-primary" id="change-number-btn">Change Number</button>
                     <button class="btn btn-danger" id="signout-btn">Sign Out</button>
                 </div>
@@ -479,6 +480,31 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Add the new Change Own Password Modal at the end of the file, before </body> -->
+    <div id="change-own-password-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal" id="close-change-own-password-modal">&times;</span>
+            <h3>Change Password</h3>
+            <form id="change-own-password-form">
+                <label for="current-password">Current Password</label>
+                <input type="password" id="current-password" required>
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" required>
+                <label for="confirm-new-password">Confirm New Password</label>
+                <input type="password" id="confirm-new-password" required>
+                <div class="password-requirements">
+                    <strong>Password Requirements:</strong>
+                    <ul>
+                        <li>At least 6 characters long</li>
+                        <li>Must contain at least one letter and one number</li>
+                    </ul>
+                </div>
+                <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+            <div id="password-change-alert" style="display:none;"></div>
         </div>
     </div>
 
