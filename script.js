@@ -861,9 +861,7 @@ function displayRecommendations(recommendations) {
     
     recommendCards.innerHTML = recommendations.map(rec => `
         <div class="recommend-card">
-            <div class="recommend-icon" style="background:#ece8ff;">
-                <span style="color:#6c63ff;font-size:1.5rem;">🤖</span>
-            </div>
+            <div class="recommend-icon" style="background:#ece8ff;"></div>
             <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">
                 ${rec.label}
             </div>
@@ -890,7 +888,7 @@ function displayDefaultRecommendations() {
     // Show static recommendations instead of error message
     recommendCards.innerHTML = `
         <div class="recommend-card">
-            <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🏷️</span></div>
+            <div class="recommend-icon" style="background:#ece8ff;"></div>
             <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">BEST VALUE</div>
             <div class="recommend-title">Garden Table</div>
             <div class="recommend-desc">Perfect for small groups and intimate gatherings. Cozy garden setting with great value.</div>
@@ -904,7 +902,7 @@ function displayDefaultRecommendations() {
             </div>
         </div>
         <div class="recommend-card">
-            <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🏖️</span></div>
+            <div class="recommend-icon" style="background:#ece8ff;"></div>
             <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">POPULAR CHOICE</div>
             <div class="recommend-title">Kubo Type</div>
             <div class="recommend-desc">Traditional Filipino kubo perfect for medium-sized groups and family gatherings.</div>
@@ -918,7 +916,7 @@ function displayDefaultRecommendations() {
             </div>
         </div>
         <div class="recommend-card">
-            <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🎉</span></div>
+            <div class="recommend-icon" style="background:#ece8ff;"></div>
             <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">CELEBRATION SPECIAL</div>
             <div class="recommend-title">VE Cottage with Videoke</div>
             <div class="recommend-desc">Perfect for celebrations, parties, and large groups. Includes videoke system for entertainment.</div>
@@ -1005,6 +1003,71 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Featured Room Details Modal Logic
+    const featuredRoomImgs = document.querySelectorAll('.featured-room-img');
+    const cottageDetailsModal = document.getElementById('cottage-details-modal');
+    const closeCottageDetailsModalBtn = document.getElementById('close-cottage-details-modal');
+    const cottageDetailsTitle = document.getElementById('cottage-details-title');
+    const cottageDetailsImage = document.getElementById('cottage-details-image');
+    const cottageDetailsBody = document.getElementById('cottage-details-body');
+
+    // Helper: Map featured room alt/type to DB cottage type
+    const featuredToCottageType = {
+        'Deluxe Ocean View': 'kubo',
+        'Garden Suite': 'kubo',
+        'Family Villa': 'With Videoke'
+    };
+
+    async function showCottageDetails(cottageTypeLabel, imgSrc) {
+        try {
+            // Fetch all cottages from backend
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
+            const data = await response.json();
+            if (!data.success || !Array.isArray(data.data)) throw new Error('Failed to fetch cottages');
+            // Map label to DB type
+            const dbType = featuredToCottageType[cottageTypeLabel] || cottageTypeLabel;
+            // Find the cottage by type
+            const cottage = data.data.find(c => c.type === dbType);
+            if (!cottage) throw new Error('Cottage not found');
+            // Fill modal
+            cottageDetailsTitle.textContent = cottage.name;
+            cottageDetailsImage.src = imgSrc;
+            cottageDetailsImage.alt = cottage.name;
+            cottageDetailsBody.innerHTML = `
+                <p><strong>Description:</strong> ${cottage.description}</p>
+                <p><strong>Price:</strong> ₱${cottage.price}</p>
+                <p><strong>Capacity:</strong> ${cottage.capacity}</p>
+                <p><strong>Amenities:</strong> ${Array.isArray(cottage.amenities) ? cottage.amenities.join(', ') : ''}</p>
+            `;
+            cottageDetailsModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        } catch (err) {
+            alert('Could not load cottage details.');
+            console.error(err);
+        }
+    }
+
+    featuredRoomImgs.forEach(img => {
+        img.addEventListener('click', function() {
+            const cottageType = this.getAttribute('data-cottage-type');
+            showCottageDetails(cottageType, this.src);
+        });
+    });
+    if (closeCottageDetailsModalBtn) {
+        closeCottageDetailsModalBtn.addEventListener('click', function() {
+            cottageDetailsModal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+    if (cottageDetailsModal) {
+        cottageDetailsModal.addEventListener('click', function(e) {
+            if (e.target === cottageDetailsModal) {
+                cottageDetailsModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    }
 });
 
 // Function to update modal cottage suggestion based on guest count

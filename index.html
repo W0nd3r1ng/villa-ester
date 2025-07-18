@@ -14,9 +14,9 @@
         <div class="navbar-left">
             <img src="images/logo.png" alt="Villa Ester Resort" class="navbar-logo">
             <div class="navbar-menu">
-                <a href="#rooms">&#127968; Cottages</a>
-                <a href="#gallery">&#128247; Gallery</a>
-                <a href="#contact">&#9742; Contact</a>
+                <a href="#rooms">Cottages</a>
+                <a href="#gallery">Gallery</a>
+                <a href="#contact">Contact</a>
             </div>
         </div>
         <div class="navbar-right">
@@ -26,8 +26,8 @@
     </nav>
     <div class="hero">
         <div class="hero-content">
-            <h3 class="hero-title">Rain or shine, Villa Ester is open for you to splash, relax, and unwind 🌞</h3>
-            <div class="hero-subtitle">Book your stay and visit our resort today! 🏊</div>
+            <h3 class="hero-title">Rain or shine, Villa Ester is open for you to splash, relax, and unwind</h3>
+            <div class="hero-subtitle">Book your stay and visit our resort today!</div>
         </div>
     </div>
     <section class="booking-section">
@@ -72,7 +72,7 @@
             </div>
             
             <button type="submit" class="search-btn">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"></span>
                 Search Availability
             </button>
         </form>
@@ -91,7 +91,7 @@
             </div>
             
             <div id="no-results" class="no-results" style="display: none;">
-                <div class="no-results-icon">🏖️</div>
+                <div class="no-results-icon"></div>
                 <h4>No cottages available for selected dates</h4>
                 <p>Try different dates or contact us for assistance</p>
                 <button class="btn btn-primary" onclick="document.getElementById('availability-form').scrollIntoView()">
@@ -110,7 +110,7 @@
         <h2>AI Recommended for You</h2>
         <div class="recommend-cards">
             <div class="recommend-card">
-                <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">★</span></div>
+                <div class="recommend-icon" style="background:#ece8ff;"></div>
                 <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">BEST VALUE</div>
                 <div class="recommend-title">Deluxe Ocean View</div>
                 <div class="recommend-desc">Enjoy panoramic ocean views with our AI-recommended package based on your preferences.</div>
@@ -119,7 +119,7 @@
                 </div>
             </div>
             <div class="recommend-card">
-                <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">🏷️</span></div>
+                <div class="recommend-icon" style="background:#ece8ff;"></div>
                 <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">SPECIAL OFFER</div>
                 <div class="recommend-title">Garden Suite</div>
                 <div class="recommend-desc">20% off for your selected dates with complimentary breakfast and spa access.</div>
@@ -128,7 +128,7 @@
                 </div>
             </div>
             <div class="recommend-card">
-                <div class="recommend-icon" style="background:#ece8ff;"><span style="color:#6c63ff;font-size:1.5rem;">❤</span></div>
+                <div class="recommend-icon" style="background:#ece8ff;"></div>
                 <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">POPULAR CHOICE</div>
                 <div class="recommend-title">Family Villa</div>
                 <div class="recommend-desc">Perfect for families with spacious accommodations and kid-friendly amenities.</div>
@@ -141,11 +141,20 @@
     <section class="featured-rooms-section" id="rooms">
         <h2>Featured Rooms</h2>
         <div class="featured-rooms">
-            <img src="images/room1.jpg" alt="Deluxe Ocean View Room">
-            <img src="images/room2.jpg" alt="Garden Suite">
-            <img src="images/room3.jpg" alt="Family Villa">
+            <img src="images/room1.jpg" alt="Deluxe Ocean View Room" class="featured-room-img" data-cottage-type="Deluxe Ocean View" style="cursor:pointer;">
+            <img src="images/room2.jpg" alt="Garden Suite" class="featured-room-img" data-cottage-type="Garden Suite" style="cursor:pointer;">
+            <img src="images/room3.jpg" alt="Family Villa" class="featured-room-img" data-cottage-type="Family Villa" style="cursor:pointer;">
         </div>
     </section>
+    <!-- Cottage Details Modal -->
+    <div id="cottage-details-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 500px;">
+            <span class="close-booking-modal" id="close-cottage-details-modal">&times;</span>
+            <h2 id="cottage-details-title"></h2>
+            <img id="cottage-details-image" src="" alt="" style="width:100%;border-radius:8px;margin-bottom:16px;">
+            <div id="cottage-details-body"></div>
+        </div>
+    </div>
     <section class="gallery-section" id="gallery">
         <h2>Photo Gallery</h2>
         <p class="gallery-subtitle">Explore the beauty and comfort of Villa Ester Resort</p>
@@ -230,8 +239,8 @@
             <span class="lightbox-close">&times;</span>
             <img id="lightbox-img" class="lightbox-content" src="" alt="">
             <div class="lightbox-caption" id="lightbox-caption"></div>
-            <button class="lightbox-nav prev" onclick="changeImage(-1)">‹</button>
-            <button class="lightbox-nav next" onclick="changeImage(1)">›</button>
+            <button class="lightbox-nav prev" onclick="changeImage(-1)"></button>
+            <button class="lightbox-nav next" onclick="changeImage(1)"></button>
         </div>
     </section>
     <section class="reviews-section">
@@ -240,11 +249,11 @@
             <!-- Reviews will be dynamically loaded here -->
         </div>
         <div class="review-carousel-controls">
-            <button class="carousel-btn prev-btn" onclick="prevReviewSet()">‹</button>
+            <button class="carousel-btn prev-btn" onclick="prevReviewSet()"></button>
             <div class="carousel-indicators" id="review-indicators">
                 <!-- Indicators will be generated here -->
             </div>
-            <button class="carousel-btn next-btn" onclick="nextReviewSet()">›</button>
+            <button class="carousel-btn next-btn" onclick="nextReviewSet()"></button>
         </div>
         <button id="open-review-modal" class="btn btn-primary" style="margin: 24px auto 0 auto; display: block;">Share Your Experience</button>
     </section>
@@ -300,7 +309,7 @@
             <div class="footer-section">
                 <h3>Follow Us</h3>
                 <div class="social-links">
-                    <a href="https://www.facebook.com/VillaEsterResort" class="social-link" target="_blank" rel="noopener">📱 Facebook</a>
+                    <a href="https://www.facebook.com/VillaEsterResort" class="social-link" target="_blank" rel="noopener">Facebook</a>
 
                 </div>
             </div>
@@ -406,7 +415,6 @@
                 </div>
                 <div class="modal-ai-room-assignment" id="modal-ai-cottage-assignment" style="display: none;">
                     <div class="modal-ai-room-card">
-                        <div class="modal-ai-room-icon">🤖</div>
                         <div class="modal-ai-room-content">
                             <span class="modal-ai-suggestion-label">AI Suggestion</span>
                             <h3>Suggested Cottage</h3>
