@@ -5,9 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
-const twilio = require('twilio');
-const twilioClient = twilio('ACa55224afa4e76f2774ff6c7c5617a1f9', '3dcf50b380e37d6064a2115952127807');
-const TWILIO_PHONE_NUMBER = '+18576754778'; // Updated to your Twilio phone number
 
 // Configure transporter (Gmail SMTP)
 const transporter = nodemailer.createTransport({
@@ -469,27 +466,6 @@ exports.confirmBooking = async (req, res) => {
       }
     }
 
-
-    // Debug log before SMS
-    console.log('Attempting to send SMS for booking', booking._id, 'contactPhone:', booking.contactPhone);
-    // Send SMS confirmation if phone exists
-    if (booking.contactPhone) {
-      let smsPhone = booking.contactPhone;
-      // Convert PH local mobile numbers (e.g., 09123456789) to +639123456789
-      if (/^09\d{9}$/.test(smsPhone)) {
-        smsPhone = '+63' + smsPhone.slice(1);
-      }
-      try {
-        await twilioClient.messages.create({
-          body: `Hi ${booking.fullName || 'Guest'}, your booking at Villa Ester Resort is confirmed! Date: ${booking.bookingDate}, Cottage: ${booking.cottageType}. If you need to cancel, please do so at least 3 days before your booking date. Thank you!`,
-          messagingServiceSid: 'MGec169f9e5a1eb128504d1777af5a97b0',
-          to: smsPhone
-        });
-        console.log('Confirmation SMS sent to', smsPhone);
-      } catch (smsErr) {
-        console.error('Failed to send confirmation SMS:', smsErr);
-      }
-    }
 
     // Emit Socket.IO event for booking confirmation
     const io = req.app.get('io');

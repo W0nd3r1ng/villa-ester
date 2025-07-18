@@ -85,28 +85,29 @@ loadAIRecommendations();
 
 // Set minimum date for all date inputs to prevent selecting past dates
 function setMinimumDates() {
-    const today = new Date().toISOString().split('T')[0];
+    // Set minimum date to tomorrow
+    const today = new Date();
+    today.setDate(today.getDate() + 1); // Move to tomorrow
+    const minDate = today.toISOString().split('T')[0];
     
     // Get all date inputs
     const dateInputs = document.querySelectorAll('input[type="date"]');
     
     dateInputs.forEach(input => {
-        input.setAttribute('min', today);
-        
-        // Add event listener to prevent manual entry of past dates
+        input.setAttribute('min', minDate);
+        // Add event listener to prevent manual entry of today or past dates
         input.addEventListener('change', function() {
             const selectedDate = new Date(this.value);
-            const todayDate = new Date();
-            todayDate.setHours(0, 0, 0, 0); // Reset time to start of day
-            
-            if (selectedDate < todayDate) {
-                alert('Please select a date from today onwards.');
-                this.value = today;
+            const tomorrow = new Date();
+            tomorrow.setHours(0, 0, 0, 0);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            if (selectedDate < tomorrow) {
+                alert('Please select a date from tomorrow onwards.');
+                this.value = minDate;
             }
         });
     });
-    
-    console.log('Set minimum date to today for all date inputs:', today);
+    console.log('Set minimum date to tomorrow for all date inputs:', minDate);
 }
 
 // Initialize minimum dates when DOM is loaded
