@@ -259,6 +259,11 @@ if (modalBookingForm) {
             alert('Please select a cottage type');
             return;
         }
+        // Validate phone number format (11 digits, no +63)
+        if (!/^[0-9]{11}$/.test(phone)) {
+            alert('Phone number must be exactly 11 digits (e.g., 09171234567)');
+            return;
+        }
         
         // Prepare FormData
         const formData = new FormData();
@@ -299,7 +304,12 @@ if (modalBookingForm) {
                 closeBookingModal();
             } else {
                 const error = await response.json();
-                alert('Booking failed: ' + (error.message || 'Unknown error'));
+                if (error.errors && Array.isArray(error.errors)) {
+                    const errorMessages = error.errors.map(e => e.msg).join('\n');
+                    alert('Booking failed:\n' + errorMessages);
+                } else {
+                    alert('Booking failed: ' + (error.message || 'Unknown error'));
+                }
             }
         } catch (err) {
             alert('Booking failed: ' + err.message);
@@ -1297,3 +1307,29 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style); 
+
+function enforcePhoneInputLimit() {
+    const phoneInput = document.getElementById('modal-phone');
+    if (phoneInput) {
+        phoneInput.setAttribute('maxlength', '11'); // Only 11 digits
+        phoneInput.setAttribute('pattern', '[0-9]{11}');
+        phoneInput.addEventListener('input', function() {
+            // Only allow numbers, and limit to 11 chars
+            let value = this.value.replace(/[^0-9]/g, '');
+            this.value = value.slice(0, 11);
+        });
+        phoneInput.addEventListener('keydown', function(e) {
+            // Prevent entering more if already 11 digits (except for navigation, backspace, delete)
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            if (this.value.length >= 11 && !allowedKeys.includes(e.key) && !window.getSelection().toString()) {
+                e.preventDefault();
+            }
+        });
+    }
+}
+// Call on DOMContentLoaded and after modal open/reset
+
+document.addEventListener('DOMContentLoaded', enforcePhoneInputLimit);
+if (openBookingModalBtn) {
+    openBookingModalBtn.addEventListener('click', enforcePhoneInputLimit);
+} 

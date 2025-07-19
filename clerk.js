@@ -819,7 +819,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 showAlert(`Booking ${status} successfully!`, 'success');
             } else {
                 const result = await response.json();
-                showAlert('Failed to update booking status: ' + (result.message || response.status), 'error');
+                if (result.errors && Array.isArray(result.errors)) {
+                    showAlert('Failed to update booking status: ' + result.errors.map(e => e.msg).join(' | '), 'error');
+                } else {
+                    showAlert('Failed to update booking status: ' + (result.message || response.status), 'error');
+                }
             }
         } catch (err) {
             showAlert('Error updating booking: ' + err.message, 'error');
@@ -900,7 +904,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             e.preventDefault();
             // Collect form data
             const fullName = document.getElementById('qb-full-name').value.trim();
-            const phone = document.getElementById('qb-phone').value.trim();
+            const phone = document.getElementById('modal-phone').value.trim();
             const email = document.getElementById('qb-email').value.trim();
             const specialRequests = document.getElementById('qb-special-requests').value.trim();
             const bookingType = document.getElementById('qb-booking-type').value;
@@ -992,7 +996,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                     if (quickBookingAlert) {
                         quickBookingAlert.style.display = 'block';
                         quickBookingAlert.style.color = '#dc3545';
-                        quickBookingAlert.textContent = 'Booking failed: ' + (error.message || 'Unknown error');
+                        if (error.errors && Array.isArray(error.errors)) {
+                            quickBookingAlert.textContent = 'Booking failed: ' + error.errors.map(e => e.msg).join(' | ');
+                        } else {
+                            quickBookingAlert.textContent = 'Booking failed: ' + (error.message || 'Unknown error');
+                        }
                         setTimeout(() => { quickBookingAlert.style.display = 'none'; }, 4000);
                     }
                 }
@@ -2862,6 +2870,30 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             } catch (err) {
                 showPasswordAlert('Network error. Please try again.', 'error');
+            }
+        });
+    }
+
+    // Add phone number input restrictions for the quick booking form
+    const quickPhoneInput = document.getElementById('modal-phone');
+    if (quickPhoneInput) {
+        quickPhoneInput.setAttribute('maxlength', '11'); // Only 11 digits
+        quickPhoneInput.setAttribute('pattern', '[0-9]{11}');
+        quickPhoneInput.addEventListener('input', function(e) {
+            // Only allow numbers, and limit to 11 chars
+            let value = this.value.replace(/[^0-9]/g, '');
+            this.value = value.slice(0, 11);
+            if (this.value.length === 11) {
+                this.disabled = true;
+                setTimeout(() => { this.blur(); }, 100); // Remove focus
+            } else {
+                this.disabled = false;
+            }
+        });
+        // Allow re-enabling on backspace/delete
+        quickPhoneInput.addEventListener('keydown', function(e) {
+            if (this.disabled && (e.key === 'Backspace' || e.key === 'Delete')) {
+                this.disabled = false;
             }
         });
     }
