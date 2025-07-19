@@ -21,7 +21,7 @@
         </div>
         <div class="navbar-right">
             <button class="btn btn-primary" id="open-booking-modal">Book Now</button>
-
+            <button class="btn btn-secondary" id="login-btn" style="margin-left: 12px;">Login</button>
         </div>
     </nav>
     <div class="hero">
@@ -442,5 +442,10 @@
             display: none;
         }
     </style>
+    <script>
+document.getElementById('login-btn').onclick = function() {
+    window.location.href = 'login.html';
+};
+</script>
 </body>
 </html>
