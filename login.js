@@ -59,19 +59,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
 
-            if (data.success) {
-                // Store token and user data
-                localStorage.setItem('token', data.data.token);
-                localStorage.setItem('user', JSON.stringify(data.data.user));
-                // Redirect based on role
-                const role = data.data.user.role;
+            if (data && (data.token || (data.data && data.data.token))) {
+                // Support both {token, user} and {data: {token, user}} response
+                const token = data.token || (data.data && data.data.token);
+                const user = data.user || (data.data && data.data.user);
+                localStorage.setItem('token', token);
+                if (user) localStorage.setItem('user', JSON.stringify(user));
+                // Redirect based on role if user info is present
+                const role = user && user.role;
                 if (role === 'admin' || role === 'clerk') {
                     window.location.href = 'clerk.html';
                 } else {
                     window.location.href = 'index.html';
                 }
             } else {
-                showError(data.message || 'Login failed. Please try again.');
+                showError(data.message || 'Login failed. Please check your credentials and try again.');
             }
         } catch (error) {
             console.error('Login error:', error);

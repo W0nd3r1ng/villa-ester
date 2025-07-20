@@ -22,6 +22,19 @@
         <div class="navbar-right">
             <button class="btn btn-primary" id="open-booking-modal">Book Now</button>
             <button class="btn btn-secondary" id="login-btn" style="margin-left: 12px;">Login</button>
+            <!-- User Profile Icon (hidden by default) -->
+            <div id="user-profile-menu-container" style="display:none; position: relative; margin-left: 12px;">
+                <button id="user-profile-btn" style="background:none; border:none; cursor:pointer;">
+                    <img src="images/user-icon.png" alt="User" style="width:32px; height:32px; border-radius:50%;">
+                </button>
+                <div id="user-dropdown-menu" style="display:none; position:absolute; right:0; top:40px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15); border-radius:8px; min-width:200px; z-index:1000;">
+                    <ul style="list-style:none; margin:0; padding:0;">
+                        <li><button class="dropdown-item" id="open-booking-history" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;">Booking History</button></li>
+                        <li><button class="dropdown-item" id="open-user-settings" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;">User Settings</button></li>
+                        <li><button class="dropdown-item" id="sign-out-btn" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer; color:#e74c3c;">Sign Out</button></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </nav>
     <div class="hero">
@@ -437,15 +450,243 @@
             </div>
         </div>
     </div>
+    <!-- Booking History Modal -->
+    <div id="booking-history-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 500px;">
+            <span class="close-booking-modal" id="close-booking-history-modal">&times;</span>
+            <h2>Your Booking History</h2>
+            <div id="booking-history-list">
+                <!-- Booking items will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+    <!-- User Settings Modal -->
+    <div id="user-settings-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 400px;">
+            <span class="close-booking-modal" id="close-user-settings-modal">&times;</span>
+            <h2>User Settings</h2>
+            <form id="user-settings-form">
+                <div class="modal-form-group">
+                    <label for="settings-email">Change Email</label>
+                    <input type="email" id="settings-email" placeholder="Enter new email">
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-number">Change Phone Number</label>
+                    <input type="text" id="settings-number" placeholder="Enter new phone number">
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-password">Change Password</label>
+                    <input type="password" id="settings-password" placeholder="Enter new password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">Save Changes</button>
+            </form>
+        </div>
+    </div>
     <style>
         #booking-modal::-webkit-scrollbar {
             display: none;
         }
+        /* Dropdown menu styling */
+        #user-dropdown-menu ul li button.dropdown-item:hover {
+            background: #f5f5f5;
+        }
     </style>
     <script>
-document.getElementById('login-btn').onclick = function() {
-    window.location.href = 'login.html';
-};
+// --- API Utility ---
+const API_BASE = 'http://localhost:3000/api'; // Change if backend runs elsewhere
+function getToken() {
+    return localStorage.getItem('token');
+}
+function isUserLoggedIn() {
+    return !!getToken();
+}
+function authHeaders() {
+    const token = getToken();
+    return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+// --- User Profile Fetch ---
+async function fetchUserProfile() {
+    try {
+        const res = await fetch(`${API_BASE}/users/me`, { headers: authHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch user profile');
+        return await res.json();
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}
+// --- Booking History Fetch ---
+async function fetchBookingHistory() {
+    try {
+        const res = await fetch(`${API_BASE}/bookings`, { headers: authHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch bookings');
+        const data = await res.json();
+        // If admin/clerk, filter for current user if needed
+        return data.bookings || data;
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+}
+// --- Cancel Booking ---
+async function cancelBooking(id) {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+        const res = await fetch(`${API_BASE}/bookings/${id}/cancel`, {
+            method: 'PATCH',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error('Failed to cancel booking');
+        alert('Booking cancelled.');
+        loadBookingHistory();
+    } catch (e) {
+        alert('Error cancelling booking.');
+        console.error(e);
+    }
+}
+// --- Update User Settings ---
+async function updateUserSettings(email, phone) {
+    try {
+        const res = await fetch(`${API_BASE}/users/me`, {
+            method: 'PUT',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, phone })
+        });
+        if (!res.ok) throw new Error('Failed to update profile');
+        alert('Profile updated.');
+    } catch (e) {
+        alert('Error updating profile.');
+        console.error(e);
+    }
+}
+async function changeUserPassword(password) {
+    try {
+        const res = await fetch(`${API_BASE}/users/me/password`, {
+            method: 'PUT',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        if (!res.ok) throw new Error('Failed to change password');
+        alert('Password changed.');
+    } catch (e) {
+        alert('Error changing password.');
+        console.error(e);
+    }
+}
+// --- UI Logic ---
+function showUserMenuIfLoggedIn() {
+    const loginBtn = document.getElementById('login-btn');
+    const userMenu = document.getElementById('user-profile-menu-container');
+    if (isUserLoggedIn()) {
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'block';
+    } else {
+        loginBtn.style.display = 'inline-block';
+        userMenu.style.display = 'none';
+    }
+}
+showUserMenuIfLoggedIn();
+// Toggle dropdown menu
+const userProfileBtn = document.getElementById('user-profile-btn');
+const userDropdownMenu = document.getElementById('user-dropdown-menu');
+if (userProfileBtn) {
+    userProfileBtn.onclick = function(e) {
+        e.stopPropagation();
+        userDropdownMenu.style.display = userDropdownMenu.style.display === 'block' ? 'none' : 'block';
+    };
+    document.addEventListener('click', function() {
+        userDropdownMenu.style.display = 'none';
+    });
+}
+// Open Booking History Modal
+const openBookingHistory = document.getElementById('open-booking-history');
+const bookingHistoryModal = document.getElementById('booking-history-modal');
+const closeBookingHistoryModal = document.getElementById('close-booking-history-modal');
+if (openBookingHistory) {
+    openBookingHistory.onclick = async function(e) {
+        e.preventDefault();
+        bookingHistoryModal.style.display = 'flex';
+        await loadBookingHistory();
+    };
+}
+if (closeBookingHistoryModal) {
+    closeBookingHistoryModal.onclick = function() {
+        bookingHistoryModal.style.display = 'none';
+    };
+}
+// Load Booking History
+async function loadBookingHistory() {
+    const historyList = document.getElementById('booking-history-list');
+    historyList.innerHTML = '<div>Loading...</div>';
+    const bookings = await fetchBookingHistory();
+    if (!bookings.length) {
+        historyList.innerHTML = '<div>No bookings found.</div>';
+        return;
+    }
+    historyList.innerHTML = bookings.map(b => `
+        <div style="border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <strong>${b.cottageType || b.cottage || 'Cottage'}</strong><br>
+                <span style="font-size:0.95em;">${b.date || b.scheduleDate || b.checkinDate || ''}</span><br>
+                <span style="color:#6c63ff;">${b.status || ''}</span>
+            </div>
+            <button class="btn btn-secondary" onclick="cancelBooking('${b._id || b.id}')">Cancel</button>
+        </div>
+    `).join('');
+}
+// Open User Settings Modal
+const openUserSettings = document.getElementById('open-user-settings');
+const userSettingsModal = document.getElementById('user-settings-modal');
+const closeUserSettingsModal = document.getElementById('close-user-settings-modal');
+if (openUserSettings) {
+    openUserSettings.onclick = async function(e) {
+        e.preventDefault();
+        userSettingsModal.style.display = 'flex';
+        // Prefill user info
+        const profile = await fetchUserProfile();
+        if (profile) {
+            document.getElementById('settings-email').value = profile.email || '';
+            document.getElementById('settings-number').value = profile.phone || '';
+        }
+    };
+}
+if (closeUserSettingsModal) {
+    closeUserSettingsModal.onclick = function() {
+        userSettingsModal.style.display = 'none';
+    };
+}
+// Sign Out
+const signOutBtn = document.getElementById('sign-out-btn');
+if (signOutBtn) {
+    signOutBtn.onclick = function() {
+        localStorage.removeItem('token');
+        showUserMenuIfLoggedIn();
+        window.location.reload();
+    };
+}
+// User Settings Form Submit
+const userSettingsForm = document.getElementById('user-settings-form');
+if (userSettingsForm) {
+    userSettingsForm.onsubmit = async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('settings-email').value;
+        const phone = document.getElementById('settings-number').value;
+        const password = document.getElementById('settings-password').value;
+        if (email || phone) await updateUserSettings(email, phone);
+        if (password) await changeUserPassword(password);
+        userSettingsModal.style.display = 'none';
+    };
+}
+// For demo: simulate login (remove this block in production)
+if (!isUserLoggedIn()) {
+    document.getElementById('login-btn').onclick = function() {
+        window.location.href = 'login.html';
+    };
+} else {
+    document.getElementById('login-btn').onclick = function() {
+        window.location.href = 'login.html';
+    };
+}
 </script>
 </body>
 </html>
