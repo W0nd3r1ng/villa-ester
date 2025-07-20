@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Account - Villa Ester Resort</title>
+    <link rel="stylesheet" href="login-style.css">
+    <style>
+        .register-container {
+            max-width: 400px;
+            margin: 80px auto 80px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(80,80,120,0.13);
+            padding: 40px 48px 32px 32px; /* Increased right padding */
+            opacity: 1 !important;
+            z-index: 1001;
+        }
+        .register-title {
+            text-align: center;
+            font-size: 2em;
+            color: #6c63ff;
+            margin-bottom: 18px;
+        }
+        .register-form label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .register-form input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+        .register-form .btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            background: #6c63ff;
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .register-form .btn:active {
+            background: #574fd6;
+        }
+        .register-form .error-message {
+            color: #e74c3c;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .register-form .success-message {
+            color: #27ae60;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-title">Create Account</div>
+        <form class="register-form" id="register-form" autocomplete="off">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" name="name" required placeholder="Enter your name">
+
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" name="email" required placeholder="Enter your email">
+
+            <label for="reg-phone">Phone Number</label>
+            <input type="text" id="reg-phone" name="phone" required placeholder="11-digit phone number" maxlength="11" pattern="[0-9]{11}">
+
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" name="password" required placeholder="Create a password" minlength="6">
+
+            <div class="error-message" id="register-error"></div>
+            <div class="success-message" id="register-success"></div>
+
+            <button type="submit" class="btn">Register</button>
+        </form>
+    </div>
+    <script>
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const phone = document.getElementById('reg-phone').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const errorDiv = document.getElementById('register-error');
+        const successDiv = document.getElementById('register-success');
+        errorDiv.textContent = '';
+        successDiv.textContent = '';
+        // Basic validation
+        if (!name || !email || !phone || !password) {
+            errorDiv.textContent = 'All fields are required.';
+            return;
+        }
+        if (!/^[0-9]{11}$/.test(phone)) {
+            errorDiv.textContent = 'Phone number must be exactly 11 digits.';
+            return;
+        }
+        if (password.length < 6) {
+            errorDiv.textContent = 'Password must be at least 6 characters.';
+            return;
+        }
+        // Send registration to backend
+        try {
+            const response = await fetch('http://localhost:3000/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone, password })
+            });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                successDiv.textContent = 'Registration successful! Redirecting to homepage...';
+                this.reset();
+                setTimeout(() => { window.location.href = 'index.html'; }, 1800);
+            } else {
+                errorDiv.textContent = result.message || 'Registration failed.';
+            }
+        } catch (err) {
+            errorDiv.textContent = 'Network error. Please try again.';
+        }
+    });
+    // Enforce phone input limit
+    document.getElementById('reg-phone').addEventListener('input', function() {
+        let value = this.value.replace(/[^0-9]/g, '');
+        this.value = value.slice(0, 11);
+    });
+    </script>
+</body>
+</html> 

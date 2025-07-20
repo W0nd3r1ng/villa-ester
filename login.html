@@ -20,6 +20,7 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
             <button type="submit" class="btn btn-primary">Login</button>
+            <button type="button" class="btn btn-secondary" id="register-btn" style="margin-top: 14px; width: 100%;">Register Account</button>
         </form>
         <div id="login-error" class="error-message"></div>
         
@@ -30,5 +31,10 @@
             <strong>Clerk:</strong> clerk@villaester.com / clerk123
         </div>
     </div>
+    <script>
+document.getElementById('register-btn').onclick = function() {
+    window.location.href = 'register.html';
+};
+</script>
 </body>
 </html> 

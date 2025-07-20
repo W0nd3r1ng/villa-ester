@@ -32,14 +32,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if user is admin or clerk (only these roles can login to dashboard)
-    if (!['admin', 'clerk'].includes(user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Admin or clerk privileges required.'
-      });
-    }
-
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -236,5 +228,32 @@ exports.deleteUser = async (req, res) => {
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to delete user', error: error.message });
+  }
+}; 
+
+// Public user registration
+exports.register = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Email already exists' });
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      password: hashed,
+      role: 'customer',
+      isActive: true
+    });
+    await user.save();
+    res.status(201).json({ success: true, message: 'Registration successful', data: { id: user._id, email: user.email, name: user.name, phone: user.phone } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to register', error: error.message });
   }
 }; 

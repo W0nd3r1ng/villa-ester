@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setLoading(true);
 
         try {
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/users/login', {
+            const response = await fetch('http://localhost:3000/api/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,9 +63,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Store token and user data
                 localStorage.setItem('token', data.data.token);
                 localStorage.setItem('user', JSON.stringify(data.data.user));
-                
-                // Always redirect to clerk.html, use role-based UI there
-                window.location.href = 'clerk.html';
+                // Redirect based on role
+                const role = data.data.user.role;
+                if (role === 'admin' || role === 'clerk') {
+                    window.location.href = 'clerk.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
             } else {
                 showError(data.message || 'Login failed. Please try again.');
             }

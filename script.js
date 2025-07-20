@@ -1,5 +1,5 @@
 // Socket.IO connection
-const socket = io('https://villa-ester-backend.onrender.com', {
+const socket = io('http://localhost:3000', {
   transports: ['websocket', 'polling']
 });
 
@@ -293,7 +293,7 @@ if (modalBookingForm) {
         });
         // Send to backend
         try {
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
+            const response = await fetch('http://localhost:3000/api/bookings', {
                 method: 'POST',
                 body: formData
             });
@@ -372,7 +372,7 @@ if (reviewForm) {
         const reviewData = { name, comment, rating };
         
         try {
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews', {
+            const response = await fetch('http://localhost:3000/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(reviewData)
@@ -420,7 +420,7 @@ async function fetchAndDisplayReviews() {
     }
     try {
         console.log('Fetching reviews from API...');
-        const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews');
+        const response = await fetch('http://localhost:3000/api/reviews');
         console.log('Response status:', response.status);
         const data = await response.json();
         console.log('Reviews API response:', data);
@@ -581,7 +581,7 @@ if (availabilityForm) {
         try {
             // Fetch available cottages
             console.log('Fetching cottages from API...');
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
+            const response = await fetch('http://localhost:3000/api/cottages');
             console.log('Response status:', response.status);
             
             const data = await response.json();
@@ -842,7 +842,7 @@ async function loadAIRecommendations() {
         console.log('Recommendation parameters:', { guests, bookingDate });
         
         // Fetch AI recommendations
-        const apiUrl = `https://villa-ester-backend.onrender.com/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
+        const apiUrl = `http://localhost:3000/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
         console.log('Fetching from:', apiUrl);
         
         const response = await fetch(apiUrl);
@@ -1033,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function showCottageDetails(cottageTypeLabel, imgSrc) {
         try {
             // Fetch all cottages from backend
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
+            const response = await fetch('http://localhost:3000/api/cottages');
             const data = await response.json();
             if (!data.success || !Array.isArray(data.data)) throw new Error('Failed to fetch cottages');
             // Map label to DB type

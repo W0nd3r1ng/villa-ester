@@ -7,6 +7,9 @@ const { admin } = require('../middleware/admin');
 // Login route (public - no authentication required)
 router.post('/login', login);
 
+// Public registration route
+router.post('/register', require('../controllers/userController').register);
+
 // Get current user's profile
 router.get('/me', auth, getProfile);
 // Update current user's profile (phone/email)
