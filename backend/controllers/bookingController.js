@@ -163,7 +163,6 @@ exports.createBooking = async (req, res) => {
     }
 
     const {
-      userId,
       cottageType,
       bookingDate,
       bookingTime,
@@ -198,8 +197,15 @@ exports.createBooking = async (req, res) => {
     }
 
     // Create new booking
+    let bookingUserId = req.user && req.user._id;
+    if (!bookingUserId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
     const booking = new Booking({
-      userId,
+      userId: bookingUserId,
       cottageId: cottage._id,
       cottageType,
       bookingDate,

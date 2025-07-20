@@ -177,7 +177,15 @@ function closeBookingModal() {
     document.body.style.overflow = '';
 }
 if (openBookingModalBtn && bookingModal && closeBookingModalBtn) {
-    openBookingModalBtn.addEventListener('click', openMainBookingModal);
+    openBookingModalBtn.addEventListener('click', function(e) {
+        if (!isUserLoggedIn()) {
+            e.preventDefault();
+            alert('You must be logged in to place a booking. Please log in or register.');
+            window.location.href = 'login.html';
+            return;
+        }
+        openMainBookingModal();
+    });
     closeBookingModalBtn.addEventListener('click', closeBookingModal);
 }
 if (modalCancelBtn) {
@@ -293,9 +301,13 @@ if (modalBookingForm) {
         });
         // Send to backend
         try {
+            const headers = {};
+            const token = localStorage.getItem('token');
+            if (token) headers['Authorization'] = 'Bearer ' + token;
             const response = await fetch('http://localhost:3000/api/bookings', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers
             });
             if (response.ok) {
                 alert('Booking submitted successfully!');
@@ -690,6 +702,11 @@ function showNoResults() {
 }
 
 function openBookingModal(cottageId, cottageType) {
+    if (!isUserLoggedIn()) {
+        alert('You must be logged in to place a booking. Please log in or register.');
+        window.location.href = 'login.html';
+        return;
+    }
     console.log('openBookingModal called with:', { cottageId, cottageType });
     
     // Map cottage titles to actual cottage type values
@@ -1333,3 +1350,24 @@ document.addEventListener('DOMContentLoaded', enforcePhoneInputLimit);
 if (openBookingModalBtn) {
     openBookingModalBtn.addEventListener('click', enforcePhoneInputLimit);
 } 
+
+// --- Require login for all Book Now buttons ---
+document.addEventListener('DOMContentLoaded', function() {
+    const bookNowButtons = Array.from(document.querySelectorAll('.btn-primary'))
+        .filter(btn => btn.textContent.trim().toLowerCase() === 'book now');
+    bookNowButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (!isUserLoggedIn()) {
+                e.preventDefault();
+                alert('You must be logged in to place a booking. Please log in or register.');
+                window.location.href = 'login.html';
+                return;
+            }
+            // Only open main booking modal for the main Book Now button
+            if (btn.id === 'open-booking-modal') {
+                openMainBookingModal();
+            }
+            // For other Book Now buttons, you can add custom logic here if needed
+        });
+    });
+}); 

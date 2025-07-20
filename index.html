@@ -452,33 +452,39 @@
     </div>
     <!-- Booking History Modal -->
     <div id="booking-history-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
-        <div class="booking-modal-content" style="max-width: 500px;">
+        <div class="booking-modal-content" style="max-width: 520px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(44,62,80,0.13); padding: 32px 28px 24px 28px;">
             <span class="close-booking-modal" id="close-booking-history-modal">&times;</span>
-            <h2>Your Booking History</h2>
-            <div id="booking-history-list">
+            <h2 style="margin-bottom: 18px; color: #6c63ff; font-size: 1.5em; font-weight: 700; letter-spacing: 0.5px;">Your Booking History</h2>
+            <div id="booking-history-list" style="margin-top: 10px;">
                 <!-- Booking items will be dynamically loaded here -->
             </div>
         </div>
     </div>
     <!-- User Settings Modal -->
     <div id="user-settings-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
-        <div class="booking-modal-content" style="max-width: 400px;">
+        <div class="booking-modal-content" style="max-width: 400px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(44,62,80,0.13); padding: 32px 28px 24px 28px;">
             <span class="close-booking-modal" id="close-user-settings-modal">&times;</span>
-            <h2>User Settings</h2>
+            <h2 style="margin-bottom: 18px; color: #6c63ff; font-size: 1.5em; font-weight: 700; letter-spacing: 0.5px;">User Settings</h2>
             <form id="user-settings-form">
+                <!-- User Info Display -->
+                <div class="modal-form-group" id="user-info-display" style="margin-bottom: 22px; background: #f4f7fa; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(44,62,80,0.06);">
+                    <div style="font-size:1.08em;"><strong>Name:</strong> <span id="user-info-name"></span></div>
+                    <div style="margin-top:4px;"><strong>Email:</strong> <span id="user-info-email"></span></div>
+                    <div style="margin-top:4px;"><strong>Phone:</strong> <span id="user-info-phone"></span></div>
+                </div>
                 <div class="modal-form-group">
                     <label for="settings-email">Change Email</label>
-                    <input type="email" id="settings-email" placeholder="Enter new email">
+                    <input type="email" id="settings-email" placeholder="Enter new email" style="border-radius:7px;">
                 </div>
                 <div class="modal-form-group">
                     <label for="settings-number">Change Phone Number</label>
-                    <input type="text" id="settings-number" placeholder="Enter new phone number">
+                    <input type="text" id="settings-number" placeholder="Enter new phone number" style="border-radius:7px;">
                 </div>
                 <div class="modal-form-group">
                     <label for="settings-password">Change Password</label>
-                    <input type="password" id="settings-password" placeholder="Enter new password">
+                    <input type="password" id="settings-password" placeholder="Enter new password" style="border-radius:7px;">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">Save Changes</button>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:14px; border-radius:7px; font-size:1.08em;">Save Changes</button>
             </form>
         </div>
     </div>
@@ -489,6 +495,47 @@
         /* Dropdown menu styling */
         #user-dropdown-menu ul li button.dropdown-item:hover {
             background: #f5f5f5;
+        }
+        /* Booking History Card Styles */
+        #booking-history-list > div {
+            background: #f4f7fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+            margin-bottom: 16px;
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+        #booking-history-list > div:hover {
+            box-shadow: 0 4px 16px rgba(44,62,80,0.13);
+        }
+        .booking-status-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.98em;
+            font-weight: 600;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            letter-spacing: 0.2px;
+        }
+        .booking-status-pending { background: #fffbe6; color: #bfa100; border: 1px solid #f1c40f; }
+        .booking-status-confirmed { background: #eafaf1; color: #1e824c; border: 1px solid #27ae60; }
+        .booking-status-completed { background: #eaf1fa; color: #205081; border: 1px solid #2980b9; }
+        .booking-status-cancelled { background: #faeaea; color: #b93a2b; border: 1px solid #e74c3c; }
+        .booking-status-rejected { background: #f4f4f4; color: #888; border: 1px solid #bbb; }
+        .booking-status-checked_out { background: #f3eafa; color: #6c3483; border: 1px solid #8e44ad; }
+        #booking-history-list .btn.btn-secondary {
+            border-radius: 7px;
+            font-size: 1.01em;
+            transition: background 0.2s, color 0.2s;
+        }
+        #booking-history-list .btn.btn-secondary:not([disabled]):hover {
+            background: #e74c3c;
+            color: #fff;
+            border-color: #e74c3c;
         }
     </style>
     <script>
@@ -509,7 +556,9 @@ async function fetchUserProfile() {
     try {
         const res = await fetch(`${API_BASE}/users/me`, { headers: authHeaders() });
         if (!res.ok) throw new Error('Failed to fetch user profile');
-        return await res.json();
+        const result = await res.json();
+        // Support both {success, data} and {name, email, phone}
+        return result.data || result;
     } catch (e) {
         console.error(e);
         return null;
@@ -623,16 +672,24 @@ async function loadBookingHistory() {
         historyList.innerHTML = '<div>No bookings found.</div>';
         return;
     }
-    historyList.innerHTML = bookings.map(b => `
-        <div style="border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;align-items:center;">
+    historyList.innerHTML = bookings.map(b => {
+        // Format date/time
+        const date = b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : (b.date || b.scheduleDate || b.checkinDate || '');
+        const time = b.bookingTime || '';
+        const status = b.status || '';
+        const statusClass = `booking-status-badge booking-status-${status.replace(/_/g,'-')}`;
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g,' ');
+        return `
+        <div>
             <div>
-                <strong>${b.cottageType || b.cottage || 'Cottage'}</strong><br>
-                <span style="font-size:0.95em;">${b.date || b.scheduleDate || b.checkinDate || ''}</span><br>
-                <span style="color:#6c63ff;">${b.status || ''}</span>
+                <strong style="font-size:1.13em;">${b.cottageType || (b.cottageId && b.cottageId.name) || 'Cottage'}</strong><br>
+                <span style="font-size:0.99em; color:#555;">${date} ${time}</span><br>
+                <span class="${statusClass}">${statusLabel}</span>
             </div>
-            <button class="btn btn-secondary" onclick="cancelBooking('${b._id || b.id}')">Cancel</button>
+            <button class="btn btn-secondary" onclick="cancelBooking('${b._id || b.id}')" ${status !== 'pending' && status !== 'confirmed' ? 'disabled' : ''}>Cancel</button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 // Open User Settings Modal
 const openUserSettings = document.getElementById('open-user-settings');
@@ -647,6 +704,10 @@ if (openUserSettings) {
         if (profile) {
             document.getElementById('settings-email').value = profile.email || '';
             document.getElementById('settings-number').value = profile.phone || '';
+            // Show user info at the top
+            document.getElementById('user-info-name').textContent = profile.name || '';
+            document.getElementById('user-info-email').textContent = profile.email || '';
+            document.getElementById('user-info-phone').textContent = profile.phone || '';
         }
     };
 }
