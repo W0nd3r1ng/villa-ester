@@ -355,6 +355,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         if (panelToShow) {
             panelToShow.style.display = 'block';
+            // Real-time: If user management panel is shown and update is needed, update the user table
+            if (panelToShow.id === 'user-management-panel' && window._userTableNeedsUpdate) {
+                if (typeof fetchUsers === 'function' && typeof renderUserTable === 'function') {
+                    fetchUsers().then(() => {
+                        renderUserTable();
+                        window._userTableNeedsUpdate = false;
+                        console.log('User table updated on panel show.');
+                    });
+                }
+            }
         }
         if (activeLink) {
             activeLink.classList.add('active');
@@ -2939,4 +2949,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             container.appendChild(card);
         });
     }
+
+    // Real-time update: listen for new user registrations
+    socket.on('user-created', async function(data) {
+      console.log('Received user-created event:', data);
+      if (typeof showNotification === 'function') {
+        showNotification('A new user has registered!', 'info');
+      }
+      if (typeof fetchUsers === 'function' && typeof renderUserTable === 'function') {
+        await fetchUsers();
+        renderUserTable();
+      }
+    });
 }); 

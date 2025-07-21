@@ -263,6 +263,23 @@ exports.register = async (req, res) => {
       isActive: true
     });
     await user.save();
+    // Emit real-time event for new user registration
+    const io = req.app && req.app.get && req.app.get('io');
+    if (io) {
+      io.emit('user-created', {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isActive: user.isActive
+        },
+        message: 'New user registered',
+        timestamp: new Date()
+      });
+      console.log('Emitted user-created event for:', user.email, user.phone);
+    }
     res.status(201).json({ success: true, message: 'Registration successful', data: { id: user._id, email: user.email, name: user.name, phone: user.phone } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to register', error: error.message });
