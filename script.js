@@ -715,6 +715,29 @@ function showNoResults() {
     availabilityResults.scrollIntoView({ behavior: 'smooth' });
 }
 
+// Add utility functions to script.js
+function isUserLoggedIn() {
+    return !!localStorage.getItem('token');
+}
+
+async function fetchUserProfile() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+        
+        const res = await fetch('https://villa-ester-backend.onrender.com/api/users/me', { 
+            headers: { 'Authorization': 'Bearer ' + token } 
+        });
+        if (!res.ok) return null;
+        
+        const result = await res.json();
+        return result.data || result;
+    } catch (e) {
+        console.error('Error fetching user profile:', e);
+        return null;
+    }
+}
+
 function openBookingModal(cottageId, cottageType) {
     if (!isUserLoggedIn()) {
         alert('You must be logged in to place a booking. Please log in or register.');
@@ -786,6 +809,20 @@ function openBookingModal(cottageId, cottageType) {
     
     // Pre-fill booking modal with availability form data
     prefillBookingModalFromAvailabilityForm();
+    
+    // Pre-fill user details if logged in
+    if (isUserLoggedIn()) {
+        fetchUserProfile().then(profile => {
+            if (profile) {
+                const nameInput = document.getElementById('modal-full-name');
+                const phoneInput = document.getElementById('modal-phone');
+                const emailInput = document.getElementById('modal-email');
+                if (nameInput) nameInput.value = profile.name || '';
+                if (phoneInput) phoneInput.value = profile.phone || '';
+                if (emailInput) emailInput.value = profile.email || '';
+            }
+        });
+    }
     
     // Open the booking modal
     const bookingModal = document.getElementById('booking-modal');
