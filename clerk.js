@@ -83,7 +83,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Fetch bookings from backend
     async function fetchBookings() {
         try {
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings');
+            const token = localStorage.getItem('token');
+            const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', { headers });
             const data = await response.json();
             if (data.success && Array.isArray(data.data)) {
                 bookingsData = data.data;

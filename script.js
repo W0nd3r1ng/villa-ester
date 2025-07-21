@@ -309,18 +309,33 @@ if (modalBookingForm) {
             fullName,
             cottageType
         });
+        // Check if user is logged in before creating booking
+        if (!isUserLoggedIn()) {
+            alert('You must be logged in to create a booking. Please log in first.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
         // Send to backend
         try {
             const headers = {};
             const token = localStorage.getItem('token');
             if (token) headers['Authorization'] = 'Bearer ' + token;
+            
+            console.log('Creating booking with token:', token ? 'Present' : 'Missing');
+            
             const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
                 method: 'POST',
                 body: formData,
                 headers
             });
+            
+            console.log('Booking response status:', response.status);
+            
             if (response.ok) {
-                alert('Booking submitted successfully!');
+                const result = await response.json();
+                console.log('Booking created successfully:', result);
+                alert('Booking submitted successfully! You can view your booking in the Booking History section.');
                 modalBookingForm.reset();
                 if (proofPreview) proofPreview.innerHTML = '';
                 closeBookingModal();
@@ -330,6 +345,17 @@ if (modalBookingForm) {
                 }
             } else {
                 const error = await response.json();
+                console.error('Booking failed:', error);
+                
+                // Handle authentication errors
+                if (response.status === 401) {
+                    alert('Your session has expired. Please log in again.');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
                 if (error.errors && Array.isArray(error.errors)) {
                     const errorMessages = error.errors.map(e => e.msg).join('\n');
                     alert('Booking failed:\n' + errorMessages);
@@ -338,6 +364,7 @@ if (modalBookingForm) {
                 }
             }
         } catch (err) {
+            console.error('Booking error:', err);
             alert('Booking failed: ' + err.message);
         }
     });

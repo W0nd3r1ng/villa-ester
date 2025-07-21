@@ -589,13 +589,61 @@ async function fetchUserProfile() {
 // --- Booking History Fetch ---
 async function fetchBookingHistory() {
     try {
-        const res = await fetch(`${API_BASE}/bookings`, { headers: authHeaders() });
-        if (!res.ok) throw new Error('Failed to fetch bookings');
+        console.log('Fetching booking history...');
+        
+        // Check if user is logged in
+        if (!isUserLoggedIn()) {
+            console.log('User not logged in');
+            return [];
+        }
+        
+        const headers = authHeaders();
+        console.log('Auth headers:', headers);
+        
+        const res = await fetch(`${API_BASE}/bookings`, { headers });
+        console.log('Response status:', res.status);
+        console.log('Response ok:', res.ok);
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Response error:', errorText);
+            
+            // Handle authentication errors
+            if (res.status === 401) {
+                console.log('Authentication failed, clearing token');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                throw new Error('Your session has expired. Please log in again.');
+            }
+            
+            throw new Error(`Failed to fetch bookings: ${res.status} ${errorText}`);
+        }
+        
         const data = await res.json();
-        // If admin/clerk, filter for current user if needed
-        return data.bookings || data;
+        console.log('Response data:', data);
+        
+        // Handle the backend response format: { success: true, data: bookings, pagination: {...} }
+        if (data.success && Array.isArray(data.data)) {
+            console.log('Found bookings:', data.data.length);
+            return data.data;
+        } else if (Array.isArray(data)) {
+            // Fallback for old API format
+            console.log('Found bookings (fallback):', data.length);
+            return data;
+        } else {
+            console.error('Unexpected response format:', data);
+            return [];
+        }
     } catch (e) {
-        console.error(e);
+        console.error('Error fetching booking history:', e);
+        
+        // If it's an authentication error, redirect to login
+        if (e.message.includes('session has expired') || e.message.includes('401')) {
+            alert('Your session has expired. Please log in again.');
+            window.location.href = 'login.html';
+            return [];
+        }
+        
         return [];
     }
 }
@@ -726,7 +774,23 @@ const closeBookingHistoryModal = document.getElementById('close-booking-history-
 if (openBookingHistory) {
     openBookingHistory.onclick = async function(e) {
         e.preventDefault();
+        
+        // Check if user is logged in
+        if (!isUserLoggedIn()) {
+            alert('You must be logged in to view your booking history.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        console.log('Opening booking history modal...');
         bookingHistoryModal.style.display = 'flex';
+        
+        // Show loading message
+        const historyList = document.getElementById('booking-history-list');
+        if (historyList) {
+            historyList.innerHTML = '<div style="text-align: center; padding: 20px;"><div>Loading your bookings...</div><div style="font-size: 0.9em; color: #666; margin-top: 8px;">Please wait while we fetch your booking history.</div></div>';
+        }
+        
         await loadBookingHistory();
     };
 }
@@ -738,30 +802,92 @@ if (closeBookingHistoryModal) {
 // Load Booking History
 async function loadBookingHistory() {
     const historyList = document.getElementById('booking-history-list');
-    historyList.innerHTML = '<div>Loading...</div>';
-    const bookings = await fetchBookingHistory();
-    if (!bookings.length) {
-        historyList.innerHTML = '<div>No bookings found.</div>';
+    if (!historyList) {
+        console.error('Booking history list element not found');
         return;
     }
-    historyList.innerHTML = bookings.map(b => {
-        // Format date/time
-        const date = b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : (b.date || b.scheduleDate || b.checkinDate || '');
-        const time = b.bookingTime || '';
-        const status = b.status || '';
-        const statusClass = `booking-status-badge booking-status-${status.replace(/_/g,'-')}`;
-        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g,' ');
-        return `
-        <div>
-            <div>
-                <strong style="font-size:1.13em;">${b.cottageType || (b.cottageId && b.cottageId.name) || 'Cottage'}</strong><br>
-                <span style="font-size:0.99em; color:#555;">${date} ${time}</span><br>
-                <span class="${statusClass}">${statusLabel}</span>
+    
+    historyList.innerHTML = '<div>Loading...</div>';
+    
+    try {
+        const bookings = await fetchBookingHistory();
+        console.log('Fetched bookings:', bookings);
+        
+        if (!bookings || !bookings.length) {
+            historyList.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="color: #666; margin-bottom: 12px;">No bookings found.</div>
+                    <div style="font-size: 0.9em; color: #888; line-height: 1.4;">
+                        <div>If you've made a booking but don't see it here:</div>
+                        <div style="margin-top: 8px;">
+                            • Make sure you were logged in when you made the booking<br>
+                            • Check that your session hasn't expired<br>
+                            • Try refreshing the page and logging in again
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <button onclick="window.location.href='index.html'" style="background: #6c63ff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                                Make a New Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        historyList.innerHTML = bookings.map(b => {
+            console.log('Processing booking:', b);
+            
+            // Format date/time
+            const date = b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : (b.date || b.scheduleDate || b.checkinDate || '');
+            const time = b.bookingTime || '';
+            const status = b.status || '';
+            const statusClass = `booking-status-badge booking-status-${status.replace(/_/g,'-')}`;
+            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g,' ');
+            
+            // Get cottage name from populated cottageId or fallback to cottageType
+            const cottageName = (b.cottageId && b.cottageId.name) || b.cottageType || 'Cottage';
+            
+            // Format additional details
+            const people = b.numberOfPeople ? `${b.numberOfPeople} people` : '';
+            const duration = b.duration ? `${b.duration} minutes` : '';
+            const price = b.totalPrice ? `₱${b.totalPrice}` : '';
+            const createdDate = b.createdAt ? new Date(b.createdAt).toLocaleDateString() : '';
+            
+            // Determine if cancel button should be shown
+            const canCancel = status === 'pending' || status === 'confirmed';
+            const cancelButton = canCancel ? 
+                `<button class="btn btn-secondary" onclick="cancelBooking('${b._id || b.id}')">Cancel</button>` : 
+                `<span style="color: #999; font-size: 0.9em;">Cannot cancel</span>`;
+            
+            return `
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 12px; padding: 16px; background: #fafafa;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <strong style="font-size:1.2em; color: #333;">${cottageName}</strong>
+                            <span class="${statusClass}" style="margin-left: 12px;">${statusLabel}</span>
+                        </div>
+                        <div style="color: #666; font-size: 0.95em; line-height: 1.4;">
+                            <div><strong>Date:</strong> ${date} ${time}</div>
+                            ${people ? `<div><strong>Guests:</strong> ${people}</div>` : ''}
+                            ${duration ? `<div><strong>Duration:</strong> ${duration}</div>` : ''}
+                            ${price ? `<div><strong>Price:</strong> ${price}</div>` : ''}
+                            ${createdDate ? `<div><strong>Booked on:</strong> ${createdDate}</div>` : ''}
+                            ${b.specialRequests ? `<div><strong>Special Requests:</strong> ${b.specialRequests}</div>` : ''}
+                        </div>
+                    </div>
+                    <div style="margin-left: 16px;">
+                        ${cancelButton}
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-secondary" onclick="cancelBooking('${b._id || b.id}')" ${status !== 'pending' && status !== 'confirmed' ? 'disabled' : ''}>Cancel</button>
-        </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading booking history:', error);
+        historyList.innerHTML = '<div style="text-align: center; color: #e74c3c; padding: 20px;">Error loading booking history. Please try again.</div>';
+    }
 }
 // Open User Settings Modal
 const openUserSettings = document.getElementById('open-user-settings');
@@ -797,6 +923,33 @@ if (signOutBtn) {
         window.location.reload();
     };
 }
+
+// Debug function for testing booking history (can be called from browser console)
+window.testBookingHistory = async function() {
+    console.log('=== Testing Booking History ===');
+    console.log('User logged in:', isUserLoggedIn());
+    console.log('Token present:', !!localStorage.getItem('token'));
+    
+    if (!isUserLoggedIn()) {
+        console.log('User not logged in - cannot test booking history');
+        return;
+    }
+    
+    try {
+        const bookings = await fetchBookingHistory();
+        console.log('Fetched bookings:', bookings);
+        console.log('Number of bookings:', bookings.length);
+        
+        if (bookings.length > 0) {
+            console.log('Sample booking:', bookings[0]);
+        }
+        
+        return bookings;
+    } catch (error) {
+        console.error('Error testing booking history:', error);
+        return null;
+    }
+};
 // User Settings Form Submit
 const userSettingsForm = document.getElementById('user-settings-form');
 if (userSettingsForm) {
