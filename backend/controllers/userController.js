@@ -238,10 +238,21 @@ exports.register = async (req, res) => {
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) {
+    // Check for existing user with same email
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
       return res.status(409).json({ success: false, message: 'Email already exists' });
     }
+    // Check for existing user with same phone
+    const existingPhone = await User.findOne({ phone: phone });
+    if (existingPhone) {
+      return res.status(409).json({ success: false, message: 'Phone number already exists' });
+    }
+    // Check for existing user with same name and phone (optional, can be removed if not needed)
+    // const existingNamePhone = await User.findOne({ name: name, phone: phone });
+    // if (existingNamePhone) {
+    //   return res.status(409).json({ success: false, message: 'A user with this name and phone number already exists' });
+    // }
     const hashed = await bcrypt.hash(password, 10);
     const user = new User({
       name,

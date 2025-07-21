@@ -186,6 +186,18 @@ exports.createBooking = async (req, res) => {
       fullName
     } = req.body;
 
+    // Block booking if phone number is already registered to a user other than the current user
+    const User = require('../models/user');
+    if (contactPhone) {
+      const existingUser = await User.findOne({ phone: contactPhone });
+      if (existingUser && (!req.user || existingUser._id.toString() !== req.user._id.toString())) {
+        return res.status(409).json({
+          success: false,
+          message: 'This phone number is already registered to an account. Please log in to book.'
+        });
+      }
+    }
+
     // Find cottage of the specified type
     const cottage = await Cottage.findOne({ type: cottageType, available: true });
     if (!cottage) {
