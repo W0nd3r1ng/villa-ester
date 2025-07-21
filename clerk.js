@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             bookingsData = [];
         }
         updatePendingBookingsBadge();
+        renderCancelledBookings();
     }
 
     // --- Utility Functions ---
@@ -135,6 +136,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateDashboardOverview && updateDashboardOverview();
         updateCottageOccupancyTable && updateCottageOccupancyTable();
         updatePendingBookingsBadge();
+        renderCancelledBookings();
         showNotification('New booking received!', 'success');
     });
     
@@ -147,6 +149,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateDashboardOverview && updateDashboardOverview();
         updateCottageOccupancyTable && updateCottageOccupancyTable();
         updatePendingBookingsBadge();
+        renderCancelledBookings();
         showNotification('Booking status updated!', 'info');
     });
     
@@ -159,6 +162,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateDashboardOverview && updateDashboardOverview();
         updateCottageOccupancyTable && updateCottageOccupancyTable();
         updatePendingBookingsBadge();
+        renderCancelledBookings();
         showNotification('Booking deleted!', 'warning');
     });
     
@@ -724,6 +728,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         let filteredBookings = bookingsData;
         if (status === 'completed') {
             filteredBookings = bookingsData.filter(booking => booking.status === 'checked_out');
+        } else if (status === 'cancelled') {
+            filteredBookings = bookingsData.filter(booking => booking.status === 'cancelled');
         } else if (status !== 'all') {
             filteredBookings = bookingsData.filter(booking => booking.status === status);
         }
@@ -736,10 +742,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         filteredBookings.forEach(booking => {
             const item = document.createElement('div');
             item.classList.add('pending-booking-item');
-            // Prefer fullName, then userId.name, then name/contactName, then 'Guest'
             let guestName = booking.fullName || (booking.userId && booking.userId.name) || booking.name || booking.contactName || 'Guest';
             const roomType = booking.cottageType || booking.roomType || 'Cottage';
-            // Determine booking type
             const bookingType = booking.bookingType || (booking.notes && booking.notes.toLowerCase().includes('overnight') ? 'Overnight' : 'Day Tour');
             let checkinTime = '-';
             let checkoutTime = '-';
@@ -750,7 +754,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 checkinTime = '6:00 PM';
                 checkoutTime = '7:00 AM (next day)';
             }
-            // Format date to MM/DD/YYYY (or your preferred format)
             function formatDate(dateStr) {
                 if (!dateStr || dateStr === '-') return '-';
                 const d = new Date(dateStr);
@@ -760,7 +763,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             let checkin = formatDate(booking.checkinDate || booking.bookingDate || '-') + ' ' + checkinTime;
             let checkout;
             if (bookingType.toLowerCase() === 'overnight') {
-                // Calculate next day for checkout
                 let checkinDate = booking.checkinDate || booking.bookingDate;
                 if (checkinDate) {
                     let d = new Date(checkinDate);
@@ -774,7 +776,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             const adults = booking.adults || booking.numberOfPeople || 1;
             const children = booking.children || 0;
-                            const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `https://villa-ester-backend.onrender.com${booking.proofOfPayment}`) : '';
+            const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `https://villa-ester-backend.onrender.com${booking.proofOfPayment}`) : '';
             const isWalkIn = booking.notes?.includes('Walk-in booking');
             item.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;">
@@ -793,7 +795,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <button class="btn-reject" title="Reject" style="color:#1976d2;background:none;border:none;cursor:pointer;font-size:1.1em;display:flex;align-items:center;"><i class="material-icons">cancel</i> Reject</button>` : ''}
                 </div>
             `;
-            // Approve/Reject only for pending
             if (booking.status === 'pending') {
                 item.querySelector('.btn-approve').onclick = async () => {
                     await confirmBooking(booking._id);
@@ -2897,6 +2898,45 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (this.disabled && (e.key === 'Backspace' || e.key === 'Delete')) {
                 this.disabled = false;
             }
+        });
+    }
+
+    // Render Cancelled Bookings Section
+    function renderCancelledBookings() {
+        const container = document.getElementById('cancelled-bookings-container');
+        const noCancelled = document.getElementById('no-cancelled-bookings');
+        if (!container) return;
+        container.innerHTML = '';
+        const cancelled = bookingsData.filter(b => b.status === 'cancelled');
+        if (cancelled.length === 0) {
+            if (noCancelled) noCancelled.style.display = '';
+            return;
+        } else {
+            if (noCancelled) noCancelled.style.display = 'none';
+        }
+        cancelled.forEach(booking => {
+            const card = document.createElement('div');
+            card.className = 'cancelled-booking-card';
+            card.style = 'border:1px solid #e0e0e0; border-radius:8px; margin-bottom:12px; padding:16px; background:#fafafa;';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; margin-bottom:8px;">
+                            <strong style="font-size:1.1em; color:#b93a2b;">${booking.fullName || 'Guest'}</strong>
+                            <span class="status cancelled" style="margin-left:12px; color:#b93a2b;">Cancelled</span>
+                        </div>
+                        <div style="color:#666; font-size:0.95em; line-height:1.4;">
+                            <div><strong>Cottage:</strong> ${booking.cottageType}</div>
+                            <div><strong>Date:</strong> ${booking.bookingDate ? new Date(booking.bookingDate).toLocaleDateString() : ''} ${booking.bookingTime || ''}</div>
+                            <div><strong>Guests:</strong> ${booking.numberOfPeople || 'N/A'}</div>
+                            <div><strong>Phone:</strong> ${booking.contactPhone || 'N/A'}</div>
+                            <div><strong>Cancelled On:</strong> ${booking.cancelledAt ? new Date(booking.cancelledAt).toLocaleDateString() : ''}</div>
+                            ${booking.cancellationReason ? `<div><strong>Reason:</strong> ${booking.cancellationReason}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
         });
     }
 }); 
