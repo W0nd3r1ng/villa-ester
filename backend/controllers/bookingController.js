@@ -49,13 +49,21 @@ exports.getAllBookings = async (req, res) => {
 
     // Build filter object
     const filter = {};
+    // Only allow userId filter for admin/clerk, otherwise always filter by current user
+    if (req.user && req.user.role && (req.user.role === 'admin' || req.user.role === 'clerk')) {
+      if (userId) filter.userId = userId;
+    } else if (req.user && req.user._id) {
+      filter.userId = req.user._id;
+    }
     if (status) filter.status = status;
-    if (userId) filter.userId = userId;
     if (startDate || endDate) {
       filter.bookingDate = {};
       if (startDate) filter.bookingDate.$gte = new Date(startDate);
       if (endDate) filter.bookingDate.$lte = new Date(endDate);
     }
+
+    // Debug logging
+    console.log('Booking history filter:', filter);
 
     // Build sort object
     const sort = {};
@@ -71,6 +79,9 @@ exports.getAllBookings = async (req, res) => {
       .limit(parseInt(limit))
       .populate('userId', 'name email')
       .populate('cottageId', 'name price capacity type');
+
+    // Debug logging
+    console.log('Bookings found:', bookings.length);
 
     // Get total count for pagination
     const total = await Booking.countDocuments(filter);
@@ -204,6 +215,8 @@ exports.createBooking = async (req, res) => {
         message: 'User not authenticated'
       });
     }
+    // Debug logging
+    console.log('Creating booking for userId:', bookingUserId);
     const booking = new Booking({
       userId: bookingUserId,
       cottageId: cottage._id,

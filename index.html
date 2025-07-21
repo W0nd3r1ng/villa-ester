@@ -22,10 +22,10 @@
         <div class="navbar-right">
             <button class="btn btn-primary" id="open-booking-modal">Book Now</button>
             <button class="btn btn-secondary" id="login-btn" style="margin-left: 12px;">Login</button>
-            <!-- User Profile Icon (hidden by default) -->
+            <!-- User Profile Name (hidden by default) -->
             <div id="user-profile-menu-container" style="display:none; position: relative; margin-left: 12px;">
-                <button id="user-profile-btn" style="background:none; border:none; cursor:pointer;">
-                    <img src="images/user-icon.png" alt="User" style="width:32px; height:32px; border-radius:50%;">
+                <button id="user-profile-btn" style="background:none; border:none; cursor:pointer; font-size:1.08em; font-weight:600; color:#6c63ff; padding: 6px 16px; border-radius: 7px;">
+                    <span id="navbar-user-name">User</span>
                 </button>
                 <div id="user-dropdown-menu" style="display:none; position:absolute; right:0; top:40px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15); border-radius:8px; min-width:200px; z-index:1000;">
                     <ul style="list-style:none; margin:0; padding:0;">
@@ -481,8 +481,15 @@
                     <input type="text" id="settings-number" placeholder="Enter new phone number" style="border-radius:7px;">
                 </div>
                 <div class="modal-form-group">
-                    <label for="settings-password">Change Password</label>
-                    <input type="password" id="settings-password" placeholder="Enter new password" style="border-radius:7px;">
+                    <label for="settings-current-password">Current Password</label>
+                    <input type="password" id="settings-current-password" placeholder="Enter current password" style="border-radius:7px;">
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-new-password">New Password</label>
+                    <input type="password" id="settings-new-password" placeholder="Enter new password" style="border-radius:7px;">
+                    <small style="color: #666; font-size: 0.9em; margin-top: 4px; display: block;">
+                        Password must be at least 6 characters with letters and numbers.
+                    </small>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;margin-top:14px; border-radius:7px; font-size:1.08em;">Save Changes</button>
             </form>
@@ -540,7 +547,7 @@
     </style>
     <script>
 // --- API Utility ---
-const API_BASE = 'http://localhost:3000/api'; // Change if backend runs elsewhere
+const API_BASE = 'https://villa-ester-backend.onrender.com/api'; // Production backend URL
 function getToken() {
     return localStorage.getItem('token');
 }
@@ -550,6 +557,21 @@ function isUserLoggedIn() {
 function authHeaders() {
     const token = getToken();
     return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+
+// Check if current token is valid
+async function isTokenValid() {
+    const token = getToken();
+    if (!token) return false;
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/me`, { 
+            headers: { 'Authorization': 'Bearer ' + token } 
+        });
+        return res.ok;
+    } catch (e) {
+        return false;
+    }
 }
 // --- User Profile Fetch ---
 async function fetchUserProfile() {
@@ -608,17 +630,56 @@ async function updateUserSettings(email, phone) {
         console.error(e);
     }
 }
-async function changeUserPassword(password) {
+async function changeUserPassword(currentPassword, newPassword) {
+    // Client-side validation
+    if (newPassword.length < 6) {
+        alert('New password must be at least 6 characters long.');
+        return;
+    }
+    
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    if (!hasLetter || !hasNumber) {
+        alert('Password must contain at least one letter and one number.');
+        return;
+    }
+    
+    // Check if user is logged in
+    const token = getToken();
+    if (!token) {
+        alert('You are not logged in. Please log in again.');
+        return;
+    }
+    
     try {
         const res = await fetch(`${API_BASE}/users/me/password`, {
             method: 'PUT',
             headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
+            body: JSON.stringify({ currentPassword, newPassword })
         });
-        if (!res.ok) throw new Error('Failed to change password');
-        alert('Password changed.');
+        const data = await res.json();
+        if (!res.ok) {
+            if (res.status === 401) {
+                alert('Your session has expired. Please log in again.');
+                // Clear invalid token and redirect to login
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+                return;
+            }
+            throw new Error(data.message || 'Failed to change password');
+        }
+        alert('Password changed successfully!');
     } catch (e) {
-        alert('Error changing password.');
+        if (e.message.includes('Token is not valid') || e.message.includes('401')) {
+            alert('Your session has expired. Please log in again.');
+            // Clear invalid token and redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        } else {
+            alert('Error changing password: ' + e.message);
+        }
         console.error(e);
     }
 }
@@ -635,6 +696,17 @@ function showUserMenuIfLoggedIn() {
     }
 }
 showUserMenuIfLoggedIn();
+// Show user name in navbar if logged in
+async function updateNavbarUserName() {
+    if (isUserLoggedIn()) {
+        const profile = await fetchUserProfile();
+        const nameSpan = document.getElementById('navbar-user-name');
+        if (profile && nameSpan) {
+            nameSpan.textContent = profile.name || profile.email || 'User';
+        }
+    }
+}
+updateNavbarUserName();
 // Toggle dropdown menu
 const userProfileBtn = document.getElementById('user-profile-btn');
 const userDropdownMenu = document.getElementById('user-dropdown-menu');
@@ -730,11 +802,35 @@ const userSettingsForm = document.getElementById('user-settings-form');
 if (userSettingsForm) {
     userSettingsForm.onsubmit = async function(e) {
         e.preventDefault();
+        
+        // Check if user is logged in and token is valid
+        if (!isUserLoggedIn()) {
+            alert('You are not logged in. Please log in again.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const tokenValid = await isTokenValid();
+        if (!tokenValid) {
+            alert('Your session has expired. Please log in again.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+            return;
+        }
+        
         const email = document.getElementById('settings-email').value;
         const phone = document.getElementById('settings-number').value;
-        const password = document.getElementById('settings-password').value;
+        const currentPassword = document.getElementById('settings-current-password').value;
+        const newPassword = document.getElementById('settings-new-password').value;
+        
         if (email || phone) await updateUserSettings(email, phone);
-        if (password) await changeUserPassword(password);
+        if (currentPassword && newPassword) {
+            await changeUserPassword(currentPassword, newPassword);
+        } else if (currentPassword || newPassword) {
+            alert('Please provide both current password and new password to change your password.');
+            return;
+        }
         userSettingsModal.style.display = 'none';
     };
 }
@@ -748,6 +844,15 @@ if (!isUserLoggedIn()) {
         window.location.href = 'login.html';
     };
 }
+// --- Redirect admin/clerk to clerk.html ---
+document.addEventListener('DOMContentLoaded', async function() {
+    if (isUserLoggedIn()) {
+        const profile = await fetchUserProfile();
+        if (profile && (profile.role === 'admin' || profile.role === 'clerk')) {
+            window.location.href = 'clerk.html';
+        }
+    }
+});
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Socket.IO connection
-const socket = io('http://localhost:3000', {
+const socket = io('https://villa-ester-backend.onrender.com', {
   transports: ['websocket', 'polling']
 });
 
@@ -13,8 +13,7 @@ socket.on('disconnect', () => {
 });
 
 socket.on('booking-created', (data) => {
-  console.log('New booking created:', data);
-  showNotification('New booking received!', 'success');
+  // Removed notification for new booking received
 });
 
 socket.on('booking-updated', (data) => {
@@ -315,7 +314,7 @@ if (modalBookingForm) {
             const headers = {};
             const token = localStorage.getItem('token');
             if (token) headers['Authorization'] = 'Bearer ' + token;
-            const response = await fetch('http://localhost:3000/api/bookings', {
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
                 method: 'POST',
                 body: formData,
                 headers
@@ -325,6 +324,10 @@ if (modalBookingForm) {
                 modalBookingForm.reset();
                 if (proofPreview) proofPreview.innerHTML = '';
                 closeBookingModal();
+                // Refresh booking history if modal is present
+                if (document.getElementById('booking-history-list')) {
+                    loadBookingHistory();
+                }
             } else {
                 const error = await response.json();
                 if (error.errors && Array.isArray(error.errors)) {
@@ -395,7 +398,7 @@ if (reviewForm) {
         const reviewData = { name, comment, rating };
         
         try {
-            const response = await fetch('http://localhost:3000/api/reviews', {
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(reviewData)
@@ -443,7 +446,7 @@ async function fetchAndDisplayReviews() {
     }
     try {
         console.log('Fetching reviews from API...');
-        const response = await fetch('http://localhost:3000/api/reviews');
+        const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews');
         console.log('Response status:', response.status);
         const data = await response.json();
         console.log('Reviews API response:', data);
@@ -604,7 +607,7 @@ if (availabilityForm) {
         try {
             // Fetch available cottages
             console.log('Fetching cottages from API...');
-            const response = await fetch('http://localhost:3000/api/cottages');
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
             console.log('Response status:', response.status);
             
             const data = await response.json();
@@ -870,7 +873,7 @@ async function loadAIRecommendations() {
         console.log('Recommendation parameters:', { guests, bookingDate });
         
         // Fetch AI recommendations
-        const apiUrl = `http://localhost:3000/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
+        const apiUrl = `https://villa-ester-backend.onrender.com/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
         console.log('Fetching from:', apiUrl);
         
         const response = await fetch(apiUrl);
@@ -1058,10 +1061,10 @@ document.addEventListener('DOMContentLoaded', function() {
         'Family Villa': 'With Videoke'
     };
 
-    async function showCottageDetails(cottageTypeLabel, imgSrc) {
+            async function showCottageDetails(cottageTypeLabel, imgSrc) {
         try {
             // Fetch all cottages from backend
-            const response = await fetch('http://localhost:3000/api/cottages');
+            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
             const data = await response.json();
             if (!data.success || !Array.isArray(data.data)) throw new Error('Failed to fetch cottages');
             // Map label to DB type

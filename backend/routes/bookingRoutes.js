@@ -22,6 +22,7 @@ const { admin, requireRole } = require('../middleware/admin');
  * @access  Public (for clerk panel)
  */
 router.get('/',
+  auth,
   validateGetBookings,
   validateDateRange,
   handleValidationErrors,
@@ -68,6 +69,7 @@ router.get('/:id',
  * @access  Public
  */
 router.post('/', 
+  auth,
   (req, res, next) => {
     console.log('POST /api/bookings route hit');
     console.log('Request headers:', req.headers);
