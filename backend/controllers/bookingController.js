@@ -155,6 +155,8 @@ exports.createBooking = async (req, res) => {
     };
     
     console.log('Parsed booking data:', bookingData);
+    console.log('GCash Reference received:', req.body.gcashReference);
+    console.log('Full req.body:', req.body);
     
     // Check for validation errors
     const errors = validationResult(req);
@@ -183,7 +185,8 @@ exports.createBooking = async (req, res) => {
       contactPhone,
       contactEmail,
       notes,
-      fullName
+      fullName,
+      gcashReference
     } = req.body;
 
     // Block booking if phone number is already registered to a user other than the current user
@@ -242,6 +245,7 @@ exports.createBooking = async (req, res) => {
       contactEmail,
       notes,
       fullName,
+      gcashReference,
       proofOfPayment: proofOfPaymentUrl,
       totalPrice: cottage.price,
       status: req.body.status || 'pending',
@@ -506,6 +510,14 @@ exports.confirmBooking = async (req, res) => {
         message: 'Booking confirmed',
         timestamp: new Date()
       });
+      // Real-time update for user
+      io.emit('booking-status-updated', {
+        bookingId: booking._id,
+        userId: booking.userId && booking.userId.toString(),
+        status: booking.status,
+        message: 'Booking confirmed',
+        timestamp: new Date()
+      });
     }
 
     res.json({
@@ -588,6 +600,14 @@ exports.rejectBooking = async (req, res) => {
     if (io) {
       io.emit('booking-updated', {
         booking,
+        message: 'Booking rejected',
+        timestamp: new Date()
+      });
+      // Real-time update for user
+      io.emit('booking-status-updated', {
+        bookingId: booking._id,
+        userId: booking.userId && booking.userId.toString(),
+        status: booking.status,
         message: 'Booking rejected',
         timestamp: new Date()
       });

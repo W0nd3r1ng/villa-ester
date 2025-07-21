@@ -31,6 +31,21 @@ socket.on('review-created', (data) => {
   fetchAndDisplayReviews(); // Refresh reviews display
 });
 
+// Real-time: Listen for booking status updates
+socket.on('booking-status-updated', function(data) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (data.userId && user && data.userId === user.id) {
+      alert('Your booking status has been updated: ' + data.status.charAt(0).toUpperCase() + data.status.slice(1));
+      if (typeof loadBookingHistory === 'function') {
+        loadBookingHistory();
+      }
+    }
+  } catch (e) {
+    console.error('Error handling booking-status-updated event:', e);
+  }
+});
+
 // Notification function
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
@@ -295,6 +310,9 @@ if (modalBookingForm) {
         formData.append('notes', `Booking Type: ${bookingType}; Adults: ${adults}; Children: ${children}`);
         formData.append('fullName', fullName);
         formData.append('cottageType', cottageType);
+        // Append GCash reference number
+        const gcashRef = document.getElementById('modal-gcash-ref')?.value || '';
+        formData.append('gcashReference', gcashRef);
         if (proofFile) formData.append('proofOfPayment', proofFile);
         
         // Debug: Log the data being sent

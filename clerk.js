@@ -798,6 +798,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <div style="margin-left:32px;min-width:120px;">${adults} Adult${adults>1?'s':''}, ${children} Child${children!==1?'ren':''}</div>
                 <div style="margin-left:32px;min-width:120px;">Status: <span style="font-weight:600;">${booking.status.charAt(0).toUpperCase()+booking.status.slice(1)}</span></div>
                 <div style="margin-left:32px;min-width:120px;">
+                    <strong>GCash Ref:</strong> ${booking.gcashReference || '<span style=\'color:#888\'>N/A</span>'}<br>
                     ${proofUrl ? `<a href="${proofUrl}" target="_blank" title="View Proof of Payment"><img src="${proofUrl}" alt="Proof of Payment" style="max-width:60px;max-height:40px;border-radius:4px;box-shadow:0 1px 4px #ccc;vertical-align:middle;"></a>` : '<span style="color:#888;font-size:0.95em;">No proof uploaded</span>'}
                 </div>
                 <div style="margin-left:auto;display:flex;gap:16px;">

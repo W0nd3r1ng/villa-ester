@@ -80,6 +80,10 @@ const bookingSchema = new mongoose.Schema({
       message: 'Invalid email format'
     }
   },
+  gcashReference: {
+    type: String,
+    required: false
+  },
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'completed', 'cancelled', 'rejected', 'checked_out'],
