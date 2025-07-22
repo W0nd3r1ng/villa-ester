@@ -918,7 +918,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             e.preventDefault();
             // Collect form data
             const fullName = document.getElementById('qb-full-name').value.trim();
-            const phone = document.getElementById('modal-phone').value.trim();
+            const phone = document.getElementById('qb-phone').value.trim();
             const email = document.getElementById('qb-email').value.trim();
             const specialRequests = document.getElementById('qb-special-requests').value.trim();
             const bookingType = document.getElementById('qb-booking-type').value;
@@ -949,6 +949,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             const adults = parseInt(document.getElementById('qb-adults').value, 10) || 1;
             const children = parseInt(document.getElementById('qb-children').value, 10) || 0;
             // Prepare booking data
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             const bookingData = {
                 fullName: fullName,
                 contactPhone: phone,
@@ -960,7 +963,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 numberOfPeople: adults + children,
                 notes: `Booking Type: ${bookingType}; Adults: ${adults}; Children: ${children}; Walk-in booking`,
                 status: 'completed', // Automatically set to completed for walk-in bookings
-                createdAt: new Date()
+                createdAt: now,
+                walkinDate: `${dateString} ${timeString}` // Add walk-in date for log
             };
             if (email) {
                 bookingData.contactEmail = email;
@@ -971,9 +975,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             console.log('Submitting bookingData:', bookingData);
             try {
+                const token = localStorage.getItem('token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
                 const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: JSON.stringify(bookingData)
                 });
                 if (response.ok) {
