@@ -232,6 +232,8 @@ exports.createBooking = async (req, res) => {
     }
     // Debug logging
     console.log('Creating booking for userId:', bookingUserId);
+    // Ensure gcashReference is set to empty string if missing
+    const safeGcashReference = typeof gcashReference === 'string' ? gcashReference : '';
     const booking = new Booking({
       userId: bookingUserId,
       cottageId: cottage._id,
@@ -245,7 +247,7 @@ exports.createBooking = async (req, res) => {
       contactEmail,
       notes,
       fullName,
-      gcashReference,
+      gcashReference: safeGcashReference,
       proofOfPayment: proofOfPaymentUrl,
       totalPrice: cottage.price,
       status: req.body.status || 'pending',
@@ -258,6 +260,8 @@ exports.createBooking = async (req, res) => {
     }
 
     const savedBooking = await booking.save();
+    // Log after saving
+    console.log('Booking saved. GCash Reference in DB:', savedBooking.gcashReference);
 
     // Populate the saved booking with user and cottage details
     const populatedBooking = await Booking.findById(savedBooking._id)

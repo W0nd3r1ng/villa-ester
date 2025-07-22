@@ -1143,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'Family Villa': 'With Videoke'
     };
 
-            async function showCottageDetails(cottageTypeLabel, imgSrc) {
+    async function showCottageDetails(cottageTypeLabel, imgSrc) {
         try {
             // Fetch all cottages from backend
             const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
