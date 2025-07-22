@@ -492,15 +492,16 @@ exports.confirmBooking = async (req, res) => {
     // Send confirmation email if email exists
     if (booking.contactEmail) {
       try {
-        // Format booking date for email
+        // Format booking date and time for email
         const bookingDate = booking.bookingDate ? new Date(booking.bookingDate).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+        const bookingTime = booking.bookingTime || 'N/A';
         const contactNumber = '09228093074';
         await transporter.sendMail({
           from: `"Villa Ester Resort" <${process.env.EMAIL_USER}>`,
           to: booking.contactEmail,
           subject: 'Your Booking is Confirmed! - Villa Ester Resort',
-          text: `Hi ${booking.fullName || 'Guest'},\n\nYour booking at Villa Ester Resort has been confirmed!\n\nBooking Date: ${bookingDate}\nCottage: ${booking.cottageType}\n\nFor more information, you may contact us at ${contactNumber} (also our GCash number).\n\nNote: Upon cancellation, the down payment will not be refunded.\n\nThank you for choosing Villa Ester Resort!`,
-          html: `<p>Hi <b>${booking.fullName || 'Guest'}</b>,</p><p>Your booking at <b>Villa Ester Resort</b> has been <b>confirmed</b>!</p><ul><li><b>Booking Date:</b> ${bookingDate}</li><li><b>Cottage:</b> ${booking.cottageType}</li></ul><p><b>For more information, you may contact us at <a href="tel:${contactNumber}">${contactNumber}</a> (also our GCash number).</b></p><p style="color:#d35400;"><b>Note:</b> Upon cancellation, the down payment will not be refunded.</p><p>Thank you for choosing Villa Ester Resort!</p>`
+          text: `Hi ${booking.fullName || 'Guest'},\n\nYour booking at Villa Ester Resort has been confirmed!\n\nBooking Date: ${bookingDate}\nBooking Time: ${bookingTime}\nCottage: ${booking.cottageType}\n\nFor more information, you may contact us at ${contactNumber}.\n\nNote: Upon cancellation, the down payment will not be refunded.\n\nThank you for choosing Villa Ester Resort!`,
+          html: `<p>Hi <b>${booking.fullName || 'Guest'}</b>,</p><p>Your booking at <b>Villa Ester Resort</b> has been <b>confirmed</b>!</p><ul><li><b>Booking Date:</b> ${bookingDate}</li><li><b>Booking Time:</b> ${bookingTime}</li><li><b>Cottage:</b> ${booking.cottageType}</li></ul><p><b>For more information, you may contact us at <a href=\"tel:${contactNumber}\">${contactNumber}</a>.</b></p><p style=\"color:#d35400;\"><b>Note:</b> Upon cancellation, the down payment will not be refunded.</p><p>Thank you for choosing Villa Ester Resort!</p>`
         });
         console.log('Confirmation email sent to', booking.contactEmail);
       } catch (emailErr) {
