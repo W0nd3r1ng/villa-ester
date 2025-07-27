@@ -201,12 +201,54 @@ exports.createBooking = async (req, res) => {
       }
     }
 
-    // Find cottage of the specified type
-    const cottage = await Cottage.findOne({ type: cottageType, available: true });
+    // Find all cottages of the specified type
+    const allCottages = await Cottage.find({ type: cottageType, available: true });
+    if (!allCottages || allCottages.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No cottages of this type available'
+      });
+    }
+
+    // Find all bookings for this type/date/time
+    const existingBookings = await Booking.find({
+      cottageType,
+      bookingDate: new Date(bookingDate),
+      bookingTime,
+      status: { $nin: ['cancelled', 'rejected'] }
+    });
+    // Get all assigned numbers
+    const assignedNumbers = existingBookings.map(b => b.cottageNumber).filter(n => typeof n === 'number');
+
+    // Use provided cottageNumber if given, else assign lowest available
+    let cottageNumber = req.body.cottageNumber ? parseInt(req.body.cottageNumber, 10) : null;
+    if (cottageNumber) {
+      if (assignedNumbers.includes(cottageNumber) || cottageNumber < 1 || cottageNumber > allCottages.length) {
+        return res.status(409).json({
+          success: false,
+          message: 'Selected cottage number is not available.'
+        });
+      }
+    } else {
+      // Assign the lowest available number (1-based)
+      cottageNumber = 1;
+      for (; cottageNumber <= allCottages.length; cottageNumber++) {
+        if (!assignedNumbers.includes(cottageNumber)) break;
+      }
+      if (cottageNumber > allCottages.length) {
+        return res.status(409).json({
+          success: false,
+          message: 'No available cottage number for this type at the selected time.'
+        });
+      }
+    }
+
+    // Find the specific cottage to assign (by order)
+    const cottage = allCottages[cottageNumber - 1];
     if (!cottage) {
       return res.status(404).json({
         success: false,
-        message: 'Cottage type not found or not available'
+        message: 'Cottage not found for assigned number.'
       });
     }
 
@@ -238,6 +280,7 @@ exports.createBooking = async (req, res) => {
       userId: bookingUserId,
       cottageId: cottage._id,
       cottageType,
+      cottageNumber, // Save assigned number
       bookingDate,
       bookingTime,
       duration,
@@ -500,8 +543,8 @@ exports.confirmBooking = async (req, res) => {
           from: `"Villa Ester Resort" <${process.env.EMAIL_USER}>`,
           to: booking.contactEmail,
           subject: 'Your Booking is Confirmed! - Villa Ester Resort',
-          text: `Hi ${booking.fullName || 'Guest'},\n\nYour booking at Villa Ester Resort has been confirmed!\n\nBooking Date: ${bookingDate}\nBooking Time: ${bookingTime}\nCottage: ${booking.cottageType}\n\nFor more information, you may contact us at ${contactNumber}.\n\nNote: Upon cancellation, the down payment will not be refunded.\n\nThank you for choosing Villa Ester Resort!`,
-          html: `<p>Hi <b>${booking.fullName || 'Guest'}</b>,</p><p>Your booking at <b>Villa Ester Resort</b> has been <b>confirmed</b>!</p><ul><li><b>Booking Date:</b> ${bookingDate}</li><li><b>Booking Time:</b> ${bookingTime}</li><li><b>Cottage:</b> ${booking.cottageType}</li></ul><p><b>For more information, you may contact us at <a href=\"tel:${contactNumber}\">${contactNumber}</a>.</b></p><p style=\"color:#d35400;\"><b>Note:</b> Upon cancellation, the down payment will not be refunded.</p><p>Thank you for choosing Villa Ester Resort!</p>`
+          text: `Hi ${booking.fullName || 'Guest'},\n\nYour booking at Villa Ester Resort has been confirmed!\n\nBooking Date: ${bookingDate}\nBooking Time: ${bookingTime}\nCottage: ${booking.cottageType}${booking.cottageNumber ? ' #' + booking.cottageNumber : ''}\n\nFor more information, you may contact us at ${contactNumber}.\n\nNote: Upon cancellation, the down payment will not be refunded.\n\nThank you for choosing Villa Ester Resort!`,
+          html: `<p>Hi <b>${booking.fullName || 'Guest'}</b>,</p><p>Your booking at <b>Villa Ester Resort</b> has been <b>confirmed</b>!</p><ul><li><b>Booking Date:</b> ${bookingDate}</li><li><b>Booking Time:</b> ${bookingTime}</li><li><b>Cottage:</b> ${booking.cottageType}${booking.cottageNumber ? ' #' + booking.cottageNumber : ''}</li></ul><p><b>For more information, you may contact us at <a href=\"tel:${contactNumber}\">${contactNumber}</a>.</b></p><p style=\"color:#d35400;\"><b>Note:</b> Upon cancellation, the down payment will not be refunded.</p><p>Thank you for choosing Villa Ester Resort!</p>`
         });
         console.log('Confirmation email sent to', booking.contactEmail);
       } catch (emailErr) {
@@ -709,5 +752,42 @@ exports.checkAvailability = async (req, res) => {
       message: 'Failed to check availability',
       error: error.message
     });
+  }
+}; 
+
+// Add this new controller function
+exports.getAvailableCottageNumbers = async (req, res) => {
+  try {
+    const { cottageType, bookingDate, bookingTime } = req.query;
+    if (!cottageType || !bookingDate || !bookingTime) {
+      return res.status(400).json({ success: false, message: 'Missing required parameters' });
+    }
+    // Find all cottages of the specified type
+    const Cottage = require('../models/cottage');
+    const allCottages = await Cottage.find({ type: cottageType, available: true });
+    if (!allCottages || allCottages.length === 0) {
+      return res.status(404).json({ success: false, message: 'No cottages of this type available' });
+    }
+    // Use total quantity, not just number of docs
+    const totalQuantity = allCottages.reduce((sum, c) => sum + (c.quantity || 1), 0);
+    // Find all bookings for this type/date/time
+    const Booking = require('../models/Booking');
+    const existingBookings = await Booking.find({
+      cottageType,
+      bookingDate: new Date(bookingDate),
+      bookingTime,
+      status: { $nin: ['cancelled', 'rejected'] }
+    });
+    // Get all assigned numbers
+    const assignedNumbers = existingBookings.map(b => b.cottageNumber).filter(n => typeof n === 'number');
+    // List all available numbers
+    const availableNumbers = [];
+    for (let i = 1; i <= totalQuantity; i++) {
+      if (!assignedNumbers.includes(i)) availableNumbers.push(i);
+    }
+    res.json({ success: true, availableNumbers });
+  } catch (error) {
+    console.error('Error fetching available cottage numbers:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch available cottage numbers', error: error.message });
   }
 }; 

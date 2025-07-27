@@ -603,6 +603,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         await Promise.all([fetchBookings(), fetchCottages()]);
         await updateDashboardOverview();
         await updateCottageOccupancyTable();
+        renderCottageNumberStatus();
     }
 
     // On dashboard load, update with real data
@@ -659,7 +660,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             arrivalCard.innerHTML = `
                 <div class="arrival-info">
                     <h3>${booking.fullName || 'Guest'}</h3>
-                    <p><strong>Cottage:</strong> ${booking.cottageType}</p>
+                    <p><strong>Cottage:</strong> ${booking.cottageType}${booking.cottageNumber ? ' #' + booking.cottageNumber : ''}</p>
                     <p><strong>Booking Type:</strong> ${booking.notes?.includes('daytour') ? 'Day Tour' : 'Overnight'}</p>
                     <p><strong>Time:</strong> ${booking.bookingTime || 'N/A'}</p>
                     <p><strong>Guests:</strong> ${booking.numberOfPeople || 'N/A'}</p>
@@ -754,6 +755,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             item.classList.add('pending-booking-item');
             let guestName = booking.fullName || (booking.userId && booking.userId.name) || booking.name || booking.contactName || 'Guest';
             const roomType = booking.cottageType || booking.roomType || 'Cottage';
+            const cottageNumber = booking.cottageNumber ? ` #${booking.cottageNumber}` : '';
+            const fullRoomInfo = roomType + cottageNumber;
             const bookingType = booking.bookingType || (booking.notes && booking.notes.toLowerCase().includes('overnight') ? 'Overnight' : 'Day Tour');
             let checkinTime = '-';
             let checkoutTime = '-';
@@ -794,7 +797,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <span style="font-weight:600;">${guestName}</span>
                     ${isWalkIn ? '<span style="color: #e67e22; font-size: 0.8em; font-weight: 600; margin-left: 8px; padding: 2px 6px; background: #fdf2e9; border-radius: 4px;">WALK-IN</span>' : ''}
                 </div>
-                <div style="margin-left:32px;min-width:180px;">${roomType}<br><span style="font-size:0.95em;color:#888;">Check-in: ${checkin}<br>Check-out: ${checkout}</span></div>
+                <div style="margin-left:32px;min-width:180px;">${fullRoomInfo}<br><span style="font-size:0.95em;color:#888;">Check-in: ${checkin}<br>Check-out: ${checkout}</span></div>
                 <div style="margin-left:32px;min-width:120px;">${adults} Adult${adults>1?'s':''}, ${children} Child${children!==1?'ren':''}</div>
                 <div style="margin-left:32px;min-width:120px;">Status: <span style="font-weight:600;">${booking.status.charAt(0).toUpperCase()+booking.status.slice(1)}</span></div>
                 <div style="margin-left:32px;min-width:120px;">
@@ -856,6 +859,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             walkinGuests.forEach((guest, idx) => {
                 const bookingType = guest.bookingType || 'Day Tour';
                 const cottage = guest.cottage || guest.cottageType || 'N/A';
+                const cottageNumber = guest.cottageNumber ? ` #${guest.cottageNumber}` : '';
+                const fullCottageInfo = cottage + cottageNumber;
                 const name = guest.name || guest.fullName || 'Guest';
                 const numPeople = guest.numberOfPeople || guest.adults || 1;
                 const phone = guest.phone || guest.contactPhone || '';
@@ -865,7 +870,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <tr>
                         <td style="padding:8px;">${name}</td>
                         <td style="padding:8px;">${bookingType}</td>
-                        <td style="padding:8px;">${cottage}</td>
+                        <td style="padding:8px;">${fullCottageInfo}</td>
                         <td style="padding:8px;">${numPeople}</td>
                         <td style="padding:8px;">${phone}</td>
                         <td style="padding:8px;">${email}</td>
@@ -973,6 +978,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 bookingData.checkinDate = checkinDate;
                 bookingData.checkoutDate = checkoutDate;
             }
+            const selectedNumber = document.getElementById('qb-cottage-number').value;
+            if (selectedNumber) bookingData.cottageNumber = selectedNumber;
             console.log('Submitting bookingData:', bookingData);
             try {
                 const token = localStorage.getItem('token');
@@ -1596,7 +1603,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             card.innerHTML = `
                 <div class="arrival-info">
                     <h3>${booking.fullName || 'Guest'}</h3>
-                    <p><strong>Cottage:</strong> ${booking.cottageType}</p>
+                    <p><strong>Cottage:</strong> ${booking.cottageType}${booking.cottageNumber ? ' #' + booking.cottageNumber : ''}</p>
                     <p><strong>Booking Type:</strong> ${isDayTour ? 'Day Tour' : 'Overnight'}</p>
                     <p><strong>Time:</strong> ${booking.bookingTime || 'N/A'}</p>
                     <p><strong>Guests:</strong> ${booking.numberOfPeople || 'N/A'}</p>
@@ -1806,7 +1813,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             ${stats.bookingDetails.map(booking => `
                                 <tr>
                                     <td style="padding: 8px; border-bottom: 1px solid #eee;">${booking.guestName}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${booking.cottageType}</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${booking.cottageType}${booking.cottageNumber ? ' #' + booking.cottageNumber : ''}</td>
                                     <td style="padding: 8px; border-bottom: 1px solid #eee;">${booking.adults + booking.children} (${booking.adults}A, ${booking.children}C)</td>
                                     <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₱${booking.totalRevenue.toLocaleString()}</td>
                                 </tr>
@@ -2944,7 +2951,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             <span class="status cancelled" style="margin-left:12px; color:#b93a2b;">Cancelled</span>
                         </div>
                         <div style="color:#666; font-size:0.95em; line-height:1.4;">
-                            <div><strong>Cottage:</strong> ${booking.cottageType}</div>
+                            <div><strong>Cottage:</strong> ${booking.cottageType}${booking.cottageNumber ? ' #' + booking.cottageNumber : ''}</div>
                             <div><strong>Date:</strong> ${booking.bookingDate ? new Date(booking.bookingDate).toLocaleDateString() : ''} ${booking.bookingTime || ''}</div>
                             <div><strong>Guests:</strong> ${booking.numberOfPeople || 'N/A'}</div>
                             <div><strong>Phone:</strong> ${booking.contactPhone || 'N/A'}</div>
@@ -2969,4 +2976,75 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderUserTable();
       }
     });
+
+    // Add after updateCottageOccupancyTable or in dashboard rendering logic
+    function renderCottageNumberStatus() {
+      const container = document.getElementById('cottage-number-status');
+      if (!container) return;
+      container.innerHTML = '';
+      const today = new Date().toISOString().slice(0, 10);
+      // Define cottage types and their counts
+      const cottageTypes = {
+        'kubo': { name: 'Kubo Type', total: 8 },
+        'With Videoke': { name: 'VE Cottage with Videoke', total: 2 },
+        'Without Videoke': { name: 'VE Cottage without Videoke', total: 2 },
+        'garden': { name: 'Garden Table', total: 10 }
+      };
+      // For each type, build a row of numbers
+      Object.keys(cottageTypes).forEach(type => {
+        const { name, total } = cottageTypes[type];
+        // Find occupied numbers for today
+        const occupiedNumbers = bookingsData
+          .filter(b => b.cottageType === type && b.bookingDate && b.bookingDate.slice(0,10) === today && b.status !== 'cancelled' && b.status !== 'rejected')
+          .map(b => b.cottageNumber)
+          .filter(n => typeof n === 'number');
+        // Build number badges
+        let numbersHtml = '';
+        for (let i = 1; i <= total; i++) {
+          const isOccupied = occupiedNumbers.includes(i);
+          numbersHtml += `<span class="cottage-number-badge${isOccupied ? ' occupied' : ' available'}">${i}</span> `;
+        }
+        container.innerHTML += `<div style="margin-bottom:12px;"><strong>${name}:</strong> ${numbersHtml}</div>`;
+      });
+    }
+    // Call this after updating bookings/cottages
+    // ... existing code ...
+    // In updateDashboardAndTable or after updateCottageOccupancyTable:
+    renderCottageNumberStatus();
+    // ... existing code ...
+
+    // Add after walk-in/quick booking form cottage type selection
+    function updateQuickBookingCottageNumbers() {
+      const type = document.getElementById('qb-cottage-type').value;
+      const numberSelect = document.getElementById('qb-cottage-number');
+      if (!type || !numberSelect) {
+        numberSelect.innerHTML = '<option value="">Select a type first</option>';
+        return;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      numberSelect.innerHTML = '<option value="">Loading...</option>';
+      fetch(`http://localhost:3000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(type)}&bookingDate=${encodeURIComponent(today)}&bookingTime=08:00`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.availableNumbers)) {
+            numberSelect.innerHTML = data.availableNumbers.map(n => `<option value="${n}">${n}</option>`).join('');
+          } else {
+            numberSelect.innerHTML = '<option value="">No available numbers</option>';
+          }
+        })
+        .catch(() => {
+          numberSelect.innerHTML = '<option value="">Error loading numbers</option>';
+        });
+    }
+    // ... existing code ...
+    // Add event listeners for cottage type selection in walk-in form
+    const qbCottageType = document.getElementById('qb-cottage-type');
+    if (qbCottageType) {
+      qbCottageType.addEventListener('change', updateQuickBookingCottageNumbers);
+    }
+    // ... existing code ...
+    // In quick booking form submit logic, add:
+    // const selectedNumber = document.getElementById('qb-cottage-number').value;
+    // Include selectedNumber as cottageNumber in the booking POST request.
+    // ... existing code ...
 }); 

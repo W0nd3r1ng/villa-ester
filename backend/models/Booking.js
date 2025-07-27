@@ -15,6 +15,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Cottage type is required']
   },
+  cottageNumber: {
+    type: Number,
+    required: false
+  },
   fullName: {
     type: String,
     required: [true, 'Full name is required']

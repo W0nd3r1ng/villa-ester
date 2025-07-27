@@ -314,6 +314,8 @@ if (modalBookingForm) {
         const gcashRef = document.getElementById('modal-gcash-ref')?.value || '';
         formData.append('gcashReference', gcashRef);
         if (proofFile) formData.append('proofOfPayment', proofFile);
+        const selectedNumber = document.getElementById('modal-cottage-number').value;
+        if (selectedNumber) formData.append('cottageNumber', selectedNumber);
         
         // Debug: Log the data being sent
         console.log('Sending booking data:', {
@@ -1466,4 +1468,144 @@ document.addEventListener('DOMContentLoaded', function() {
             // For other Book Now buttons, you can add custom logic here if needed
         });
     });
+}); 
+
+// Add after user selects cottage type and date/time in the booking modal
+function updateAvailableCottageNumbers(cottageType, bookingDate, bookingTime) {
+  // This function should be called whenever cottageType, bookingDate, or bookingTime changes
+  // It will update the dropdown of available cottage numbers
+  console.log('updateAvailableCottageNumbers called with:', { cottageType, bookingDate, bookingTime });
+  
+  const numberSelect = document.getElementById('modal-cottage-number');
+  if (!numberSelect) {
+    console.log('modal-cottage-number select not found');
+    return;
+  }
+  
+  numberSelect.innerHTML = '<option value="">Loading...</option>';
+  
+  const url = `http://localhost:3000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(cottageType)}&bookingDate=${encodeURIComponent(bookingDate)}&bookingTime=${encodeURIComponent(bookingTime)}`;
+  console.log('Fetching from URL:', url);
+  
+  // Get user token if available
+  const token = localStorage.getItem('token');
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('Including auth token in request');
+  } else {
+    console.log('No auth token available');
+  }
+  
+  fetch(url, {
+    headers: headers
+  })
+    .then(res => {
+      console.log('Response status:', res.status);
+      return res.json();
+    })
+    .then(data => {
+      console.log('Response data:', data);
+      if (data.success && Array.isArray(data.availableNumbers)) {
+        numberSelect.innerHTML = data.availableNumbers.map(n => `<option value="${n}">${n}</option>`).join('');
+        console.log('Updated dropdown with', data.availableNumbers.length, 'options');
+      } else {
+        numberSelect.innerHTML = '<option value="">No available numbers</option>';
+        console.log('No available numbers or invalid response');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching available numbers:', error);
+      numberSelect.innerHTML = '<option value="">Error loading numbers</option>';
+    });
+}
+
+// Function to get max numbers for each cottage type
+function getMaxNumbersForCottageType(cottageType) {
+  const maxNumbers = {
+    'kubo': 10,
+    'With Videoke': 2,
+    'Without Videoke': 2,
+    'garden': 10
+  };
+  return maxNumbers[cottageType] || 10;
+}
+
+// Function to select a cottage number
+function selectCottageNumber(number) {
+  // Remove previous selection
+  const items = document.querySelectorAll('.cottage-number-item');
+  items.forEach(item => item.classList.remove('selected'));
+  
+  // Add selection to clicked item
+  const selectedItem = document.querySelector(`[data-number="${number}"]`);
+  if (selectedItem) {
+    selectedItem.classList.add('selected');
+  }
+  
+  // Update hidden input
+  const hiddenInput = document.getElementById('modal-cottage-number');
+  if (hiddenInput) {
+    hiddenInput.value = number;
+  }
+  
+  console.log('Selected cottage number:', number);
+}
+
+// Add event listeners for cottage number updates
+document.addEventListener('DOMContentLoaded', function() {
+  const cottageTypeSelect = document.getElementById('modal-cottage-type');
+  const scheduleDateInput = document.getElementById('modal-schedule-date');
+  const checkinDateInput = document.getElementById('modal-checkin-date');
+  const bookingTypeSelect = document.getElementById('modal-booking-type');
+  
+  console.log('Setting up cottage number event listeners');
+  console.log('Found elements:', {
+    cottageTypeSelect: !!cottageTypeSelect,
+    scheduleDateInput: !!scheduleDateInput,
+    checkinDateInput: !!checkinDateInput,
+    bookingTypeSelect: !!bookingTypeSelect
+  });
+  
+  function updateCottageNumbers() {
+    const cottageType = cottageTypeSelect.value;
+    const bookingType = bookingTypeSelect ? bookingTypeSelect.value : 'daytour';
+    let bookingDate = '';
+    let bookingTime = '';
+    
+    // Get the appropriate date based on booking type
+    if (bookingType === 'daytour') {
+      bookingDate = scheduleDateInput ? scheduleDateInput.value : '';
+      bookingTime = '08:00';
+    } else if (bookingType === 'overnight') {
+      bookingDate = checkinDateInput ? checkinDateInput.value : '';
+      bookingTime = '14:00';
+    }
+    
+    console.log('updateCottageNumbers called with:', { cottageType, bookingType, bookingDate, bookingTime });
+    
+    if (cottageType && bookingDate && bookingTime) {
+      console.log('All values present, calling updateAvailableCottageNumbers');
+      updateAvailableCottageNumbers(cottageType, bookingDate, bookingTime);
+    } else {
+      console.log('Missing values, not calling updateAvailableCottageNumbers');
+    }
+  }
+  
+  if (cottageTypeSelect) {
+    cottageTypeSelect.addEventListener('change', updateCottageNumbers);
+    console.log('Added change listener to cottage type select');
+  }
+  if (scheduleDateInput) {
+    scheduleDateInput.addEventListener('change', updateCottageNumbers);
+    console.log('Added change listener to schedule date input');
+  }
+  if (checkinDateInput) {
+    checkinDateInput.addEventListener('change', updateCottageNumbers);
+    console.log('Added change listener to checkin date input');
+  }
+  if (bookingTypeSelect) {
+    bookingTypeSelect.addEventListener('change', updateCottageNumbers);
+    console.log('Added change listener to booking type select');
+  }
 }); 

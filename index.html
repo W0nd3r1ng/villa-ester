@@ -403,6 +403,10 @@
                             <option value="garden">Garden Table - ₱300 (5 guests)</option>
                         </select>
                     </div>
+                    <label for="modal-cottage-number">Cottage Number</label>
+                    <select id="modal-cottage-number" required>
+                        <option value="">Select a number</option>
+                    </select>
                 </div>
                 <div class="modal-form-row">
                     <div class="modal-form-group">
@@ -864,6 +868,8 @@ async function loadBookingHistory() {
             
             // Get cottage name from populated cottageId or fallback to cottageType
             const cottageName = (b.cottageId && b.cottageId.name) || b.cottageType || 'Cottage';
+            const cottageNumber = b.cottageNumber ? ` #${b.cottageNumber}` : '';
+            const fullCottageInfo = cottageName + cottageNumber;
             
             // Format additional details
             const people = b.numberOfPeople ? `${b.numberOfPeople} people` : '';
@@ -882,7 +888,7 @@ async function loadBookingHistory() {
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                            <strong style="font-size:1.2em; color: #333;">${cottageName}</strong>
+                            <strong style="font-size:1.2em; color: #333;">${fullCottageInfo}</strong>
                             <span class="${statusClass}" style="margin-left: 12px;">${statusLabel}</span>
                         </div>
                         <div style="color: #666; font-size: 0.95em; line-height: 1.4;">
