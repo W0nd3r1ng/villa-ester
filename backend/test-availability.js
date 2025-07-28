@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const Booking = require('./models/Booking');
 const Cottage = require('./models/cottage');
+const Booking = require('./models/Booking');
 require('dotenv').config();
 
 async function testAvailability() {
@@ -8,46 +8,68 @@ async function testAvailability() {
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true,
+      useUnifiedTopology: true
     });
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
-    // Test date and time
-    const testDate = '2025-07-14';
-    const testTime = '08:00';
+    // Test 1: Check cottage data
+    console.log('\n=== TEST 1: Checking cottage data ===');
+    const cottages = await Cottage.find({});
+    console.log('Total cottages found:', cottages.length);
+    cottages.forEach(cottage => {
+      console.log(`- ${cottage.name} (${cottage.type}): Quantity ${cottage.quantity}, Available: ${cottage.available}`);
+    });
 
-    console.log('\n=== Testing Availability System ===');
-    console.log('Test Date:', testDate);
-    console.log('Test Time:', testTime);
+    // Test 2: Check existing bookings for today
+    console.log('\n=== TEST 2: Checking existing bookings ===');
+    const today = new Date().toISOString().slice(0, 10);
+    const bookings = await Booking.find({
+      bookingDate: {
+        $gte: new Date(today + 'T00:00:00.000Z'),
+        $lte: new Date(today + 'T23:59:59.999Z')
+      },
+      status: { $nin: ['cancelled', 'rejected'] }
+    });
+    console.log('Bookings for today:', bookings.length);
+    bookings.forEach(booking => {
+      console.log(`- ${booking.cottageType} #${booking.cottageNumber} at ${booking.bookingTime} (${booking.status})`);
+    });
 
-    // Check each cottage type
-    const cottageTypes = ['kubo', 'With Videoke', 'Without Videoke', 'garden'];
-    
-    for (const cottageType of cottageTypes) {
-      console.log(`\n--- Testing ${cottageType} ---`);
+    // Test 3: Test availability for kubo type
+    console.log('\n=== TEST 3: Testing kubo availability ===');
+    const kuboCottage = await Cottage.findOne({ type: 'kubo' });
+    if (kuboCottage) {
+      console.log('Kubo cottage found:', kuboCottage.name, 'Quantity:', kuboCottage.quantity);
       
-      // Get cottage info
-      const cottage = await Cottage.findOne({ type: cottageType });
-      if (cottage) {
-        console.log(`Total quantity: ${cottage.quantity}`);
+      const kuboBookings = await Booking.find({
+        cottageType: 'kubo',
+        bookingDate: {
+          $gte: new Date(today + 'T00:00:00.000Z'),
+          $lte: new Date(today + 'T23:59:59.999Z')
+        },
+        bookingTime: '08:00',
+        status: { $nin: ['cancelled', 'rejected'] }
+      });
+      
+      console.log('Kubo bookings for today at 08:00:', kuboBookings.length);
+      const assignedNumbers = kuboBookings.map(b => b.cottageNumber).filter(n => typeof n === 'number');
+      console.log('Assigned cottage numbers:', assignedNumbers);
+      
+      const availableNumbers = [];
+      for (let i = 1; i <= kuboCottage.quantity; i++) {
+        if (!assignedNumbers.includes(i)) {
+          availableNumbers.push(i);
+        }
       }
-
-      // Check availability
-      const isAvailable = await Booking.checkAvailabilityByType(cottageType, testDate, testTime);
-      const availableQuantity = await Booking.getAvailableQuantity(cottageType, testDate, testTime);
-      
-      console.log(`Available: ${isAvailable}`);
-      console.log(`Available quantity: ${availableQuantity}`);
+      console.log('Available cottage numbers:', availableNumbers);
     }
 
-    console.log('\n=== Test Complete ===');
   } catch (error) {
-    console.error('❌ Error testing availability:', error);
+    console.error('Error:', error);
   } finally {
     await mongoose.connection.close();
-    console.log('🔌 Database connection closed');
+    console.log('MongoDB connection closed');
   }
 }
 
-// Run the test
 testAvailability(); 

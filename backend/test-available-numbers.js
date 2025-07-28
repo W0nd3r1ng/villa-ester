@@ -4,7 +4,7 @@ async function testAvailableNumbers() {
   try {
     console.log('Testing cottage-numbers endpoint...');
     
-    const response = await axios.get('http://localhost:3000/api/bookings/cottage-numbers', {
+    const response = await axios.get('http://localhost:5000/api/bookings/get-cottage-numbers', {
       params: {
         cottageType: 'kubo',
         bookingDate: '2025-07-29',

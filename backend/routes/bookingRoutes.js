@@ -13,8 +13,11 @@ const {
   validateDateRange,
   validateBookingTimeSlot
 } = require('../middleware/bookingValidation');
-const { auth } = require('../middleware/auth');
+const { auth, optionalAuth } = require('../middleware/auth');
 const { admin, requireRole } = require('../middleware/admin');
+
+// Development mode check
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Cottage availability route - completely self-contained
 router.get('/get-cottage-numbers', async (req, res) => {
@@ -39,42 +42,66 @@ router.get('/get-cottage-numbers', async (req, res) => {
       });
     }
     
-    // Find all cottages of the specified type
+    // Find the cottage document for the specified type
     const Cottage = require('../models/cottage');
-    const allCottages = await Cottage.find({ type: cottageType, available: true });
-    console.log('Found cottages:', allCottages.length);
+    const cottage = await Cottage.findOne({ type: cottageType, available: true });
+    console.log('Found cottage:', cottage ? cottage.name : 'None');
     
-    if (!allCottages || allCottages.length === 0) {
-      console.log('No cottages of this type available');
-      return res.status(404).json({ success: false, message: 'No cottages of this type available' });
+    if (!cottage) {
+      console.log('No cottage of this type available');
+      return res.status(404).json({ success: false, message: 'No cottage of this type available' });
     }
     
-    // Use total quantity, not just number of docs
-    const totalQuantity = allCottages.reduce((sum, c) => sum + (c.quantity || 1), 0);
-    console.log('Total quantity:', totalQuantity);
+    // Get total quantity for this cottage type
+    const totalQuantity = cottage.quantity || 1;
+    console.log('Total quantity for', cottageType, ':', totalQuantity);
     
-    // Find all bookings for this type/date/time
+    // Find all bookings for this type/date/time that are not cancelled/rejected
     const Booking = require('../models/Booking');
+    
+    // Create start and end of the booking date for proper date comparison
+    const bookingDateStart = new Date(bookingDate);
+    bookingDateStart.setHours(0, 0, 0, 0);
+    const bookingDateEnd = new Date(bookingDate);
+    bookingDateEnd.setHours(23, 59, 59, 999);
+    
+    console.log('Date range for query:', {
+      start: bookingDateStart.toISOString(),
+      end: bookingDateEnd.toISOString(),
+      requestedDate: bookingDate
+    });
+    
     const existingBookings = await Booking.find({
       cottageType,
-      bookingDate: new Date(bookingDate),
+      bookingDate: { $gte: bookingDateStart, $lte: bookingDateEnd },
       bookingTime,
       status: { $nin: ['cancelled', 'rejected'] }
     });
-    console.log('Existing bookings:', existingBookings.length);
+    console.log('Existing bookings for this date/time:', existingBookings.length);
+    existingBookings.forEach((booking, index) => {
+      console.log(`  ${index + 1}. ${booking.cottageType} #${booking.cottageNumber} - ${booking.bookingDate.toISOString()} at ${booking.bookingTime} (${booking.status})`);
+    });
     
     // Get all assigned numbers
     const assignedNumbers = existingBookings.map(b => b.cottageNumber).filter(n => typeof n === 'number');
     console.log('Assigned numbers:', assignedNumbers);
     
-    // List all available numbers
+    // List all available numbers (1 to totalQuantity)
     const availableNumbers = [];
     for (let i = 1; i <= totalQuantity; i++) {
-      if (!assignedNumbers.includes(i)) availableNumbers.push(i);
+      if (!assignedNumbers.includes(i)) {
+        availableNumbers.push(i);
+      }
     }
     console.log('Available numbers:', availableNumbers);
     
-    res.json({ success: true, availableNumbers });
+    res.json({ 
+      success: true, 
+      availableNumbers,
+      totalQuantity,
+      assignedNumbers,
+      cottageType
+    });
   } catch (error) {
     console.error('Error in cottage availability controller:', error);
     res.status(500).json({ 
@@ -88,10 +115,10 @@ router.get('/get-cottage-numbers', async (req, res) => {
 /**
  * @route   GET /api/bookings
  * @desc    Get all bookings with filtering and pagination
- * @access  Public (for clerk panel)
+ * @access  Public (for clerk panel) - uses optional auth in development
  */
 router.get('/',
-  auth,
+  isDevelopment ? optionalAuth : auth,
   validateGetBookings,
   validateDateRange,
   handleValidationErrors,
@@ -138,7 +165,7 @@ router.get('/:id',
  * @access  Public
  */
 router.post('/', 
-  auth,
+  optionalAuth,
   (req, res, next) => {
     console.log('POST /api/bookings route hit');
     console.log('Request headers:', req.headers);

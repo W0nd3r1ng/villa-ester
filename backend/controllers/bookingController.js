@@ -156,6 +156,7 @@ exports.createBooking = async (req, res) => {
     
     console.log('Parsed booking data:', bookingData);
     console.log('GCash Reference received:', req.body.gcashReference);
+    console.log('Cottage Number received:', req.body.cottageNumber);
     console.log('Full req.body:', req.body);
     
     // Check for validation errors
@@ -201,72 +202,106 @@ exports.createBooking = async (req, res) => {
       }
     }
 
-    // Find all cottages of the specified type
-    const allCottages = await Cottage.find({ type: cottageType, available: true });
-    if (!allCottages || allCottages.length === 0) {
+    // Find the cottage document for the specified type
+    const cottage = await Cottage.findOne({ type: cottageType, available: true });
+    if (!cottage) {
       return res.status(404).json({
         success: false,
-        message: 'No cottages of this type available'
+        message: 'No cottage of this type available'
       });
     }
 
+    // Get total quantity for this cottage type
+    const totalQuantity = cottage.quantity || 1;
+
     // Find all bookings for this type/date/time
+    // Create start and end of the booking date for proper date comparison
+    const bookingDateStart = new Date(bookingDate);
+    bookingDateStart.setHours(0, 0, 0, 0);
+    const bookingDateEnd = new Date(bookingDate);
+    bookingDateEnd.setHours(23, 59, 59, 999);
+    
     const existingBookings = await Booking.find({
       cottageType,
-      bookingDate: new Date(bookingDate),
+      bookingDate: { $gte: bookingDateStart, $lte: bookingDateEnd },
       bookingTime,
       status: { $nin: ['cancelled', 'rejected'] }
     });
+    
+    console.log('=== EXISTING BOOKINGS DEBUG ===');
+    console.log('Date range:', { start: bookingDateStart.toISOString(), end: bookingDateEnd.toISOString() });
+    console.log('Query criteria:', { cottageType, bookingTime, status: { $nin: ['cancelled', 'rejected'] } });
+    console.log('Found existing bookings:', existingBookings.length);
+    existingBookings.forEach((booking, index) => {
+      console.log(`  ${index + 1}. ${booking.cottageType} #${booking.cottageNumber} - ${booking.bookingDate.toISOString()} at ${booking.bookingTime} (${booking.status})`);
+    });
+    
     // Get all assigned numbers
     const assignedNumbers = existingBookings.map(b => b.cottageNumber).filter(n => typeof n === 'number');
+    console.log('Assigned cottage numbers:', assignedNumbers);
+    console.log('=== END EXISTING BOOKINGS DEBUG ===');
 
     // Use provided cottageNumber if given, else assign lowest available
     let cottageNumber = req.body.cottageNumber ? parseInt(req.body.cottageNumber, 10) : null;
+    console.log('=== COTTAGE NUMBER DEBUG ===');
+    console.log('Raw cottageNumber from req.body:', req.body.cottageNumber);
+    console.log('Type of cottageNumber:', typeof req.body.cottageNumber);
+    console.log('Parsed cottageNumber:', cottageNumber);
+    console.log('Cottage number assignment:', {
+      requestedNumber: req.body.cottageNumber,
+      parsedNumber: cottageNumber,
+      totalQuantity,
+      assignedNumbers,
+      cottageType,
+      bookingDate,
+      bookingTime
+    });
+    console.log('=== END COTTAGE NUMBER DEBUG ===');
+    
     if (cottageNumber) {
-      if (assignedNumbers.includes(cottageNumber) || cottageNumber < 1 || cottageNumber > allCottages.length) {
+      // Validate the requested cottage number
+      console.log('=== COTTAGE NUMBER VALIDATION ===');
+      console.log('Requested cottage number:', cottageNumber);
+      console.log('Assigned numbers:', assignedNumbers);
+      console.log('Total quantity:', totalQuantity);
+      console.log('Is assigned:', assignedNumbers.includes(cottageNumber));
+      console.log('Is too small:', cottageNumber < 1);
+      console.log('Is too large:', cottageNumber > totalQuantity);
+      
+      if (assignedNumbers.includes(cottageNumber) || cottageNumber < 1 || cottageNumber > totalQuantity) {
+        console.log('Cottage number validation failed:', {
+          isAssigned: assignedNumbers.includes(cottageNumber),
+          isTooSmall: cottageNumber < 1,
+          isTooLarge: cottageNumber > totalQuantity
+        });
         return res.status(409).json({
           success: false,
           message: 'Selected cottage number is not available.'
         });
       }
+      console.log('Cottage number validation passed');
+      console.log('=== END COTTAGE NUMBER VALIDATION ===');
     } else {
       // Assign the lowest available number (1-based)
       cottageNumber = 1;
-      for (; cottageNumber <= allCottages.length; cottageNumber++) {
+      for (; cottageNumber <= totalQuantity; cottageNumber++) {
         if (!assignedNumbers.includes(cottageNumber)) break;
       }
-      if (cottageNumber > allCottages.length) {
+      if (cottageNumber > totalQuantity) {
+        console.log('No available cottage numbers found');
         return res.status(409).json({
           success: false,
           message: 'No available cottage number for this type at the selected time.'
         });
       }
     }
-
-    // Find the specific cottage to assign (by order)
-    const cottage = allCottages[cottageNumber - 1];
-    if (!cottage) {
-      return res.status(404).json({
-        success: false,
-        message: 'Cottage not found for assigned number.'
-      });
-    }
-
-    // Check if any cottage of this type is available for the time slot
-    console.log('Checking availability for:', { cottageType, bookingDate, bookingTime });
-    const isAvailable = await Booking.checkAvailabilityByType(cottageType, bookingDate, bookingTime);
-    console.log('Availability result:', isAvailable);
     
-    if (!isAvailable) {
-      return res.status(409).json({
-        success: false,
-        message: 'No cottages of this type are available for the selected date and time'
-      });
-    }
+    console.log('Final assigned cottage number:', cottageNumber);
 
     // Create new booking
     let bookingUserId = req.user && req.user._id;
-    if (!bookingUserId) {
+    // For walk-in bookings, we don't require a user ID
+    if (!bookingUserId && req.body.status !== 'completed') {
       return res.status(401).json({
         success: false,
         message: 'User not authenticated'
@@ -277,7 +312,7 @@ exports.createBooking = async (req, res) => {
     // Ensure gcashReference is set to empty string if missing
     const safeGcashReference = typeof gcashReference === 'string' ? gcashReference : '';
     const booking = new Booking({
-      userId: bookingUserId,
+      userId: bookingUserId || null, // Allow null for walk-in bookings
       cottageId: cottage._id,
       cottageType,
       cottageNumber, // Save assigned number

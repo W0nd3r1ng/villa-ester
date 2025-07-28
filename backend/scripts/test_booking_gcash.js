@@ -6,7 +6,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 
 // CONFIGURE THESE:
-const API_BASE = process.env.API_BASE || 'http://localhost:3000/api';
+const API_BASE = process.env.API_BASE || 'http://localhost:5000/api';
 const MONGODB_URI = 'mongodb+srv://villa_ester_admin:Bk5IaRBQjT7Kk2WR@cluster0.tuh5fdh.mongodb.net/villa_ester?retryWrites=true&w=majority&appName=Cluster0';
 const TEST_PHONE = '09999999999';
 const TEST_EMAIL = 'gcash_test@example.com';
