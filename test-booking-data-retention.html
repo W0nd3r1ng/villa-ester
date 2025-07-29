@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Booking Data Retention</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: #6c63ff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #554ee0;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Booking Data Retention</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Fill Availability Form</h2>
+        <form id="test-availability-form">
+            <div class="form-group">
+                <label for="test-booking-type">Booking Type:</label>
+                <select id="test-booking-type">
+                    <option value="">Select booking type</option>
+                    <option value="daytour">Day Tour (8am–6pm)</option>
+                    <option value="overnight">Overnight Stay</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="test-guests">Number of Guests:</label>
+                <input type="number" id="test-guests" min="1" max="30" value="5">
+            </div>
+            <div class="form-group">
+                <label for="test-schedule-date">Schedule Date (Day Tour):</label>
+                <input type="date" id="test-schedule-date">
+            </div>
+            <div class="form-group">
+                <label for="test-checkin-date">Check-in Date (Overnight):</label>
+                <input type="date" id="test-checkin-date">
+            </div>
+            <div class="form-group">
+                <label for="test-checkout-date">Check-out Date (Overnight):</label>
+                <input type="date" id="test-checkout-date">
+            </div>
+        </form>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Data Retention</h2>
+        <p>Click the buttons below to test if the availability form data is carried over to the booking modal:</p>
+        
+        <button class="test-button" onclick="testDataRetention('kubo', 'Kubo Type')">Test Kubo Type</button>
+        <button class="test-button" onclick="testDataRetention('With Videoke', 'VE Cottage with Videoke')">Test VE Cottage with Videoke</button>
+        <button class="test-button" onclick="testDataRetention('Without Videoke', 'VE Cottage without Videoke')">Test VE Cottage without Videoke</button>
+        <button class="test-button" onclick="testDataRetention('garden', 'Garden Table')">Test Garden Table</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Expected Results</h2>
+        <div class="result">
+            <strong>When you click "Book Now" on any cottage:</strong>
+            <ul>
+                <li>✓ Booking type should be pre-filled</li>
+                <li>✓ Number of guests should be carried over to "Adults" field</li>
+                <li>✓ Date fields should be pre-filled based on booking type</li>
+                <li>✓ Cottage type should be pre-selected</li>
+                <li>✓ Personal info fields (name, email, phone) should be cleared</li>
+                <li>✓ A green notification should appear confirming data was carried over</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Mock the availability form elements to simulate the real form
+        function mockAvailabilityForm() {
+            // Create mock elements that the script expects
+            const mockElements = {
+                'booking-type': document.getElementById('test-booking-type'),
+                'guests': document.getElementById('test-guests'),
+                'schedule-date': document.getElementById('test-schedule-date'),
+                'checkin-date': document.getElementById('test-checkin-date'),
+                'checkout-date': document.getElementById('test-checkout-date')
+            };
+            
+            // Override getElementById to return our mock elements
+            const originalGetElementById = document.getElementById;
+            document.getElementById = function(id) {
+                return mockElements[id] || originalGetElementById.call(document, id);
+            };
+        }
+        
+        // Test function to simulate clicking "Book Now"
+        function testDataRetention(cottageId, cottageType) {
+            console.log('Testing data retention for:', cottageType);
+            
+            // Mock the availability form
+            mockAvailabilityForm();
+            
+            // Call the openBookingModal function (this would normally be called from the cottage card)
+            if (typeof openBookingModal === 'function') {
+                openBookingModal(cottageId, cottageType);
+            } else {
+                alert('openBookingModal function not found. Make sure script.js is loaded.');
+            }
+        }
+        
+        // Set some default test values
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set tomorrow's date as default
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            
+            document.getElementById('test-schedule-date').value = tomorrowStr;
+            document.getElementById('test-checkin-date').value = tomorrowStr;
+            
+            // Set checkout date to day after tomorrow
+            const dayAfterTomorrow = new Date();
+            dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+            const dayAfterTomorrowStr = dayAfterTomorrow.toISOString().split('T')[0];
+            document.getElementById('test-checkout-date').value = dayAfterTomorrowStr;
+            
+            // Apply date validation to test form
+            applyDateValidation();
+        });
+        
+        // Apply date validation to test form
+        function applyDateValidation() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInputs = document.querySelectorAll('#test-availability-form input[type="date"]');
+            
+            dateInputs.forEach(input => {
+                input.setAttribute('min', today);
+            });
+            
+            // Set up checkout date validation
+            const checkinInput = document.getElementById('test-checkin-date');
+            const checkoutInput = document.getElementById('test-checkout-date');
+            
+            if (checkinInput && checkoutInput) {
+                checkinInput.addEventListener('change', function() {
+                    if (this.value) {
+                        const nextDay = new Date(this.value);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        const nextDayStr = nextDay.toISOString().split('T')[0];
+                        checkoutInput.setAttribute('min', nextDayStr);
+                        
+                        if (checkoutInput.value && checkoutInput.value <= this.value) {
+                            checkoutInput.value = '';
+                        }
+                    }
+                });
+                
+                checkoutInput.addEventListener('change', function() {
+                    if (this.value && checkinInput.value && this.value <= checkinInput.value) {
+                        alert('Check-out date must be after check-in date.');
+                        this.value = '';
+                    }
+                });
+            }
+        }
+    </script>
+    
+    <!-- Include the main script to test the functionality -->
+    <script src="script.js"></script>
+</body>
+</html> 

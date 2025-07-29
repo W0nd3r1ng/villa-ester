@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villa Ester Resort</title>
+    <link rel="icon" href="images/logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="images/logo.png" alt="Villa Ester Resort" class="navbar-logo">
+            <div class="navbar-menu">
+                <a href="#rooms">Cottages</a>
+                <a href="#gallery">Gallery</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <button class="btn btn-primary" id="open-booking-modal">Book Now</button>
+            <button class="btn btn-secondary" id="login-btn" style="margin-left: 12px;">Login</button>
+            <!-- User Profile Name (hidden by default) -->
+            <div id="user-profile-menu-container" style="display:none; position: relative; margin-left: 12px;">
+                <button id="user-profile-btn" style="background:none; border:none; cursor:pointer; font-size:1.08em; font-weight:600; color:#6c63ff; padding: 6px 16px; border-radius: 7px;">
+                    <span id="navbar-user-name">User</span>
+                </button>
+                <div id="user-dropdown-menu" style="display:none; position:absolute; right:0; top:40px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15); border-radius:8px; min-width:200px; z-index:1000;">
+                    <ul style="list-style:none; margin:0; padding:0;">
+                        <li><button class="dropdown-item" id="open-booking-history" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;">Booking History</button></li>
+                        <li><button class="dropdown-item" id="open-user-settings" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;">User Settings</button></li>
+                        <li><button class="dropdown-item" id="sign-out-btn" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer; color:#e74c3c;">Sign Out</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="hero">
+        <div class="hero-content">
+            <h3 class="hero-title">Rain or shine, Villa Ester is open for you to splash, relax, and unwind</h3>
+            <div class="hero-subtitle">Book your stay and visit our resort today!</div>
+        </div>
+    </div>
+    <section class="booking-section">
+        <div class="booking-header">
+            <h2>Find Your Perfect Cottage</h2>
+            <p>Check availability and book your dream getaway</p>
+        </div>
+        <form class="booking-form" id="availability-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="booking-type">Booking Type</label>
+                    <select id="booking-type" name="booking-type" required>
+                        <option value="">Select booking type</option>
+                        <option value="daytour">Day Tour (8am–6pm)</option>
+                        <option value="overnight">Overnight Stay</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="guests">Number of Guests</label>
+                    <input type="number" id="guests" name="gues ts" min="1" max="30" value="" required>
+                </div>
+            </div>
+            
+            <div id="daytour-fields" class="date-fields">
+                <div class="form-group">
+                    <label for="schedule-date">Schedule Date</label>
+                    <input type="date" id="schedule-date" name="schedule-date">
+                </div>
+            </div>
+            
+            <div id="overnight-fields" class="date-fields" style="display:none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="checkin-date">Check-in Date</label>
+                        <input type="date" id="checkin-date" name="checkin-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkout-date">Check-out Date</label>
+                        <input type="date" id="checkout-date" name="checkout-date">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="search-btn">
+                <span class="search-icon"></span>
+                Search Availability
+            </button>
+        </form>
+        
+        <!-- Availability Results -->
+        <div id="availability-results" class="availability-results" style="display: none;">
+            <div class="results-header">
+                <h3>Available Cottages</h3>
+                <div class="results-count">
+                    <span id="results-count">0</span> cottages available
+                </div>
+            </div>
+            
+            <div id="cottages-grid" class="cottages-grid">
+                <!-- Cottage cards will be dynamically loaded here -->
+            </div>
+            
+            <div id="no-results" class="no-results" style="display: none;">
+                <div class="no-results-icon"></div>
+                <h4>No cottages available for selected dates</h4>
+                <p>Try different dates or contact us for assistance</p>
+                <button class="btn btn-primary" onclick="document.getElementById('availability-form').scrollIntoView()">
+                    Try Different Dates
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Searching for available cottages...</p>
+        </div>
+    </section>
+    <section class="recommend-section">
+        <h2>AI Recommended for You</h2>
+        <div class="recommend-cards">
+            <div class="recommend-card">
+                <div class="recommend-icon" style="background:#ece8ff;"></div>
+                <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">BEST VALUE</div>
+                <div class="recommend-title">Deluxe Ocean View</div>
+                <div class="recommend-desc">Enjoy panoramic ocean views with our AI-recommended package based on your preferences.</div>
+                <div class="recommend-actions">
+                    <button class="btn btn-primary" onclick="openBookingModal('', 'Deluxe Ocean View')">Book Now</button>
+                </div>
+            </div>
+            <div class="recommend-card">
+                <div class="recommend-icon" style="background:#ece8ff;"></div>
+                <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">SPECIAL OFFER</div>
+                <div class="recommend-title">Garden Suite</div>
+                <div class="recommend-desc">20% off for your selected dates with complimentary breakfast and spa access.</div>
+                <div class="recommend-actions">
+                    <button class="btn btn-primary" onclick="openBookingModal('', 'Garden Suite')">Book Now</button>
+                </div>
+            </div>
+            <div class="recommend-card">
+                <div class="recommend-icon" style="background:#ece8ff;"></div>
+                <div class="recommend-label" style="color:#6c63ff;font-weight:600;font-size:1rem;">POPULAR CHOICE</div>
+                <div class="recommend-title">Family Villa</div>
+                <div class="recommend-desc">Perfect for families with spacious accommodations and kid-friendly amenities.</div>
+                <div class="recommend-actions">
+                    <button class="btn btn-primary" onclick="openBookingModal('', 'Family Villa')">Book Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="featured-rooms-section" id="rooms">
+        <h2>Featured Rooms</h2>
+        <div class="featured-rooms">
+            <img src="images/room1.jpg" alt="Deluxe Ocean View Room" class="featured-room-img" data-cottage-type="Deluxe Ocean View" style="cursor:pointer;">
+            <img src="images/room2.jpg" alt="Garden Suite" class="featured-room-img" data-cottage-type="Garden Suite" style="cursor:pointer;">
+            <img src="images/room3.jpg" alt="Family Villa" class="featured-room-img" data-cottage-type="Family Villa" style="cursor:pointer;">
+        </div>
+    </section>
+    <!-- Cottage Details Modal -->
+    <div id="cottage-details-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 500px;">
+            <span class="close-booking-modal" id="close-cottage-details-modal">&times;</span>
+            <h2 id="cottage-details-title"></h2>
+            <img id="cottage-details-image" src="" alt="" style="width:100%;border-radius:8px;margin-bottom:16px;">
+            <div id="cottage-details-body"></div>
+        </div>
+    </div>
+    <section class="gallery-section" id="gallery">
+        <h2>Photo Gallery</h2>
+        <p class="gallery-subtitle">Explore the beauty and comfort of Villa Ester Resort</p>
+        
+        <div class="photo-collage">
+            <div class="collage-item">
+                <img src="images/VillaEster1.jpg" alt="Villa Ester Resort View 1" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Resort Overview</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/VillaEster2.jpg" alt="Villa Ester Resort View 2" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Scenic View</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/VillaEster3.jpg" alt="Villa Ester Resort View 3" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Resort Grounds</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/VillaEster4.jpg" alt="Villa Ester Resort View 4" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Outdoor Area</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/VillaEster5.jpg" alt="Villa Ester Resort View 5" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Resort Entrance</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/VillaEster6.jpg" alt="Villa Ester Resort View 6" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Garden View</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/VillaEster7.jpg" alt="Villa Ester Resort View 7" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Resort Landscape</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/gardentable.jpg" alt="Garden Table Cottage" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Garden Table</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/kubo.jpg" alt="Kubo Cottage" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Kubo Type</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/room1.jpg" alt="Deluxe Room 1" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Deluxe Room</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/room2.jpg" alt="Garden Suite" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Garden Suite</span>
+                </div>
+            </div>
+            <div class="collage-item">
+                <img src="images/room3.jpg" alt="Family Villa" class="collage-img" onclick="openLightbox(this)">
+                <div class="image-overlay">
+                    <span class="image-title">Family Villa</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lightbox Modal -->
+        <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+            <span class="lightbox-close">&times;</span>
+            <img id="lightbox-img" class="lightbox-content" src="" alt="">
+            <div class="lightbox-caption" id="lightbox-caption"></div>
+            <button class="lightbox-nav prev" onclick="changeImage(-1)"></button>
+            <button class="lightbox-nav next" onclick="changeImage(1)"></button>
+        </div>
+    </section>
+    <section class="reviews-section">
+        <h2>What Our Guests Say</h2>
+        <div class="reviews-container" id="reviews-container">
+            <!-- Reviews will be dynamically loaded here -->
+        </div>
+        <div class="review-carousel-controls">
+            <button class="carousel-btn prev-btn" onclick="prevReviewSet()"></button>
+            <div class="carousel-indicators" id="review-indicators">
+                <!-- Indicators will be generated here -->
+            </div>
+            <button class="carousel-btn next-btn" onclick="nextReviewSet()"></button>
+        </div>
+        <button id="open-review-modal" class="btn btn-primary" style="margin: 24px auto 0 auto; display: block;">Share Your Experience</button>
+    </section>
+    <!-- Review Modal -->
+    <div id="review-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 400px;">
+            <span class="close-booking-modal" id="close-review-modal">&times;</span>
+            <h2>Share Your Experience</h2>
+            <form id="review-form">
+                <div class="modal-form-group">
+                    <label for="review-name">Your Name (2-50 characters)</label>
+                    <input type="text" id="review-name" placeholder="Enter your name" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="review-rating">Rating</label>
+                    <div class="rating-stars">
+                        <input type="radio" id="star5" name="rating" value="5" checked>
+                        <label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4">
+                        <label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3">
+                        <label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2">
+                        <label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1">
+                        <label for="star1">★</label>
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label for="review-comment">Your Comment (5-500 characters)</label>
+                    <textarea id="review-comment" placeholder="Share your experience..." rows="4" required style="width:100%;padding:10px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">Submit Review</button>
+            </form>
+        </div>
+    </div>
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p>📍 Natunuan South, San Pascual, Batangas City, Philippines</p>
+                <p>📞 (043) 781 0496</p>
+                <p>✉️ info@villaester.com</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#rooms">Rooms & Suites</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/VillaEsterResort" class="social-link" target="_blank" rel="noopener">Facebook</a>
+
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Villa Ester Resort. All rights reserved.</p>
+            <div class="footer-logo">Villa Ester Resort</div>
+        </div>
+    </footer>
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="booking-modal-overlay" style="display:none; overflow-y: auto; align-items: flex-start; scrollbar-width: none; -ms-overflow-style: none;">
+        <div class="booking-modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <span class="close-booking-modal" id="close-booking-modal">&times;</span>
+            <h2>Quick Booking</h2>
+            <form class="modal-booking-form">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-full-name">Full Name</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="modal-full-name" placeholder="Enter guest name" required>
+                         
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-phone">Phone Number</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="modal-phone" placeholder="Enter phone number" required>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-email">Email</label>
+                        <div class="input-with-icon">
+                            <input type="email" id="modal-email" placeholder="Enter email address" required>
+                            
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-special-requests">Special Requests</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="modal-special-requests" placeholder="Add notes or requests">
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-booking-type">Booking Type</label>
+                        <select id="modal-booking-type" required>
+                            <option value="">Select booking type</option>
+                            <option value="daytour">Day Tour (8am–6pm)</option>
+                            <option value="overnight">Overnight Stay</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <div id="modal-daytour-fields">
+                            <label for="modal-schedule-date">Schedule Date</label>
+                            <input type="date" id="modal-schedule-date">
+                        </div>
+                        <div id="modal-overnight-fields" style="display:none;">
+                            <label for="modal-checkin-date">Check-in Date</label>
+                            <input type="date" id="modal-checkin-date">
+                            <label for="modal-checkout-date">Check-out Date</label>
+                            <input type="date" id="modal-checkout-date">
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-cottage-type">Cottage Type</label>
+                        <select id="modal-cottage-type" required>
+                            <option value="">Select a cottage type</option>
+                            <option value="kubo">Kubo Type - ₱800 (10-15 guests)</option>
+                            <option value="With Videoke">VE Cottage with Videoke - ₱2,500 (20-25 guests)</option>
+                            <option value="Without Videoke">VE Cottage without Videoke - ₱2,000 (20-25 guests)</option>
+                            <option value="garden">Garden Table - ₱300 (5 guests)</option>
+                        </select>
+                    </div>
+                    <label for="modal-cottage-number">Cottage Number</label>
+                    <select id="modal-cottage-number" required>
+                        <option value="">Select a number</option>
+                    </select>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-adults">Adults</label>
+                        <div class="input-with-icon">
+                            <input type="number" id="modal-adults" placeholder="Number of adults" min="1" required>
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="modal-children">Children</label>
+                        <div class="input-with-icon">
+                            <input type="number" id="modal-children" placeholder="Number of children" min="0">
+                        </div>
+                    </div>
+                </div>
+                <!-- Downpayment Note -->
+                <div class="modal-form-row">
+                    <div class="modal-form-group" style="margin-bottom: 8px;">
+                        <div style="background: #fff8e1; color: #b26a00; border-radius: 7px; padding: 10px 14px; font-size: 1.01em; margin-bottom: 6px;">
+                            <strong>Note:</strong> A P200.00 downpayment should be paid through <strong>GCash (09228093074) for comfirmation</strong>.<br>
+                            <span style="color:#b93a2b;">Upon cancellation, the downpayment will not be refunded.</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- GCash Reference Number -->
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-gcash-ref">GCash Reference Number</label>
+                        <input type="text" id="modal-gcash-ref" name="gcashReference" placeholder="Enter GCash reference number" required>
+                        <small style="color:#888;">Please enter the reference number from your GCash payment receipt.</small>
+                    </div>
+                </div>
+                <!-- Proof of Payment Upload -->
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="modal-proof">Proof of Payment (screenshot/image)</label>
+                        <input type="file" id="modal-proof" accept="image/*" required>
+                        <div id="modal-proof-preview" style="margin-top:8px;"></div>
+                    </div>
+                </div>
+                <div class="modal-ai-room-assignment" id="modal-ai-cottage-assignment" style="display: none;">
+                    <div class="modal-ai-room-card">
+                        <div class="modal-ai-room-content">
+                            <span class="modal-ai-suggestion-label">AI Suggestion</span>
+                            <h3>Suggested Cottage</h3>
+                            <p id="modal-ai-cottage-suggestion">Based on your guest count, we recommend the best cottage for your stay.</p>
+                            <div class="modal-ai-room-actions">
+                                <button type="button" class="btn assign-room-btn" id="modal-assign-cottage-btn">Select This Cottage</button>
+                                <button type="button" class="btn view-options-btn" id="modal-view-cottage-options">View All Options</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-form-actions">
+                    <button type="submit" class="btn book-checkin-btn">Schedule Booking</button>
+                    <button type="button" class="btn cancel-btn" id="modal-cancel-btn">Cancel</button>
+                </div>
+            </form>
+            <!-- Booking Note -->
+            <div class="modal-booking-note" style="margin-top:18px; color:#6c63ff; font-size:1.05em; background:#f8f8ff; border-radius:8px; padding:12px 16px;">
+                <strong>Note:</strong> To place a booking, you must pay the price of the cottage. Entrance fees will be collected on the day of arrival.
+            </div>
+        </div>
+    </div>
+    <!-- Booking History Modal -->
+    <div id="booking-history-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 520px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(44,62,80,0.13); padding: 32px 28px 24px 28px;">
+            <span class="close-booking-modal" id="close-booking-history-modal">&times;</span>
+            <h2 style="margin-bottom: 18px; color: #6c63ff; font-size: 1.5em; font-weight: 700; letter-spacing: 0.5px;">Your Booking History</h2>
+            <div id="booking-history-list" style="margin-top: 10px;">
+                <!-- Booking items will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+    <!-- User Settings Modal -->
+    <div id="user-settings-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
+        <div class="booking-modal-content" style="max-width: 400px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(44,62,80,0.13); padding: 32px 28px 24px 28px;">
+            <span class="close-booking-modal" id="close-user-settings-modal">&times;</span>
+            <h2 style="margin-bottom: 18px; color: #6c63ff; font-size: 1.5em; font-weight: 700; letter-spacing: 0.5px;">User Settings</h2>
+            <form id="user-settings-form">
+                <!-- User Info Display -->
+                <div class="modal-form-group" id="user-info-display" style="margin-bottom: 22px; background: #f4f7fa; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(44,62,80,0.06);">
+                    <div style="font-size:1.08em;"><strong>Name:</strong> <span id="user-info-name"></span></div>
+                    <div style="margin-top:4px;"><strong>Email:</strong> <span id="user-info-email"></span></div>
+                    <div style="margin-top:4px;"><strong>Phone:</strong> <span id="user-info-phone"></span></div>
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-email">Change Email</label>
+                    <input type="email" id="settings-email" placeholder="Enter new email" style="border-radius:7px;">
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-number">Change Phone Number</label>
+                    <input type="text" id="settings-number" placeholder="Enter new phone number" style="border-radius:7px;">
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-current-password">Current Password</label>
+                    <input type="password" id="settings-current-password" placeholder="Enter current password" style="border-radius:7px;">
+                </div>
+                <div class="modal-form-group">
+                    <label for="settings-new-password">New Password</label>
+                    <input type="password" id="settings-new-password" placeholder="Enter new password" style="border-radius:7px;">
+                    <small style="color: #666; font-size: 0.9em; margin-top: 4px; display: block;">
+                        Password must be at least 6 characters with letters and numbers.
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:14px; border-radius:7px; font-size:1.08em;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+    <style>
+        #booking-modal::-webkit-scrollbar {
+            display: none;
+        }
+        /* Dropdown menu styling */
+        #user-dropdown-menu ul li button.dropdown-item:hover {
+            background: #f5f5f5;
+        }
+        /* Booking History Card Styles */
+        #booking-history-list > div {
+            background: #f4f7fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+            margin-bottom: 16px;
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+        #booking-history-list > div:hover {
+            box-shadow: 0 4px 16px rgba(44,62,80,0.13);
+        }
+        .booking-status-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.98em;
+            font-weight: 600;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            letter-spacing: 0.2px;
+        }
+        .booking-status-pending { background: #fffbe6; color: #bfa100; border: 1px solid #f1c40f; }
+        .booking-status-confirmed { background: #eafaf1; color: #1e824c; border: 1px solid #27ae60; }
+        .booking-status-completed { background: #eaf1fa; color: #205081; border: 1px solid #2980b9; }
+        .booking-status-cancelled { background: #faeaea; color: #b93a2b; border: 1px solid #e74c3c; }
+        .booking-status-rejected { background: #f4f4f4; color: #888; border: 1px solid #bbb; }
+        .booking-status-checked_out { background: #f3eafa; color: #6c3483; border: 1px solid #8e44ad; }
+        #booking-history-list .btn.btn-secondary {
+            border-radius: 7px;
+            font-size: 1.01em;
+            transition: background 0.2s, color 0.2s;
+        }
+        #booking-history-list .btn.btn-secondary:not([disabled]):hover {
+            background: #e74c3c;
+            color: #fff;
+            border-color: #e74c3c;
+        }
+    </style>
+    <script>
+// --- API Utility ---
+const API_BASE = 'https://villa-ester-backend.onrender.com/api'; // Production backend URL
+function getToken() {
+    return localStorage.getItem('token');
+}
+function isUserLoggedIn() {
+    return !!getToken();
+}
+function authHeaders() {
+    const token = getToken();
+    return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+
+// Check if current token is valid
+async function isTokenValid() {
+    const token = getToken();
+    if (!token) return false;
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/me`, { 
+            headers: { 'Authorization': 'Bearer ' + token } 
+        });
+        return res.ok;
+    } catch (e) {
+        return false;
+    }
+}
+// --- User Profile Fetch ---
+async function fetchUserProfile() {
+    try {
+        const res = await fetch(`${API_BASE}/users/me`, { headers: authHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch user profile');
+        const result = await res.json();
+        // Support both {success, data} and {name, email, phone}
+        return result.data || result;
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}
+// --- Booking History Fetch ---
+async function fetchBookingHistory() {
+    try {
+        console.log('Fetching booking history...');
+        
+        // Check if user is logged in
+        if (!isUserLoggedIn()) {
+            console.log('User not logged in');
+            return [];
+        }
+        
+        const headers = authHeaders();
+        console.log('Auth headers:', headers);
+        
+        const res = await fetch(`${API_BASE}/bookings`, { headers });
+        console.log('Response status:', res.status);
+        console.log('Response ok:', res.ok);
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Response error:', errorText);
+            
+            // Handle authentication errors
+            if (res.status === 401) {
+                console.log('Authentication failed, clearing token');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                throw new Error('Your session has expired. Please log in again.');
+            }
+            
+            throw new Error(`Failed to fetch bookings: ${res.status} ${errorText}`);
+        }
+        
+        const data = await res.json();
+        console.log('Response data:', data);
+        
+        // Handle the backend response format: { success: true, data: bookings, pagination: {...} }
+        if (data.success && Array.isArray(data.data)) {
+            console.log('Found bookings:', data.data.length);
+            return data.data;
+        } else if (Array.isArray(data)) {
+            // Fallback for old API format
+            console.log('Found bookings (fallback):', data.length);
+            return data;
+        } else {
+            console.error('Unexpected response format:', data);
+            return [];
+        }
+    } catch (e) {
+        console.error('Error fetching booking history:', e);
+        
+        // If it's an authentication error, redirect to login
+        if (e.message.includes('session has expired') || e.message.includes('401')) {
+            alert('Your session has expired. Please log in again.');
+            window.location.href = 'login.html';
+            return [];
+        }
+        
+        return [];
+    }
+}
+// --- Cancel Booking ---
+async function cancelBooking(id) {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+        const res = await fetch(`${API_BASE}/bookings/${id}/cancel`, {
+            method: 'PATCH',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error('Failed to cancel booking');
+        alert('Booking cancelled.');
+        loadBookingHistory();
+    } catch (e) {
+        alert('Error cancelling booking.');
+        console.error(e);
+    }
+}
+// --- Update User Settings ---
+async function updateUserSettings(email, phone) {
+    try {
+        const res = await fetch(`${API_BASE}/users/me`, {
+            method: 'PUT',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, phone })
+        });
+        if (!res.ok) throw new Error('Failed to update profile');
+        alert('Profile updated.');
+    } catch (e) {
+        alert('Error updating profile.');
+        console.error(e);
+    }
+}
+async function changeUserPassword(currentPassword, newPassword) {
+    // Client-side validation
+    if (newPassword.length < 6) {
+        alert('New password must be at least 6 characters long.');
+        return;
+    }
+    
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    if (!hasLetter || !hasNumber) {
+        alert('Password must contain at least one letter and one number.');
+        return;
+    }
+    
+    // Check if user is logged in
+    const token = getToken();
+    if (!token) {
+        alert('You are not logged in. Please log in again.');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/me/password`, {
+            method: 'PUT',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            if (res.status === 401) {
+                alert('Your session has expired. Please log in again.');
+                // Clear invalid token and redirect to login
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+                return;
+            }
+            throw new Error(data.message || 'Failed to change password');
+        }
+        alert('Password changed successfully!');
+    } catch (e) {
+        if (e.message.includes('Token is not valid') || e.message.includes('401')) {
+            alert('Your session has expired. Please log in again.');
+            // Clear invalid token and redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        } else {
+            alert('Error changing password: ' + e.message);
+        }
+        console.error(e);
+    }
+}
+// --- UI Logic ---
+function showUserMenuIfLoggedIn() {
+    const loginBtn = document.getElementById('login-btn');
+    const userMenu = document.getElementById('user-profile-menu-container');
+    if (isUserLoggedIn()) {
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'block';
+    } else {
+        loginBtn.style.display = 'inline-block';
+        userMenu.style.display = 'none';
+    }
+}
+showUserMenuIfLoggedIn();
+// Show user name in navbar if logged in
+async function updateNavbarUserName() {
+    if (isUserLoggedIn()) {
+        const profile = await fetchUserProfile();
+        const nameSpan = document.getElementById('navbar-user-name');
+        if (profile && nameSpan) {
+            nameSpan.textContent = profile.name || profile.email || 'User';
+        }
+    }
+}
+updateNavbarUserName();
+// Toggle dropdown menu
+const userProfileBtn = document.getElementById('user-profile-btn');
+const userDropdownMenu = document.getElementById('user-dropdown-menu');
+if (userProfileBtn) {
+    userProfileBtn.onclick = function(e) {
+        e.stopPropagation();
+        userDropdownMenu.style.display = userDropdownMenu.style.display === 'block' ? 'none' : 'block';
+    };
+    document.addEventListener('click', function() {
+        userDropdownMenu.style.display = 'none';
+    });
+}
+// Open Booking History Modal
+const openBookingHistory = document.getElementById('open-booking-history');
+const bookingHistoryModal = document.getElementById('booking-history-modal');
+const closeBookingHistoryModal = document.getElementById('close-booking-history-modal');
+if (openBookingHistory) {
+    openBookingHistory.onclick = async function(e) {
+        e.preventDefault();
+        
+        // Check if user is logged in
+        if (!isUserLoggedIn()) {
+            alert('You must be logged in to view your booking history.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        console.log('Opening booking history modal...');
+        bookingHistoryModal.style.display = 'flex';
+        
+        // Show loading message
+        const historyList = document.getElementById('booking-history-list');
+        if (historyList) {
+            historyList.innerHTML = '<div style="text-align: center; padding: 20px;"><div>Loading your bookings...</div><div style="font-size: 0.9em; color: #666; margin-top: 8px;">Please wait while we fetch your booking history.</div></div>';
+        }
+        
+        await loadBookingHistory();
+    };
+}
+if (closeBookingHistoryModal) {
+    closeBookingHistoryModal.onclick = function() {
+        bookingHistoryModal.style.display = 'none';
+    };
+}
+// Load Booking History
+async function loadBookingHistory() {
+    const historyList = document.getElementById('booking-history-list');
+    if (!historyList) {
+        console.error('Booking history list element not found');
+        return;
+    }
+    
+    historyList.innerHTML = '<div>Loading...</div>';
+    
+    try {
+        const bookings = await fetchBookingHistory();
+        console.log('Fetched bookings:', bookings);
+        
+        if (!bookings || !bookings.length) {
+            historyList.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="color: #666; margin-bottom: 12px;">No bookings found.</div>
+                    <div style="font-size: 0.9em; color: #888; line-height: 1.4;">
+                        <div>If you've made a booking but don't see it here:</div>
+                        <div style="margin-top: 8px;">
+                            • Make sure you were logged in when you made the booking<br>
+                            • Check that your session hasn't expired<br>
+                            • Try refreshing the page and logging in again
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <button onclick="window.location.href='index.html'" style="background: #6c63ff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                                Make a New Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        historyList.innerHTML = bookings.map(b => {
+            console.log('Processing booking:', b);
+            
+            // Format date/time
+            const date = b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : (b.date || b.scheduleDate || b.checkinDate || '');
+            const time = b.bookingTime || '';
+            const status = b.status || '';
+            const statusClass = `booking-status-badge booking-status-${status.replace(/_/g,'-')}`;
+            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g,' ');
+            
+            // Get cottage name from populated cottageId or fallback to cottageType
+            const cottageName = (b.cottageId && b.cottageId.name) || b.cottageType || 'Cottage';
+            const cottageNumber = b.cottageNumber ? ` #${b.cottageNumber}` : '';
+            const fullCottageInfo = cottageName + cottageNumber;
+            
+            // Format additional details
+            const people = b.numberOfPeople ? `${b.numberOfPeople} people` : '';
+            const duration = b.duration ? `${b.duration} minutes` : '';
+            const price = b.totalPrice ? `₱${b.totalPrice}` : '';
+            const createdDate = b.createdAt ? new Date(b.createdAt).toLocaleDateString() : '';
+            
+            // Determine if cancel button should be shown
+            const canCancel = status === 'pending' || status === 'confirmed';
+            const cancelButton = canCancel ? 
+                `<button class="btn btn-secondary" onclick="cancelBooking('${b._id || b.id}')">Cancel</button>` : 
+                `<span style="color: #999; font-size: 0.9em;">Cannot cancel</span>`;
+            
+            return `
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 12px; padding: 16px; background: #fafafa;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <strong style="font-size:1.2em; color: #333;">${fullCottageInfo}</strong>
+                            <span class="${statusClass}" style="margin-left: 12px;">${statusLabel}</span>
+                        </div>
+                        <div style="color: #666; font-size: 0.95em; line-height: 1.4;">
+                            <div><strong>Date:</strong> ${date} ${time}</div>
+                            ${people ? `<div><strong>Guests:</strong> ${people}</div>` : ''}
+                            ${duration ? `<div><strong>Duration:</strong> ${duration}</div>` : ''}
+                            ${price ? `<div><strong>Price:</strong> ${price}</div>` : ''}
+                            ${createdDate ? `<div><strong>Booked on:</strong> ${createdDate}</div>` : ''}
+                            ${b.specialRequests ? `<div><strong>Special Requests:</strong> ${b.specialRequests}</div>` : ''}
+                        </div>
+                    </div>
+                    <div style="margin-left: 16px;">
+                        ${cancelButton}
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading booking history:', error);
+        historyList.innerHTML = '<div style="text-align: center; color: #e74c3c; padding: 20px;">Error loading booking history. Please try again.</div>';
+    }
+}
+// Open User Settings Modal
+const openUserSettings = document.getElementById('open-user-settings');
+const userSettingsModal = document.getElementById('user-settings-modal');
+const closeUserSettingsModal = document.getElementById('close-user-settings-modal');
+if (openUserSettings) {
+    openUserSettings.onclick = async function(e) {
+        e.preventDefault();
+        userSettingsModal.style.display = 'flex';
+        // Prefill user info
+        const profile = await fetchUserProfile();
+        if (profile) {
+            document.getElementById('settings-email').value = profile.email || '';
+            document.getElementById('settings-number').value = profile.phone || '';
+            // Show user info at the top
+            document.getElementById('user-info-name').textContent = profile.name || '';
+            document.getElementById('user-info-email').textContent = profile.email || '';
+            document.getElementById('user-info-phone').textContent = profile.phone || '';
+        }
+    };
+}
+if (closeUserSettingsModal) {
+    closeUserSettingsModal.onclick = function() {
+        userSettingsModal.style.display = 'none';
+    };
+}
+// Sign Out
+const signOutBtn = document.getElementById('sign-out-btn');
+if (signOutBtn) {
+    signOutBtn.onclick = function() {
+        localStorage.removeItem('token');
+        showUserMenuIfLoggedIn();
+        window.location.reload();
+    };
+}
+
+// Debug function for testing booking history (can be called from browser console)
+window.testBookingHistory = async function() {
+    console.log('=== Testing Booking History ===');
+    console.log('User logged in:', isUserLoggedIn());
+    console.log('Token present:', !!localStorage.getItem('token'));
+    
+    if (!isUserLoggedIn()) {
+        console.log('User not logged in - cannot test booking history');
+        return;
+    }
+    
+    try {
+        const bookings = await fetchBookingHistory();
+        console.log('Fetched bookings:', bookings);
+        console.log('Number of bookings:', bookings.length);
+        
+        if (bookings.length > 0) {
+            console.log('Sample booking:', bookings[0]);
+        }
+        
+        return bookings;
+    } catch (error) {
+        console.error('Error testing booking history:', error);
+        return null;
+    }
+};
+// User Settings Form Submit
+const userSettingsForm = document.getElementById('user-settings-form');
+if (userSettingsForm) {
+    userSettingsForm.onsubmit = async function(e) {
+        e.preventDefault();
+        
+        // Check if user is logged in and token is valid
+        if (!isUserLoggedIn()) {
+            alert('You are not logged in. Please log in again.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const tokenValid = await isTokenValid();
+        if (!tokenValid) {
+            alert('Your session has expired. Please log in again.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const email = document.getElementById('settings-email').value;
+        const phone = document.getElementById('settings-number').value;
+        const currentPassword = document.getElementById('settings-current-password').value;
+        const newPassword = document.getElementById('settings-new-password').value;
+        
+        if (email || phone) await updateUserSettings(email, phone);
+        if (currentPassword && newPassword) {
+            await changeUserPassword(currentPassword, newPassword);
+        } else if (currentPassword || newPassword) {
+            alert('Please provide both current password and new password to change your password.');
+            return;
+        }
+        userSettingsModal.style.display = 'none';
+    };
+}
+// For demo: simulate login (remove this block in production)
+if (!isUserLoggedIn()) {
+    document.getElementById('login-btn').onclick = function() {
+        window.location.href = 'login.html';
+    };
+} else {
+    document.getElementById('login-btn').onclick = function() {
+        window.location.href = 'login.html';
+    };
+}
+// --- Redirect admin/clerk to clerk.html ---
+document.addEventListener('DOMContentLoaded', async function() {
+    if (isUserLoggedIn()) {
+        const profile = await fetchUserProfile();
+        if (profile && (profile.role === 'admin' || profile.role === 'clerk')) {
+            window.location.href = 'clerk.html';
+        }
+    }
+});
+</script>
+</body>
+</html>

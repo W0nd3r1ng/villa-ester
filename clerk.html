@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clerk Panel | Villa Ester Resort</title>
+    <link rel="stylesheet" href="clerk-style.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="clerk.js" defer></script>
+    <!-- Add Material Icons or other icon library if needed for sidebar icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" href="images/logo.png" type="image/png">
+</head>
+<body>
+    <!-- Main Dashboard View -->
+    <div id="main-dashboard-view">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Villa Ester Resort</h2>
+                <!--<span class="material-icons">menu</span>-->
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" data-panel="dashboard-overview-panel" class="active"><i class="material-icons">dashboard</i> Dashboard</a></li>
+                    <li><a href="#" data-panel="check-in-out-panel"><i class="material-icons">event</i> Today's Arrivals</a></li>
+                    <li><a href="#" data-panel="quick-booking-panel"><i class="material-icons">add_circle</i> Walk-in</a></li>
+                    <li><a href="#" data-panel="guest-management-panel"><i class="material-icons">people</i> Guest Management <span id="pending-bookings-badge" class="notification-badge" style="display:none;">0</span></a></li>
+                    <li><a href="#" data-panel="clerk-reports-panel"><i class="material-icons">bar_chart</i> Reports & Analytics</a></li>
+                    <li><a href="#" data-panel="user-management-panel" id="user-management-link" style="display:none;"><i class="material-icons">manage_accounts</i> User Management</a></li>
+                </ul>
+                <div class="sidebar-section-title">
+                     <h3>TOOLS</h3>
+                     <ul>
+                         <li><a href="#" data-panel="settings-panel"><i class="material-icons">settings</i> Settings</a></li>
+                     </ul>
+                </div>
+            </nav>
+            <!-- Place Refresh Data button here, below TOOLS -->
+            <button id="refresh-data-btn" class="btn btn-primary" style="width:90%;margin:18px auto 0 auto;display:block;"><span class="material-icons" style="font-size:1.1em;vertical-align:middle;">refresh</span> Refresh Data</button>
+            <div class="sidebar-footer">
+                 <div class="profile-info">
+                    <!-- <img src="https://via.placeholder.com/30" alt="Profile Pic" class="profile-pic"> -->
+                    <div>
+                        <p class="profile-name">Front Desk Clerk</p>
+                        <p class="profile-status">On duty</p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <!-- Check-in & Check-out Management Panel -->
+            <div id="check-in-out-panel" class="dashboard-panel" style="display: none;">
+                <div class="content-header">
+                    <h1>Check-in & Check-out Management</h1>
+                </div>
+                
+                <h3 class="search-label">Search Arrivals</h3>
+                <div class="search-bar">
+                    <div class="search-input-wrapper">
+                        <input type="text" placeholder="Search by name, room, or reservation">
+                        <i class="material-icons search-icon">search</i>
+                    </div>
+                </div>
+
+                <div class="arrival-tabs" style="display: flex; gap: 32px; margin-bottom: 12px; border-bottom: 2px solid #f0f0f0;">
+                    <span class="arrival-tab" data-tab="arrivals">Today's Arrivals</span>
+                    <span class="arrival-tab active" data-tab="checkout">Check Out</span>
+                </div>
+                <div class="guest-list-header">Today's Arrivals</div>
+                <div id="arrival-list-container"></div>
+                <div class="guest-list-header" style="display:none;">Check Out</div>
+                <div id="checkout-list-container" style="display:none;"></div>
+
+                <h2 class="quick-actions-header">Quick Actions</h2>
+                <div class="quick-actions">
+                    <div class="action-card">
+                        <div class="icon-bg"><i class="material-icons">person_add</i></div>
+                        <h3>Walk-in Check-in</h3>
+                        <p>Book and check in a guest without a reservation.</p>
+                        <button class="btn action-btn-primary">New Walk-in</button>
+                    </div>
+                    <div class="action-card">
+                        <div class="icon-bg"><i class="material-icons">print</i></div>
+                        <h3>Print Reports</h3>
+                        <p>Generate and print daily reports.</p>
+                        <button class="btn action-btn-primary" id="print-reports-btn">Print</button>
+                    </div>
+                </div>
+
+                <!-- Add Booking Modal (still used for adding) -->
+                <div id="add-booking-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-modal" id="close-modal">&times;</span>
+                        <h3>Add New Booking</h3>
+                        <form id="add-booking-form">
+                            <label for="guest-name">Guest Name</label>
+                            <input type="text" id="guest-name" required>
+                            <label for="room-number">Room Number</label>
+                            <input type="number" id="room-number" required>
+                            <label for="booking-type">Booking Type</label>
+                            <select id="booking-type" required>
+                                <option value="">Select booking type</option>
+                                <option value="daytour">Day Tour (8am–6pm)</option>
+                                <option value="overnight">Overnight Stay</option>
+                            </select>
+                            <div id="daytour-fields">
+                                <label for="schedule-date">Schedule Date</label>
+                                <input type="date" id="schedule-date">
+                            </div>
+                            <div id="overnight-fields" style="display:none;">
+                                <label for="checkin-date">Check-in Date</label>
+                                <input type="date" id="checkin-date">
+                                <label for="checkout-date">Check-out Date</label>
+                                <input type="date" id="checkout-date">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Booking</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Overview Panel (newly created) -->
+            <div id="dashboard-overview-panel" class="dashboard-panel">
+                <div class="content-header">
+                    <h1>Dashboard Overview</h1>
+                </div>
+                
+                <div class="dashboard-overview">
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">home</i></div>
+                        <h3>Total Occupancy</h3>
+                        <p>78% of rooms currently occupied</p>
+                        <button class="btn action-btn-primary">View Details</button>
+                    </div>
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">attach_money</i></div>
+                        <h3>Today's Revenue</h3>
+                        <p>$4,850 from 12 bookings</p>
+                        <button class="btn action-btn-primary">View Report</button>
+                    </div>
+                    <div class="action-card">
+                        <div class="icon-bg"><i class="material-icons">person_add</i></div>
+                        <h3>Walk-in Check-in</h3>
+                        <p>Book and check in a guest without a reservation.</p>
+                        <button class="btn action-btn-primary" id="dashboard-walkin-btn">New Walk-in</button>
+                    </div>
+                </div>
+
+                <h2>Cottage Occupancy Status</h2>
+                <div class="cottage-occupancy-status">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cottage Type</th>
+                                <th>Total Available</th>
+                                <th>Currently Occupied</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cottage-occupancy-tbody">
+                            <!-- Dynamic cottage occupancy data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="cottage-number-status" style="margin-top:18px;"></div>
+            </div>
+
+            <!-- Quick Booking Panel (hidden initially) -->
+            <div id="quick-booking-panel" class="dashboard-panel">
+                <div class="content-header">
+                    <h1>Walk-in</h1>
+                </div>
+                <div class="quick-booking-tabs">
+                    <span class="tab active">New Walk-in</span>
+                </div>
+                <form class="quick-booking-form">
+                    <div class="quick-booking-form-row">
+                        <div class="quick-booking-form-group">
+                            <label for="qb-full-name">Full Name</label>
+                            <div class="input-with-icon">
+                                <input type="text" id="qb-full-name" placeholder="Enter guest name">
+                                <i class="material-icons">person</i>
+                            </div>
+                        </div>
+                        <div class="quick-booking-form-group">
+                            <label for="qb-phone">Phone Number</label>
+                            <div class="input-with-icon">
+                                <input type="text" id="qb-phone" placeholder="Enter phone number" pattern="[0-9]{11}" maxlength="11" title="Phone number must be exactly 11 digits" required>
+                                <i class="material-icons">call</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-booking-form-row">
+                        <div class="quick-booking-form-group">
+                            <label for="qb-email">Email (optional)</label>
+                            <div class="input-with-icon">
+                                <input type="email" id="qb-email" placeholder="Enter email address">
+                                <i class="material-icons">email</i>
+                            </div>
+                        </div>
+                        <div class="quick-booking-form-group">
+                            <label for="qb-special-requests">Special Requests</label>
+                            <div class="input-with-icon">
+                                <input type="text" id="qb-special-requests" placeholder="Add notes or requests">
+                                <i class="material-icons">content_paste</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-booking-form-row">
+                        <div class="quick-booking-form-group">
+                            <label for="qb-booking-type">Booking Type</label>
+                            <select id="qb-booking-type" required>
+                                <option value="">Select booking type</option>
+                                <option value="daytour">Day Tour (8am–6pm)</option>
+                                <option value="overnight">Overnight Stay</option>
+                            </select>
+                            <label for="qb-cottage-type">Cottage Type</label>
+                            <select id="qb-cottage-type" required>
+                                <option value="">Select cottage type</option>
+                                <option value="kubo">Kubo Type - ₱800 (10-15 guests)</option>
+                                <option value="With Videoke">VE Cottage with Videoke - ₱2,500 (20-25 guests)</option>
+                                <option value="Without Videoke">VE Cottage without Videoke - ₱2,000 (20-25 guests)</option>
+                                <option value="garden">Garden Table - ₱300 (5 guests)</option>
+                            </select>
+                            <label for="qb-cottage-number">Cottage Number</label>
+                            <select id="qb-cottage-number" required>
+                                <option value="">Select a number</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="quick-booking-form-row">
+                        <div id="qb-daytour-fields" class="quick-booking-form-group">
+                            <!-- Removed Schedule Date field -->
+                        </div>
+                        <div id="qb-overnight-fields" class="quick-booking-form-group" style="display:none;">
+                            <label for="qb-checkin-date">Check-in Date</label>
+                            <div class="input-with-icon">
+                                <input type="date" id="qb-checkin-date">
+                                <i class="material-icons">calendar_today</i>
+                            </div>
+                            <label for="qb-checkout-date">Check-out Date</label>
+                            <div class="input-with-icon">
+                                <input type="date" id="qb-checkout-date">
+                                <i class="material-icons">calendar_today</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-booking-form-row">
+                        <div class="quick-booking-form-group">
+                            <label for="qb-adults">Adults</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="qb-adults" placeholder="Number of adults">
+                                <i class="material-icons">group</i>
+                            </div>
+                        </div>
+                        <div class="quick-booking-form-group">
+                            <label for="qb-children">Children</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="qb-children" placeholder="Number of children">
+                                <i class="material-icons">visibility</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-booking-form-actions">
+                        <button type="submit" class="btn book-checkin-btn">Book & Check In</button>
+                        <button type="button" class="btn cancel-btn">Cancel</button>
+                    </div>
+                </form>
+                <div id="quick-booking-guest-details" style="display:none; margin-top: 24px;">
+                    <h2>Walk-in Guests <span class="walkin-count" style="font-size:1rem;color:#6c63ff;font-weight:600;">2</span></h2>
+                    <table class="walkin-guest-list" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Name</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Booking Type</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Cottage</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">No. of People</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Phone</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Email</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Special Requests</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic rows will be rendered by JS -->
+                        </tbody>
+                    </table>
+                    <p style="color:#888; font-size:0.98em; margin-top:12px;">This list will update automatically as new walk-in guests are added.</p>
+                </div>
+                <div id="quick-booking-alert" style="display:none;"></div>
+            </div>
+
+            <!-- Guest Management Panel (hidden initially) -->
+            <div id="guest-management-panel" class="dashboard-panel">
+                <div class="content-header">
+                    <h1>Guest Management</h1>
+                    <p>Manage and approve pending bookings</p>
+                </div>
+                <div class="pending-bookings-list">
+                    <div class="booking-status-tabs">
+                        <span class="booking-status-tab active" data-status="pending">Pending</span>
+                        <span class="booking-status-tab" data-status="confirmed">Confirmed</span>
+                        <span class="booking-status-tab" data-status="completed">Completed</span>
+                        <span class="booking-status-tab" data-status="rejected">Rejected</span>
+                        <span class="booking-status-tab" data-status="cancelled">Cancelled</span>
+                        <span class="booking-status-tab" data-status="all">All</span>
+                    </div>
+                    <h2>Bookings</h2>
+                    <div id="pending-bookings-container"></div>
+                    <p id="no-pending-bookings" style="text-align:center; color:#888; display:none;">No bookings found.</p>
+                </div>
+            </div>
+
+            <!-- Reports & Analytics Panel -->
+            <div id="clerk-reports-panel" class="dashboard-panel" style="display:none;">
+                <div class="content-header">
+                    <h1>Reports & Analytics</h1>
+                </div>
+                <div class="dashboard-overview">
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">bar_chart</i></div>
+                        <h3>Daily Revenue Report</h3>
+                        <p>View today's revenue breakdown and statistics.</p>
+                        <button class="btn action-btn-primary" id="clerk-daily-revenue-btn">View Report</button>
+                    </div>
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">trending_up</i></div>
+                        <h3>Weekly Revenue Report</h3>
+                        <p>Analyze revenue trends for the last 7 days.</p>
+                        <button class="btn action-btn-primary" id="clerk-weekly-revenue-btn">View Report</button>
+                    </div>
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">pie_chart</i></div>
+                        <h3>Monthly Revenue Report</h3>
+                        <p>Comprehensive monthly financial analysis.</p>
+                        <button class="btn action-btn-primary" id="clerk-monthly-revenue-btn">View Report</button>
+                    </div>
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">file_download</i></div>
+                        <h3>Export Revenue Data</h3>
+                        <p>Download revenue data as CSV for external analysis.</p>
+                        <button class="btn action-btn-primary" id="clerk-export-revenue-btn">Export CSV</button>
+                    </div>
+                    <div class="card">
+                        <div class="icon"><i class="material-icons">analytics</i></div>
+                        <h3>Comprehensive Analytics</h3>
+                        <p>View detailed booking trends and business insights.</p>
+                        <button class="btn action-btn-secondary" id="clerk-download-analytics-btn" style="margin-top:8px;">Download Analytics Report</button>
+                    </div>
+                </div>
+                <div id="clerk-analytics-dashboard" style="margin-top: 32px;"></div>
+                
+                <!-- Revenue Summary Section -->
+                <div class="revenue-summary-section" style="margin-top: 30px;">
+                    <h2>Quick Revenue Overview</h2>
+                    <div class="revenue-overview-grid">
+                        <div class="revenue-overview-card">
+                            <h4>Today's Revenue</h4>
+                            <div class="revenue-amount" id="clerk-today-revenue-amount">₱0</div>
+                            <div class="revenue-count" id="clerk-today-booking-count">0 bookings</div>
+                        </div>
+                        <div class="revenue-overview-card">
+                            <h4>This Week's Revenue</h4>
+                            <div class="revenue-amount" id="clerk-week-revenue-amount">₱0</div>
+                            <div class="revenue-count" id="clerk-week-booking-count">0 bookings</div>
+                        </div>
+                        <div class="revenue-overview-card">
+                            <h4>This Month's Revenue</h4>
+                            <div class="revenue-amount" id="clerk-month-revenue-amount">₱0</div>
+                            <div class="revenue-count" id="clerk-month-booking-count">0 bookings</div>
+                        </div>
+                        <div class="revenue-overview-card">
+                            <h4>Average per Booking</h4>
+                            <div class="revenue-amount" id="clerk-avg-revenue-amount">₱0</div>
+                            <div class="revenue-count">All time</div>
+                        </div>
+                    </div>
+                    <div id="clerk-analytics-insights"></div>
+                </div>
+            </div>
+
+            <!-- Settings Panel (hidden initially) -->
+            <div id="settings-panel" class="dashboard-panel settings-panel" style="display:none;">
+                <div class="settings-card">
+                    <h2 class="settings-title">Profile information</h2>
+                    <div class="settings-avatar-row">
+                        <div class="profile-avatar">
+                            <span class="material-icons">person</span>
+                        </div>
+                        <button class="btn btn-secondary" id="upload-photo-btn">Upload photo</button>
+                    </div>
+                    <div class="settings-form-group">
+                        <label>Display name</label>
+                        <input type="text" id="profile-username" value="clerk" readonly>
+                    </div>
+                    <div class="settings-form-group">
+                        <label>Email</label>
+                        <input type="email" id="profile-email" value="clerk@villaester.com" readonly>
+                    </div>
+                    <div class="settings-form-group">
+                        <label>Phone number</label>
+                        <input type="text" id="profile-phone" value="+63 900 000 0000" readonly>
+                    </div>
+                    <button class="btn btn-secondary" id="change-password-btn">Change Password</button>
+                    <button class="btn btn-primary" id="change-number-btn">Change Number</button>
+                    <button class="btn btn-danger" id="signout-btn">Sign Out</button>
+                </div>
+                
+
+            </div>
+
+            <!-- User Management Panel (admin only) -->
+            <div id="user-management-panel" class="dashboard-panel" style="display:none;">
+                <div class="content-header">
+                    <h1>User Management</h1>
+                    <button class="btn btn-primary" id="create-user-btn" style="float:right; margin-top:-40px;">Create User</button>
+                </div>
+                <div id="user-management-table-container">
+                    <!-- User table will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Create User Modal -->
+            <div id="create-user-modal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <span class="close-modal" id="close-create-user-modal">&times;</span>
+                    <h3>Create New User</h3>
+                    <form id="create-user-form">
+                        <label for="create-user-name">Name</label>
+                        <input type="text" id="create-user-name" required>
+                        <label for="create-user-email">Email</label>
+                        <input type="email" id="create-user-email" required>
+                        <label for="create-user-phone">Phone</label>
+                        <input type="text" id="create-user-phone">
+                        <label for="create-user-role">Role</label>
+                        <select id="create-user-role" required>
+                            <option value="clerk">Clerk</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <label for="create-user-password">Password</label>
+                        <input type="password" id="create-user-password" required>
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit User Modal -->
+            <div id="edit-user-modal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <span class="close-modal" id="close-edit-user-modal">&times;</span>
+                    <h3>Edit User</h3>
+                    <form id="edit-user-form">
+                        <input type="hidden" id="edit-user-id">
+                        <label for="edit-user-name">Name</label>
+                        <input type="text" id="edit-user-name" required>
+                        <label for="edit-user-email">Email</label>
+                        <input type="email" id="edit-user-email" required>
+                        <label for="edit-user-phone">Phone</label>
+                        <input type="text" id="edit-user-phone">
+                        <label for="edit-user-role">Role</label>
+                        <select id="edit-user-role" required>
+                            <option value="clerk">Clerk</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Change User Password Modal -->
+            <div id="change-user-password-modal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <span class="close-modal" id="close-change-user-password-modal">&times;</span>
+                    <h3>Change User Password</h3>
+                    <form id="change-user-password-form">
+                        <input type="hidden" id="change-password-user-id">
+                        <label for="change-user-new-password">New Password</label>
+                        <input type="password" id="change-user-new-password" required>
+                        <label for="change-user-confirm-password">Confirm New Password</label>
+                        <input type="password" id="change-user-confirm-password" required>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Add the new Change Own Password Modal at the end of the file, before </body> -->
+    <div id="change-own-password-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal" id="close-change-own-password-modal">&times;</span>
+            <h3>Change Password</h3>
+            <form id="change-own-password-form">
+                <label for="current-password">Current Password</label>
+                <input type="password" id="current-password" required>
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" required>
+                <label for="confirm-new-password">Confirm New Password</label>
+                <input type="password" id="confirm-new-password" required>
+                <div class="password-requirements">
+                    <strong>Password Requirements:</strong>
+                    <ul>
+                        <li>At least 6 characters long</li>
+                        <li>Must contain at least one letter and one number</li>
+                    </ul>
+                </div>
+                <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+            <div id="password-change-alert" style="display:none;"></div>
+        </div>
+    </div>
+
+</body>
+</html> 

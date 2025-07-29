@@ -1,0 +1,111 @@
+body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    background: url('images/logo.jpg') center center/cover no-repeat fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Add a semi-transparent overlay for readability */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.72);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(44,62,80,0.12);
+    padding: 40px 32px 32px 32px;
+    max-width: 350px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.login-container h2 {
+    margin-bottom: 28px;
+    color: #222;
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+#login-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#login-form label {
+    font-size: 1em;
+    color: #555;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+#login-form input[type="text"],
+#login-form input[type="password"] {
+    padding: 12px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1em;
+    background: #fafbfc;
+    transition: border 0.2s;
+}
+#login-form input[type="text"]:focus,
+#login-form input[type="password"]:focus {
+    border: 1.5px solid #6c63ff;
+    outline: none;
+}
+
+.btn.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+}
+.btn.btn-primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 4px 16px rgba(102,126,234,0.13);
+}
+
+.error-message {
+    color: #e74c3c;
+    margin-top: 18px;
+    font-size: 1em;
+    text-align: center;
+    min-height: 24px;
+}
+
+.login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.login-subtitle {
+    color: #888;
+    font-size: 1.08em;
+    margin-bottom: 24px;
+    text-align: center;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+} 
