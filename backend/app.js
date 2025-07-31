@@ -53,9 +53,44 @@ app.get('/', (req, res) => {
   });
 });
 
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Enhanced MongoDB connection with retry logic
+const connectDB = async () => {
+  try {
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // 10 seconds
+      socketTimeoutMS: 45000, // 45 seconds
+      bufferMaxEntries: 0,
+      maxPoolSize: 10,
+      minPoolSize: 2
+    };
+    
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    // Retry connection after 5 seconds
+    setTimeout(connectDB, 5000);
+  }
+};
+
+// Handle MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(connectDB, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('MongoDB reconnected');
+});
+
+// Initial connection
+connectDB();
 
 // Add debug logging for all requests
 app.use((req, res, next) => {
@@ -145,7 +180,12 @@ app.use('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+const HOST = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
+
+server.listen(PORT, HOST, () => {
   console.log("=== BACKEND STARTED: " + new Date().toISOString());
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://${HOST}:${PORT}`);
+  console.log(`Local access: http://localhost:${PORT}`);
+  console.log(`Network access: http://[YOUR_LOCAL_IP]:${PORT}`);
+  console.log(`Example: http://192.168.1.100:${PORT}`);
 }); 

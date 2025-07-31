@@ -215,18 +215,50 @@ exports.createBooking = async (req, res) => {
     const totalQuantity = cottage.quantity || 1;
 
     // Find all bookings for this type/date/time
-    // Create start and end of the booking date for proper date comparison
-    const bookingDateStart = new Date(bookingDate);
-    bookingDateStart.setHours(0, 0, 0, 0);
-    const bookingDateEnd = new Date(bookingDate);
-    bookingDateEnd.setHours(23, 59, 59, 999);
+    // IMPROVED DATE HANDLING - Handle timezone issues
+    let bookingDateStart, bookingDateEnd;
+    
+    try {
+      // Parse the booking date more robustly
+      const parsedDate = new Date(bookingDate);
+      
+      // Check if the date is valid
+      if (isNaN(parsedDate.getTime())) {
+        console.log('Invalid date format received:', bookingDate);
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid date format',
+          receivedDate: bookingDate
+        });
+      }
+      
+      // Create start and end of the booking date for proper date comparison
+      // Use UTC to avoid timezone issues
+      bookingDateStart = new Date(parsedDate);
+      bookingDateStart.setUTCHours(0, 0, 0, 0);
+      
+      bookingDateEnd = new Date(parsedDate);
+      bookingDateEnd.setUTCHours(23, 59, 59, 999);
+    } catch (dateError) {
+      console.error('Error parsing date:', dateError);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format',
+        error: dateError.message
+      });
+    }
+    
+    // Add timeout and retry logic for MongoDB queries
+    const queryOptions = {
+      maxTimeMS: 10000 // 10 second timeout
+    };
     
     const existingBookings = await Booking.find({
       cottageType,
       bookingDate: { $gte: bookingDateStart, $lte: bookingDateEnd },
       bookingTime,
       status: { $nin: ['cancelled', 'rejected'] }
-    });
+    }, null, queryOptions).exec();
     
     console.log('=== EXISTING BOOKINGS DEBUG ===');
     console.log('Date range:', { start: bookingDateStart.toISOString(), end: bookingDateEnd.toISOString() });

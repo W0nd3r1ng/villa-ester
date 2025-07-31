@@ -59,24 +59,58 @@ router.get('/get-cottage-numbers', async (req, res) => {
     // Find all bookings for this type/date/time that are not cancelled/rejected
     const Booking = require('../models/Booking');
     
-    // Create start and end of the booking date for proper date comparison
-    const bookingDateStart = new Date(bookingDate);
-    bookingDateStart.setHours(0, 0, 0, 0);
-    const bookingDateEnd = new Date(bookingDate);
-    bookingDateEnd.setHours(23, 59, 59, 999);
+    // IMPROVED DATE HANDLING - Handle timezone issues
+    let bookingDateStart, bookingDateEnd;
     
-    console.log('Date range for query:', {
-      start: bookingDateStart.toISOString(),
-      end: bookingDateEnd.toISOString(),
-      requestedDate: bookingDate
-    });
+    try {
+      // Parse the booking date more robustly
+      const parsedDate = new Date(bookingDate);
+      
+      // Check if the date is valid
+      if (isNaN(parsedDate.getTime())) {
+        console.log('Invalid date format received:', bookingDate);
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid date format',
+          receivedDate: bookingDate
+        });
+      }
+      
+      // Create start and end of the booking date for proper date comparison
+      // Use UTC to avoid timezone issues
+      bookingDateStart = new Date(parsedDate);
+      bookingDateStart.setUTCHours(0, 0, 0, 0);
+      
+      bookingDateEnd = new Date(parsedDate);
+      bookingDateEnd.setUTCHours(23, 59, 59, 999);
+      
+      console.log('Date range for query:', {
+        start: bookingDateStart.toISOString(),
+        end: bookingDateEnd.toISOString(),
+        requestedDate: bookingDate,
+        parsedDate: parsedDate.toISOString()
+      });
+    } catch (dateError) {
+      console.error('Error parsing date:', dateError);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format',
+        error: dateError.message
+      });
+    }
+    
+    // Add timeout and retry logic for MongoDB queries
+    const queryOptions = {
+      maxTimeMS: 10000 // 10 second timeout
+    };
     
     const existingBookings = await Booking.find({
       cottageType,
       bookingDate: { $gte: bookingDateStart, $lte: bookingDateEnd },
       bookingTime,
       status: { $nin: ['cancelled', 'rejected'] }
-    });
+    }, null, queryOptions).exec();
+    
     console.log('Existing bookings for this date/time:', existingBookings.length);
     existingBookings.forEach((booking, index) => {
       console.log(`  ${index + 1}. ${booking.cottageType} #${booking.cottageNumber} - ${booking.bookingDate.toISOString()} at ${booking.bookingTime} (${booking.status})`);
@@ -95,20 +129,44 @@ router.get('/get-cottage-numbers', async (req, res) => {
     }
     console.log('Available numbers:', availableNumbers);
     
-    res.json({ 
+    // Add additional debugging info
+    const response = { 
       success: true, 
       availableNumbers,
       totalQuantity,
       assignedNumbers,
-      cottageType
-    });
+      cottageType,
+      debug: {
+        dateRange: {
+          start: bookingDateStart.toISOString(),
+          end: bookingDateEnd.toISOString()
+        },
+        bookingCount: existingBookings.length,
+        environment: process.env.NODE_ENV || 'development'
+      }
+    };
+    
+    console.log('Sending response:', response);
+    res.json(response);
+    
   } catch (error) {
     console.error('Error in cottage availability controller:', error);
-    res.status(500).json({ 
+    
+    // Enhanced error response
+    const errorResponse = {
       success: false, 
       message: 'Failed to fetch available cottage numbers', 
-      error: error.message 
-    });
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    };
+    
+    // Add stack trace in development
+    if (process.env.NODE_ENV !== 'production') {
+      errorResponse.stack = error.stack;
+    }
+    
+    res.status(500).json(errorResponse);
   }
 });
 
