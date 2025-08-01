@@ -57,11 +57,8 @@ app.get('/', (req, res) => {
 const connectDB = async () => {
   try {
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 10000, // 10 seconds
       socketTimeoutMS: 45000, // 45 seconds
-      bufferMaxEntries: 0,
       maxPoolSize: 10,
       minPoolSize: 2
     };

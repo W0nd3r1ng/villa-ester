@@ -41,6 +41,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     updateUserInfo();
 
+    // Debug function to check authentication
+    function debugAuth() {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        console.log('=== AUTH DEBUG ===');
+        console.log('Token present:', !!token);
+        console.log('User:', user);
+        console.log('User role:', user.role);
+        console.log('==================');
+    }
+    debugAuth();
+
     // Role-based UI for Reports & Analytics
     function updateRoleBasedUI() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -74,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const guestManagementPanel = document.getElementById('guest-management-panel');
 
     // --- Socket.IO for real-time updates ---
-    const socket = io('https://villa-ester-backend.onrender.com', {
+    const socket = io('http://localhost:5000', {
       transports: ['websocket', 'polling']
     });
 
@@ -84,15 +96,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchBookings() {
         try {
             const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            console.log('Fetching bookings with token:', token ? 'Present' : 'Missing');
+            console.log('User role:', user.role);
+            
             const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', { headers });
+            const response = await fetch('http://localhost:5000/api/bookings', { headers });
+            console.log('Response status:', response.status);
+            
             const data = await response.json();
+            console.log('Bookings response:', data);
+            
             if (data.success && Array.isArray(data.data)) {
                 bookingsData = data.data;
+                console.log('Found bookings:', bookingsData.length);
             } else if (Array.isArray(data)) {
                 bookingsData = data; // fallback for old API
+                console.log('Found bookings (fallback):', bookingsData.length);
             } else {
                 bookingsData = [];
+                console.log('No bookings found');
             }
         } catch (err) {
             console.error('Failed to fetch bookings:', err);
@@ -134,7 +157,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderCheckoutList && renderCheckoutList();
         renderPendingBookingList && renderPendingBookingList();
         updateDashboardOverview && updateDashboardOverview();
-        updateCottageOccupancyTable && updateCottageOccupancyTable();
         updatePendingBookingsBadge();
         renderCancelledBookings();
         showNotification('New booking received!', 'success');
@@ -147,7 +169,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderCheckoutList && renderCheckoutList();
         renderPendingBookingList && renderPendingBookingList();
         updateDashboardOverview && updateDashboardOverview();
-        updateCottageOccupancyTable && updateCottageOccupancyTable();
         updatePendingBookingsBadge();
         renderCancelledBookings();
         showNotification('Booking status updated!', 'info');
@@ -160,7 +181,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderCheckoutList && renderCheckoutList();
         renderPendingBookingList && renderPendingBookingList();
         updateDashboardOverview && updateDashboardOverview();
-        updateCottageOccupancyTable && updateCottageOccupancyTable();
         updatePendingBookingsBadge();
         renderCancelledBookings();
         showNotification('Booking deleted!', 'warning');
@@ -247,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     console.log(`Auto-checking out day tour booking: ${booking.fullName}`);
                     
                     try {
-                        const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${booking._id}`, {
+                        const response = await fetch(`http://localhost:5000/api/bookings/${booking._id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
@@ -432,7 +452,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             renderCheckoutList && renderCheckoutList();
             renderPendingBookingList && renderPendingBookingList();
             updateDashboardOverview && updateDashboardOverview();
-            updateCottageOccupancyTable && updateCottageOccupancyTable();
+    
             showNotification('Data refreshed manually', 'info');
         });
     }
@@ -443,7 +463,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Fetch cottages from backend
     async function fetchCottages() {
         try {
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
+            const response = await fetch('http://localhost:5000/api/cottages');
             const data = await response.json();
             if (data.success && Array.isArray(data.data)) {
                 cottagesData = data.data;
@@ -537,72 +557,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // Update cottage occupancy status table with real database data
-    async function updateCottageOccupancyTable() {
-        const tableBody = document.getElementById('cottage-occupancy-tbody');
-        if (!tableBody) return;
-        tableBody.innerHTML = '';
-        
-        // Ensure we have the latest data
-        await fetchBookings();
-        await fetchCottages();
-        
-        const today = new Date().toISOString().slice(0, 10);
-        
-        // Create cottage types map from database
-        const cottageTypes = {};
-        cottagesData.forEach(cottage => {
-            cottageTypes[cottage.type] = {
-                name: cottage.name,
-                total: cottage.quantity || 1,
-                price: cottage.price
-            };
-        });
-        
-        // Fallback cottage types if database is empty
-        if (Object.keys(cottageTypes).length === 0) {
-            cottageTypes['kubo'] = { name: 'Kubo Type', total: 8, price: 800 };
-            cottageTypes['With Videoke'] = { name: 'VE Cottage with Videoke', total: 2, price: 2500 };
-            cottageTypes['Without Videoke'] = { name: 'VE Cottage without Videoke', total: 2, price: 2000 };
-            cottageTypes['garden'] = { name: 'Garden Table', total: 10, price: 300 };
-        }
-        
-        // Count occupied cottages by type
-        const occupiedCounts = {};
-        bookingsData.forEach(booking => {
-            const bookingDate = (booking.bookingDate || '').slice(0, 10);
-            if ((booking.status !== 'cancelled' && booking.status !== 'rejected') && bookingDate === today) {
-                const cottageType = booking.cottageType;
-                if (cottageType && cottageTypes[cottageType]) {
-                    occupiedCounts[cottageType] = (occupiedCounts[cottageType] || 0) + 1;
-                }
-            }
-        });
-        
-        // Create table rows
-        Object.keys(cottageTypes).forEach(type => {
-            const cottage = cottageTypes[type];
-            const occupied = occupiedCounts[type] || 0;
-            const available = cottage.total - occupied;
-            const status = available > 0 ? 'Available' : 'Fully Booked';
-            const statusClass = available > 0 ? 'vacant' : 'occupied';
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${cottage.name}</td>
-                <td>${cottage.total}</td>
-                <td>${occupied}</td>
-                <td class="${statusClass}">${status}</td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
+
 
     // Update dashboard and table after fetching data
     async function updateDashboardAndTable() {
         await Promise.all([fetchBookings(), fetchCottages()]);
         await updateDashboardOverview();
-        await updateCottageOccupancyTable();
         renderCottageNumberStatus();
     }
 
@@ -695,11 +655,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Function to mark booking as completed (check-in)
     async function markBookingAsCompleted(bookingId) {
         try {
-            const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'completed' })
-            });
+                    const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+        });
             
             if (response.ok) {
                 await fetchBookings();
@@ -789,7 +749,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             const adults = booking.adults || booking.numberOfPeople || 1;
             const children = booking.children || 0;
-            const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `https://villa-ester-backend.onrender.com${booking.proofOfPayment}`) : '';
+            const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `http://localhost:5000${booking.proofOfPayment}`) : '';
             const isWalkIn = booking.notes?.includes('Walk-in booking');
             item.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;">
@@ -823,7 +783,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function updateBookingStatus(bookingId, status) {
         try {
-            const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}`, {
+            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
@@ -985,7 +945,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const token = localStorage.getItem('token');
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-                const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
+                const response = await fetch('http://localhost:5000/api/bookings', {
                     method: 'POST',
                     headers,
                     body: JSON.stringify(bookingData)
@@ -1373,7 +1333,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchUserProfile() {
         if (!token) return;
         try {
-            const res = await fetch('https://villa-ester-backend.onrender.com/api/users/me', {
+            const res = await fetch('http://localhost:5000/api/users/me', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const data = await res.json();
@@ -1402,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     return;
                 }
                 try {
-                    const res = await fetch('https://villa-ester-backend.onrender.com/api/users/me', {
+                    const res = await fetch('http://localhost:5000/api/users/me', {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1636,7 +1596,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function markBookingAsCheckedOut(bookingId) {
         try {
-            const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}`, {
+            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'checked_out' })
@@ -2464,7 +2424,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchUsers() {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('https://villa-ester-backend.onrender.com/api/users', {
+            const res = await fetch('http://localhost:5000/api/users', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const data = await res.json();
@@ -2540,7 +2500,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`https://villa-ester-backend.onrender.com/api/users/${userId}`, {
+            const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': 'Bearer ' + token
@@ -2635,7 +2595,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const role = document.getElementById('create-user-role').value;
             const password = document.getElementById('create-user-password').value;
             try {
-                const res = await fetch('https://villa-ester-backend.onrender.com/api/users', {
+                const res = await fetch('http://localhost:5000/api/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2666,7 +2626,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const phone = document.getElementById('edit-user-phone').value.trim();
             const role = document.getElementById('edit-user-role').value;
             try {
-                const res = await fetch(`https://villa-ester-backend.onrender.com/api/users/${userId}`, {
+                const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2703,7 +2663,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             try {
-                const res = await fetch(`https://villa-ester-backend.onrender.com/api/users/${userId}/password`, {
+                const res = await fetch(`http://localhost:5000/api/users/${userId}/password`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2738,7 +2698,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             
-            const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}/confirm`, {
+            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/confirm`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2779,7 +2739,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             
-            const response = await fetch(`https://villa-ester-backend.onrender.com/api/bookings/${bookingId}/reject`, {
+            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/reject`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2874,7 +2834,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // API call
             const token = localStorage.getItem('token');
             try {
-                const response = await fetch('https://villa-ester-backend.onrender.com/api/users/me/password', {
+                const response = await fetch('http://localhost:5000/api/users/me/password', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2977,7 +2937,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     });
 
-    // Add after updateCottageOccupancyTable or in dashboard rendering logic
+
     function renderCottageNumberStatus() {
       const container = document.getElementById('cottage-number-status');
       if (!container) return;
@@ -3055,7 +3015,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     // Call this after updating bookings/cottages
     // ... existing code ...
-    // In updateDashboardAndTable or after updateCottageOccupancyTable:
+
     renderCottageNumberStatus();
     // ... existing code ...
 
@@ -3069,7 +3029,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       const today = new Date().toISOString().slice(0, 10);
       numberSelect.innerHTML = '<option value="">Loading...</option>';
-      fetch(`http://localhost:3000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(type)}&bookingDate=${encodeURIComponent(today)}&bookingTime=08:00`)
+      fetch(`http://localhost:5000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(type)}&bookingDate=${encodeURIComponent(today)}&bookingTime=08:00`)
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.availableNumbers)) {

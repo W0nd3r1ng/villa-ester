@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick API Test</title>
+</head>
+<body>
+    <h1>Quick API Test</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test root endpoint first
+                const rootResponse = await fetch('https://villa-ester-backend.onrender.com/');
+                const rootData = await rootResponse.json();
+                console.log('Root response:', rootData);
+                
+                // Test login endpoint
+                const loginResponse = await fetch('https://villa-ester-backend.onrender.com/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@villaester.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>API Test Results:</h3>
+                    <p><strong>Root Status:</strong> ${rootResponse.status}</p>
+                    <p><strong>Login Status:</strong> ${loginResponse.status}</p>
+                    <p><strong>Login Data:</strong> ${JSON.stringify(loginData, null, 2)}</p>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                console.error('API Test Error:', error);
+            }
+        }
+    </script>
+</body>
+</html> 

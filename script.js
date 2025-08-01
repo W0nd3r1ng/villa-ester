@@ -1,7 +1,24 @@
-// Socket.IO connection
-const socket = io('https://villa-ester-backend.onrender.com', {
-  transports: ['websocket', 'polling']
-});
+// Utility function to get backend URL
+function getBackendUrl() {
+    // For development, prioritize localhost
+    return 'http://localhost:5000';
+}
+
+// Socket.IO connection - Try local server first, then production
+let socket;
+try {
+    // Try local server first
+    socket = io(getBackendUrl(), {
+        transports: ['websocket', 'polling']
+    });
+    console.log('Connected to local Socket.IO server');
+} catch (error) {
+    console.log('Local Socket.IO failed, trying production server');
+    socket = io('https://villa-ester-backend.onrender.com', {
+        transports: ['websocket', 'polling']
+    });
+    console.log('Connected to production Socket.IO server');
+}
 
 // Socket.IO event handlers
 socket.on('connect', () => {
@@ -344,7 +361,7 @@ if (modalBookingForm) {
             
             console.log('Creating booking with token:', token ? 'Present' : 'Missing');
             
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/bookings', {
+            const response = await fetch(getBackendUrl() + '/api/bookings', {
                 method: 'POST',
                 body: formData,
                 headers
@@ -445,7 +462,7 @@ if (reviewForm) {
         const reviewData = { name, comment, rating };
         
         try {
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews', {
+            const response = await fetch(getBackendUrl() + '/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(reviewData)
@@ -493,7 +510,7 @@ async function fetchAndDisplayReviews() {
     }
     try {
         console.log('Fetching reviews from API...');
-        const response = await fetch('https://villa-ester-backend.onrender.com/api/reviews');
+        const response = await fetch(getBackendUrl() + '/api/reviews');
         console.log('Response status:', response.status);
         const data = await response.json();
         console.log('Reviews API response:', data);
@@ -654,7 +671,7 @@ if (availabilityForm) {
         try {
             // Fetch available cottages
             console.log('Fetching cottages from API...');
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
+            const response = await fetch(getBackendUrl() + '/api/cottages');
             console.log('Response status:', response.status);
             
             const data = await response.json();
@@ -772,10 +789,45 @@ async function fetchUserProfile() {
         const token = localStorage.getItem('token');
         if (!token) return null;
         
-        const res = await fetch('https://villa-ester-backend.onrender.com/api/users/me', { 
-            headers: { 'Authorization': 'Bearer ' + token } 
-        });
-        if (!res.ok) return null;
+        // Try local server first, then production as fallback
+        const backendUrls = [
+            'http://localhost:5000/api/users/me',
+            'https://villa-ester-backend.onrender.com/api/users/me'
+        ];
+        
+        let res;
+        let lastError;
+        
+        for (const url of backendUrls) {
+            try {
+                console.log(`Fetching user profile from: ${url}`);
+                res = await fetch(url, { 
+                    headers: { 'Authorization': 'Bearer ' + token } 
+                });
+                
+                if (res.ok) {
+                    console.log(`User profile fetched successfully from: ${url}`);
+                    break; // Success, exit the loop
+                } else {
+                    console.log(`Failed to fetch profile from ${url}, status: ${res.status}`);
+                    if (url === backendUrls[backendUrls.length - 1]) {
+                        return null; // Last URL failed
+                    }
+                }
+                
+            } catch (error) {
+                console.log(`Error fetching profile from ${url}:`, error.message);
+                lastError = error;
+                
+                if (url === backendUrls[backendUrls.length - 1]) {
+                    // This was the last URL, throw the error
+                    throw lastError;
+                }
+                // Continue to next URL
+            }
+        }
+        
+        if (!res || !res.ok) return null;
         
         const result = await res.json();
         return result.data || result;
@@ -957,7 +1009,7 @@ async function loadAIRecommendations() {
         console.log('Recommendation parameters:', { guests, bookingDate });
         
         // Fetch AI recommendations
-        const apiUrl = `https://villa-ester-backend.onrender.com/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
+        const apiUrl = `${getBackendUrl()}/api/recommendations?guest_count=${guests}&booking_date=${bookingDate}`;
         console.log('Fetching from:', apiUrl);
         
         const response = await fetch(apiUrl);
@@ -1148,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function showCottageDetails(cottageTypeLabel, imgSrc) {
         try {
             // Fetch all cottages from backend
-            const response = await fetch('https://villa-ester-backend.onrender.com/api/cottages');
+            const response = await fetch(getBackendUrl() + '/api/cottages');
             const data = await response.json();
             if (!data.success || !Array.isArray(data.data)) throw new Error('Failed to fetch cottages');
             // Map label to DB type
@@ -1484,7 +1536,7 @@ function updateAvailableCottageNumbers(cottageType, bookingDate, bookingTime) {
   
   numberSelect.innerHTML = '<option value="">Loading...</option>';
   
-  const url = `http://localhost:3000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(cottageType)}&bookingDate=${encodeURIComponent(bookingDate)}&bookingTime=${encodeURIComponent(bookingTime)}`;
+          const url = `http://localhost:5000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(cottageType)}&bookingDate=${encodeURIComponent(bookingDate)}&bookingTime=${encodeURIComponent(bookingTime)}`;
   console.log('Fetching from URL:', url);
   
   // Get user token if available

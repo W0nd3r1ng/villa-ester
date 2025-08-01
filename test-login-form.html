@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        .debug {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h2>Login Test</h2>
+    
+    <form id="login-form">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        
+        <button type="submit" id="login-btn">Login</button>
+    </form>
+    
+    <div id="message"></div>
+    
+    <div class="debug" id="debug-log"></div>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const loginBtn = document.getElementById('login-btn');
+        const messageDiv = document.getElementById('message');
+        const debugLog = document.getElementById('debug-log');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+        
+        function showMessage(text, isError = false) {
+            messageDiv.textContent = text;
+            messageDiv.className = isError ? 'error' : 'success';
+        }
+        
+        function setLoading(loading) {
+            loginBtn.disabled = loading;
+            loginBtn.textContent = loading ? 'Logging in...' : 'Login';
+        }
+        
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            log('Form submitted');
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            log(`Email: ${email}`);
+            log(`Password length: ${password.length}`);
+            
+            if (!email || !password) {
+                showMessage('Please enter both email and password.', true);
+                return;
+            }
+            
+            setLoading(true);
+            showMessage('');
+            
+            try {
+                log('Making API call...');
+                const startTime = Date.now();
+                
+                const response = await fetch('https://villa-ester-backend.onrender.com/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const endTime = Date.now();
+                log(`Response received in ${endTime - startTime}ms`);
+                log(`Status: ${response.status}`);
+                log(`OK: ${response.ok}`);
+                
+                const data = await response.json();
+                log(`Response data: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.ok && data.data && data.data.token) {
+                    showMessage('Login successful!');
+                    log('Token received, redirecting...');
+                    // Don't actually redirect in test
+                } else {
+                    showMessage(data.message || 'Login failed', true);
+                    log('Login failed - no token or error response');
+                }
+                
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                showMessage(`Error: ${error.message}`, true);
+            } finally {
+                setLoading(false);
+                log('Request completed');
+            }
+        });
+        
+        // Test basic connectivity
+        async function testConnectivity() {
+            log('Testing basic connectivity...');
+            try {
+                const response = await fetch('https://villa-ester-backend.onrender.com/');
+                log(`Root endpoint status: ${response.status}`);
+                if (response.ok) {
+                    const data = await response.text();
+                    log(`Root response: ${data.substring(0, 100)}...`);
+                }
+            } catch (error) {
+                log(`Connectivity test failed: ${error.message}`);
+            }
+        }
+        
+        // Run connectivity test on page load
+        testConnectivity();
+    </script>
+</body>
+</html> 

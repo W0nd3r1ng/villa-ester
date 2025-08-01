@@ -171,6 +171,15 @@ router.get('/get-cottage-numbers', async (req, res) => {
 });
 
 /**
+ * @route   GET /api/bookings/available-cottage-numbers
+ * @desc    Get available cottage numbers for a specific type, date, and time
+ * @access  Public
+ */
+router.get('/available-cottage-numbers',
+  bookingController.getAvailableCottageNumbers
+);
+
+/**
  * @route   GET /api/bookings
  * @desc    Get all bookings with filtering and pagination
  * @access  Public (for clerk panel) - uses optional auth in development

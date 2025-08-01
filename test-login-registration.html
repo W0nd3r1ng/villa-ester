@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Registration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .info {
+            color: blue;
+            margin-top: 10px;
+        }
+        .debug {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .user-info {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login & Registration Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Backend Connectivity Test</h2>
+        <button onclick="testBackendConnectivity()">Test Backend Connection</button>
+        <div id="connectivity-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Registration Test</h2>
+        <form id="registration-form">
+            <div class="form-group">
+                <label for="reg-name">Full Name:</label>
+                <input type="text" id="reg-name" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-email">Email:</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-phone">Phone:</label>
+                <input type="text" id="reg-phone" required maxlength="11" pattern="[0-9]{11}">
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Password:</label>
+                <input type="password" id="reg-password" required minlength="6">
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div id="registration-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Login Test</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. User Profile Test</h2>
+        <button onclick="testUserProfile()">Get User Profile</button>
+        <div id="profile-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Current User Info</h2>
+        <div id="current-user-info"></div>
+    </div>
+    
+    <div class="debug" id="debug-log"></div>
+
+    <script>
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const debugLog = document.getElementById('debug-log');
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+        
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${isError ? 'error' : 'success'}">${message}</div>`;
+        }
+        
+        // Test backend connectivity
+        async function testBackendConnectivity() {
+            log('Testing backend connectivity...');
+            const resultDiv = document.getElementById('connectivity-result');
+            resultDiv.innerHTML = '<div class="info">Testing...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/');
+                if (response.ok) {
+                    const data = await response.text();
+                    resultDiv.innerHTML = `<div class="success">✅ Backend is running! Response: ${data.substring(0, 100)}...</div>`;
+                    log('Backend connectivity test: SUCCESS');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Backend responded with status: ${response.status}</div>`;
+                    log(`Backend connectivity test: FAILED - Status ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Cannot connect to backend: ${error.message}</div>`;
+                log(`Backend connectivity test: FAILED - ${error.message}`);
+            }
+        }
+        
+        // Registration form handler
+        document.getElementById('registration-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            log('Registration form submitted');
+            
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-password').value;
+            
+            log(`Registration data: ${name}, ${email}, ${phone}, password length: ${password.length}`);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, password })
+                });
+                
+                const result = await response.json();
+                log(`Registration response: ${JSON.stringify(result)}`);
+                
+                if (response.ok && result.success) {
+                    showResult('registration-result', '✅ Registration successful!', false);
+                    this.reset();
+                } else {
+                    showResult('registration-result', `❌ Registration failed: ${result.message}`, true);
+                }
+            } catch (error) {
+                log(`Registration error: ${error.message}`);
+                showResult('registration-result', `❌ Network error: ${error.message}`, true);
+            }
+        });
+        
+        // Login form handler
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            log('Login form submitted');
+            
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            log(`Login data: ${email}, password length: ${password.length}`);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                log(`Login response: ${JSON.stringify(result)}`);
+                
+                if (response.ok && result.data && result.data.token) {
+                    // Store token and user data
+                    localStorage.setItem('token', result.data.token);
+                    localStorage.setItem('user', JSON.stringify(result.data.user));
+                    
+                    showResult('login-result', '✅ Login successful! Token stored.', false);
+                    updateCurrentUserInfo();
+                } else {
+                    showResult('login-result', `❌ Login failed: ${result.message}`, true);
+                }
+            } catch (error) {
+                log(`Login error: ${error.message}`);
+                showResult('login-result', `❌ Network error: ${error.message}`, true);
+            }
+        });
+        
+        // Test user profile
+        async function testUserProfile() {
+            log('Testing user profile...');
+            const resultDiv = document.getElementById('profile-result');
+            resultDiv.innerHTML = '<div class="info">Testing...</div>';
+            
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    resultDiv.innerHTML = '<div class="error">❌ No token found. Please login first.</div>';
+                    return;
+                }
+                
+                const response = await fetch('http://localhost:5000/api/users/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                const result = await response.json();
+                log(`Profile response: ${JSON.stringify(result)}`);
+                
+                if (response.ok && result.data) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Profile fetched successfully!<br>
+                            Name: ${result.data.name}<br>
+                            Email: ${result.data.email}<br>
+                            Phone: ${result.data.phone}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to fetch profile: ${result.message}</div>`;
+                }
+            } catch (error) {
+                log(`Profile error: ${error.message}`);
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+        
+        // Update current user info display
+        function updateCurrentUserInfo() {
+            const userInfoDiv = document.getElementById('current-user-info');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    userInfoDiv.innerHTML = `
+                        <div class="user-info">
+                            <h3>Current User:</h3>
+                            <p><strong>Name:</strong> ${userData.name}</p>
+                            <p><strong>Email:</strong> ${userData.email}</p>
+                            <p><strong>Phone:</strong> ${userData.phone}</p>
+                            <p><strong>Role:</strong> ${userData.role}</p>
+                            <p><strong>Token:</strong> ${token.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    userInfoDiv.innerHTML = '<div class="error">❌ Error parsing user data</div>';
+                }
+            } else {
+                userInfoDiv.innerHTML = '<div class="info">No user logged in</div>';
+            }
+        }
+        
+        // Initialize
+        updateCurrentUserInfo();
+        log('Test page loaded');
+    </script>
+</body>
+</html> 

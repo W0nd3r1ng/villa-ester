@@ -6,6 +6,7 @@
     <title>Villa Ester Resort</title>
     <link rel="icon" href="images/logo.png" type="image/png">
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="script.js" defer></script>
 </head>
@@ -25,7 +26,7 @@
             <!-- User Profile Name (hidden by default) -->
             <div id="user-profile-menu-container" style="display:none; position: relative; margin-left: 12px;">
                 <button id="user-profile-btn" style="background:none; border:none; cursor:pointer; font-size:1.08em; font-weight:600; color:#6c63ff; padding: 6px 16px; border-radius: 7px;">
-                    <span id="navbar-user-name">User</span>
+                    <span id="navbar-user-name"><i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">person</i></span>
                 </button>
                 <div id="user-dropdown-menu" style="display:none; position:absolute; right:0; top:40px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15); border-radius:8px; min-width:200px; z-index:1000;">
                     <ul style="list-style:none; margin:0; padding:0;">
@@ -426,7 +427,7 @@
                 <div class="modal-form-row">
                     <div class="modal-form-group" style="margin-bottom: 8px;">
                         <div style="background: #fff8e1; color: #b26a00; border-radius: 7px; padding: 10px 14px; font-size: 1.01em; margin-bottom: 6px;">
-                            <strong>Note:</strong> A P200.00 downpayment should be paid through <strong>GCash (09228093074) for comfirmation</strong>.<br>
+                            <strong>Note:</strong> A 20% downpayment should be paid through <strong>GCash (09228093074) for comfirmation</strong>.<br>
                             <span style="color:#b93a2b;">Upon cancellation, the downpayment will not be refunded.</span>
                         </div>
                     </div>
@@ -568,7 +569,7 @@
     </style>
     <script>
 // --- API Utility ---
-const API_BASE = 'https://villa-ester-backend.onrender.com/api'; // Production backend URL
+const API_BASE = 'http://localhost:5000/api'; // Local development backend URL
 function getToken() {
     return localStorage.getItem('token');
 }
@@ -771,7 +772,8 @@ async function updateNavbarUserName() {
         const profile = await fetchUserProfile();
         const nameSpan = document.getElementById('navbar-user-name');
         if (profile && nameSpan) {
-            nameSpan.textContent = profile.name || profile.email || 'User';
+            // Keep just the icon, no text
+            nameSpan.innerHTML = `<i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">person</i>`;
         }
     }
 }
