@@ -17,6 +17,7 @@
             <div class="navbar-menu">
                 <a href="#rooms">Cottages</a>
                 <a href="#gallery">Gallery</a>
+                <a href="#about">About</a>
                 <a href="#contact">Contact</a>
             </div>
         </div>
@@ -122,7 +123,7 @@
     </section>
     
     <!-- User Settings Section (hidden initially) -->
-    <section id="user-settings-section" class="settings-section" style="display: none; padding: 60px 20px; background: #f8f9fa; min-height: calc(100vh - 80px); margin-top: 80px;">
+    <section id="user-settings-section" class="settings-section" style="display: none; padding: 60px 20px; background: #f8f9fa; margin-top: 80px; height: auto; min-height: auto;">
         <div class="container" style="max-width: 1200px; margin: 0 auto;">
             <!-- Page Header -->
             <div style="text-align: center; margin-bottom: 40px;">
@@ -287,7 +288,7 @@
     </div>
     
     <!-- Gallery Section (hidden initially) -->
-    <section id="gallery-section" class="gallery-section" style="display: none; padding: 60px 20px; background: #f8f9fa; min-height: 100vh;">
+    <section id="gallery-section" class="gallery-section" style="display: none; padding: 60px 20px; background: #f8f9fa; height: auto; min-height: auto;">
         <div class="container" style="max-width: 1200px; margin: 0 auto;">
             <!-- Page Header -->
             <div style="text-align: center; margin-bottom: 40px;">
@@ -380,6 +381,42 @@
             </div>
         </div>
     </section>
+    
+    <!-- About Section (hidden initially) -->
+    <section id="about-section" class="about-section" style="display: none; padding: 60px 20px; background: #f8f9fa; height: auto; min-height: auto;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Page Header -->
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h1 style="color: #333; font-size: 2.5em; margin-bottom: 10px;">About Us</h1>
+                <p style="color: #666; font-size: 1.1em;">Discover the story behind Villa Ester Resort</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;">
+                <!-- Left Section - Text Content -->
+                <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    <h2 style="color: #333; font-size: 2em; margin-bottom: 20px; border-bottom: 3px solid #6c63ff; padding-bottom: 10px;">ABOUT US</h2>
+                    <div style="color: #666; line-height: 1.8; font-size: 1.1em; margin-bottom: 30px;">
+                        <p style="margin-bottom: 20px;">
+                            Nestled in a peaceful location, Villa Ester Resort is a privately owned pool resort designed to provide a relaxing and enjoyable escape from the everyday. With well-maintained swimming pools, a serene atmosphere, and guest-friendly amenities, the resort has become a favorite destination for families, friends, and groups looking to unwind or celebrate special moments.
+                        </p>
+                        <p>
+                            As part of its commitment to delivering memorable experiences, Villa Ester Resort is excited to announce the upcoming opening of its event venue hall — a versatile space perfect for weddings, birthdays, reunions, and corporate events. Whether you're here for leisure, celebration, or a quiet retreat, Villa Ester Resort is dedicated to making your stay both comfortable and unforgettable.
+                        </p>
+                    </div>
+                    <button class="btn btn-primary" id="about-book-now-btn" style="padding: 12px 25px; font-size: 1.1em;">BOOK NOW</button>
+                </div>
+                
+                <!-- Right Section - Random Gallery Collage -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 400px;">
+                    <div style="background: url('images/VillaEster1.jpg') center/cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
+                    <div style="background: url('images/VillaEster3.jpg') center/cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
+                    <div style="background: url('images/VillaEster5.jpg') center/cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
+                    <div style="background: url('images/VillaEster7.jpg') center/cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     <section class="reviews-section">
         <h2>What Our Guests Say</h2>
         <div class="reviews-container" id="reviews-container">
@@ -433,14 +470,14 @@
                 <h3>Contact Us</h3>
                 <p>📍 Natunuan South, San Pascual, Batangas City, Philippines</p>
                 <p>📞 (043) 781 0496</p>
-                <p>✉️ info@villaester.com</p>
+                <p>📞 09123456789</p>
+                <p>✉️ villaester@gmail.com</p>
             </div>
             <div class="footer-section">
                 <h3>Quick Links</h3>
                 <ul>
                     <li><a href="#rooms">Cottages</a></li>
-                    <li><a href="#gallery">Gallery</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#gallery" id="footer-gallery-link">Gallery</a></li>
                 </ul>
             </div>
             <div class="footer-section">
@@ -1060,6 +1097,7 @@ if (openUserSettings) {
         const recommendSection = document.querySelector('.recommend-section');
         const featuredRoomsSection = document.querySelector('.featured-rooms-section');
         const reviewsSection = document.querySelector('.reviews-section');
+        const aboutSection = document.getElementById('about-section');
         
         if (heroSection) heroSection.style.display = 'none';
         if (bookingSection) bookingSection.style.display = 'none';
@@ -1067,6 +1105,7 @@ if (openUserSettings) {
         if (featuredRoomsSection) featuredRoomsSection.style.display = 'none';
         if (reviewsSection) reviewsSection.style.display = 'none';
         if (gallerySection) gallerySection.style.display = 'none';
+        if (aboutSection) aboutSection.style.display = 'none';
         
         // Show settings section
         userSettingsSection.style.display = 'block';
@@ -1268,29 +1307,96 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gallery navigation functionality
     const galleryNavLink = document.querySelector('a[href="#gallery"]');
+    const footerGalleryLink = document.getElementById('footer-gallery-link');
+    const aboutNavLink = document.querySelector('a[href="#about"]');
+    const aboutSection = document.getElementById('about-section');
     
+    // Function to show gallery
+    function showGallery() {
+        // Hide all other content sections
+        const heroSection = document.querySelector('.hero');
+        const recommendSection = document.querySelector('.recommend-section');
+        const featuredRoomsSection = document.querySelector('.featured-rooms-section');
+        const reviewsSection = document.querySelector('.reviews-section');
+        
+        if (heroSection) heroSection.style.display = 'none';
+        if (bookingSection) bookingSection.style.display = 'none';
+        if (recommendSection) recommendSection.style.display = 'none';
+        if (featuredRoomsSection) featuredRoomsSection.style.display = 'none';
+        if (reviewsSection) reviewsSection.style.display = 'none';
+        if (userSettingsSection) userSettingsSection.style.display = 'none';
+        if (aboutSection) aboutSection.style.display = 'none';
+        
+        // Show gallery section
+        gallerySection.style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
+    
+    // Function to show about
+    function showAbout() {
+        // Hide all other content sections
+        const heroSection = document.querySelector('.hero');
+        const recommendSection = document.querySelector('.recommend-section');
+        const featuredRoomsSection = document.querySelector('.featured-rooms-section');
+        const reviewsSection = document.querySelector('.reviews-section');
+        
+        if (heroSection) heroSection.style.display = 'none';
+        if (bookingSection) bookingSection.style.display = 'none';
+        if (recommendSection) recommendSection.style.display = 'none';
+        if (featuredRoomsSection) featuredRoomsSection.style.display = 'none';
+        if (reviewsSection) reviewsSection.style.display = 'none';
+        if (userSettingsSection) userSettingsSection.style.display = 'none';
+        if (gallerySection) gallerySection.style.display = 'none';
+        
+        // Show about section
+        aboutSection.style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
+    
+    // Navbar gallery link
     if (galleryNavLink) {
         galleryNavLink.onclick = function(e) {
             e.preventDefault();
+            showGallery();
+        };
+    }
+    
+    // Footer gallery link
+    if (footerGalleryLink) {
+        footerGalleryLink.onclick = function(e) {
+            e.preventDefault();
+            showGallery();
+        };
+    }
+    
+    // Navbar about link
+    if (aboutNavLink) {
+        aboutNavLink.onclick = function(e) {
+            e.preventDefault();
+            showAbout();
+        };
+    }
+    
+    // About section BOOK NOW button
+    const aboutBookNowBtn = document.getElementById('about-book-now-btn');
+    if (aboutBookNowBtn) {
+        aboutBookNowBtn.onclick = function(e) {
+            e.preventDefault();
             
-            // Hide all other content sections
-            const heroSection = document.querySelector('.hero');
-            const recommendSection = document.querySelector('.recommend-section');
-            const featuredRoomsSection = document.querySelector('.featured-rooms-section');
-            const reviewsSection = document.querySelector('.reviews-section');
-            
-            if (heroSection) heroSection.style.display = 'none';
-            if (bookingSection) bookingSection.style.display = 'none';
-            if (recommendSection) recommendSection.style.display = 'none';
-            if (featuredRoomsSection) featuredRoomsSection.style.display = 'none';
-            if (reviewsSection) reviewsSection.style.display = 'none';
-            if (userSettingsSection) userSettingsSection.style.display = 'none';
-            
-            // Show gallery section
-            gallerySection.style.display = 'block';
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
+            if (isUserLoggedIn()) {
+                // User is logged in - show booking form
+                const bookingModal = document.getElementById('booking-modal');
+                if (bookingModal) {
+                    bookingModal.style.display = 'flex';
+                }
+            } else {
+                // User is not logged in - redirect to login page
+                window.location.href = 'login.html';
+            }
         };
     }
 });
