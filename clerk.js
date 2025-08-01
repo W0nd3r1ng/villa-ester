@@ -1,5 +1,10 @@
 // Clerk Panel UI Logic
 
+// Utility function to get backend URL
+function getBackendUrl() {
+    return 'https://villa-ester-backend.onrender.com';
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Authentication check
     function checkAuth() {
@@ -86,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const guestManagementPanel = document.getElementById('guest-management-panel');
 
     // --- Socket.IO for real-time updates ---
-    const socket = io('http://localhost:5000', {
+    const socket = io(getBackendUrl(), {
       transports: ['websocket', 'polling']
     });
 
@@ -101,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('User role:', user.role);
             
             const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-            const response = await fetch('http://localhost:5000/api/bookings', { headers });
+            const response = await fetch(`${getBackendUrl()}/api/bookings`, { headers });
             console.log('Response status:', response.status);
             
             const data = await response.json();
@@ -267,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     console.log(`Auto-checking out day tour booking: ${booking.fullName}`);
                     
                     try {
-                        const response = await fetch(`http://localhost:5000/api/bookings/${booking._id}`, {
+                        const response = await fetch(`${getBackendUrl()}/api/bookings/${booking._id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
@@ -463,7 +468,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Fetch cottages from backend
     async function fetchCottages() {
         try {
-            const response = await fetch('http://localhost:5000/api/cottages');
+            const response = await fetch(`${getBackendUrl()}/api/cottages`);
             const data = await response.json();
             if (data.success && Array.isArray(data.data)) {
                 cottagesData = data.data;
@@ -655,7 +660,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Function to mark booking as completed (check-in)
     async function markBookingAsCompleted(bookingId) {
         try {
-                    const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+                    const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'completed' })
@@ -749,7 +754,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             const adults = booking.adults || booking.numberOfPeople || 1;
             const children = booking.children || 0;
-            const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `http://localhost:5000${booking.proofOfPayment}`) : '';
+            const proofUrl = booking.proofOfPayment ? (booking.proofOfPayment.startsWith('http') ? booking.proofOfPayment : `${getBackendUrl()}${booking.proofOfPayment}`) : '';
             const isWalkIn = booking.notes?.includes('Walk-in booking');
             item.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;">
@@ -1333,7 +1338,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchUserProfile() {
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:5000/api/users/me', {
+            const res = await fetch(`${getBackendUrl()}/api/users/me`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const data = await res.json();
@@ -1362,7 +1367,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     return;
                 }
                 try {
-                    const res = await fetch('http://localhost:5000/api/users/me', {
+                    const res = await fetch(`${getBackendUrl()}/api/users/me`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',

@@ -789,10 +789,9 @@ async function fetchUserProfile() {
         const token = localStorage.getItem('token');
         if (!token) return null;
         
-        // Try local server first, then production as fallback
+        // Use production backend URL
         const backendUrls = [
-            'http://localhost:5000/api/users/me',
-            'https://villa-ester-backend.onrender.com/api/users/me'
+            `${getBackendUrl()}/api/users/me`
         ];
         
         let res;
