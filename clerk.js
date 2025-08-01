@@ -2702,13 +2702,32 @@ document.addEventListener('DOMContentLoaded', async function() {
                 showAlert('Authentication required. Please log in again.', 'error');
                 return;
             }
+
+            // Check if backend is reachable first
+            try {
+                const healthCheck = await fetch('http://localhost:5000/', { 
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'include'
+                });
+                if (!healthCheck.ok) {
+                    throw new Error('Backend server is not responding');
+                }
+            } catch (healthError) {
+                console.error('Backend health check failed:', healthError);
+                showAlert('Backend server is not reachable. Please check if the server is running.', 'error');
+                return;
+            }
             
             const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/confirm`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                }
+                    'Authorization': 'Bearer ' + token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                mode: 'cors',
+                credentials: 'include'
             });
             
             console.log('Response status:', response.status);
@@ -2726,7 +2745,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         } catch (err) {
             console.error('Error in confirmBooking:', err);
-            showAlert('Error confirming booking: ' + err.message, 'error');
+            
+            // Check if it's a network error and suggest solutions
+            if (err.message.includes('Failed to fetch') || err.message.includes('ERR_BLOCKED_BY_CLIENT')) {
+                showAlert('Network error: Request was blocked. Please try:\n1. Disable ad blocker for localhost\n2. Use incognito mode\n3. Check if backend server is running', 'error');
+            } else {
+                showAlert('Error confirming booking: ' + err.message, 'error');
+            }
         }
     }
 
@@ -2743,13 +2768,32 @@ document.addEventListener('DOMContentLoaded', async function() {
                 showAlert('Authentication required. Please log in again.', 'error');
                 return;
             }
+
+            // Check if backend is reachable first
+            try {
+                const healthCheck = await fetch('http://localhost:5000/', { 
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'include'
+                });
+                if (!healthCheck.ok) {
+                    throw new Error('Backend server is not responding');
+                }
+            } catch (healthError) {
+                console.error('Backend health check failed:', healthError);
+                showAlert('Backend server is not reachable. Please check if the server is running.', 'error');
+                return;
+            }
             
             const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/reject`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + token,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                mode: 'cors',
+                credentials: 'include',
                 body: JSON.stringify({ reason: 'Booking rejected by staff' })
             });
             
@@ -2768,7 +2812,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         } catch (err) {
             console.error('Error in rejectBooking:', err);
-            showAlert('Error rejecting booking: ' + err.message, 'error');
+            
+            // Check if it's a network error and suggest solutions
+            if (err.message.includes('Failed to fetch') || err.message.includes('ERR_BLOCKED_BY_CLIENT')) {
+                showAlert('Network error: Request was blocked. Please try:\n1. Disable ad blocker for localhost\n2. Use incognito mode\n3. Check if backend server is running', 'error');
+            } else {
+                showAlert('Error rejecting booking: ' + err.message, 'error');
+            }
         }
     }
 
