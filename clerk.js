@@ -1,5 +1,17 @@
 // Clerk Panel UI Logic
 
+// Function to get the correct backend URL based on environment
+function getBackendUrl() {
+    // Check if we're in production (live) or development (localhost)
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // We're in production - use the live backend URL
+        return 'https://villa-ester-backend.onrender.com';
+    } else {
+        // We're in development - use localhost
+        return 'http://localhost:5000';
+    }
+}
+
 // Utility function to get backend URL
 function getBackendUrl() {
     return 'https://villa-ester-backend.onrender.com';
@@ -788,7 +800,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function updateBookingStatus(bookingId, status) {
         try {
-            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+            const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
@@ -950,7 +962,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const token = localStorage.getItem('token');
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-                const response = await fetch('http://localhost:5000/api/bookings', {
+                const response = await fetch(`${getBackendUrl()}/api/bookings`, {
                     method: 'POST',
                     headers,
                     body: JSON.stringify(bookingData)
@@ -1601,7 +1613,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function markBookingAsCheckedOut(bookingId) {
         try {
-            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+            const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'checked_out' })
@@ -2429,7 +2441,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchUsers() {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:5000/api/users', {
+            const res = await fetch(`${getBackendUrl()}/api/users`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const data = await res.json();
@@ -2505,7 +2517,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+            const res = await fetch(`${getBackendUrl()}/api/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': 'Bearer ' + token
@@ -2600,7 +2612,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const role = document.getElementById('create-user-role').value;
             const password = document.getElementById('create-user-password').value;
             try {
-                const res = await fetch('http://localhost:5000/api/users', {
+                const res = await fetch(`${getBackendUrl()}/api/users`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2631,7 +2643,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const phone = document.getElementById('edit-user-phone').value.trim();
             const role = document.getElementById('edit-user-role').value;
             try {
-                const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                const res = await fetch(`${getBackendUrl()}/api/users/${userId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2668,7 +2680,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             try {
-                const res = await fetch(`http://localhost:5000/api/users/${userId}/password`, {
+                const res = await fetch(`${getBackendUrl()}/api/users/${userId}/password`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2703,23 +2715,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
-            // Check if backend is reachable first
-            try {
-                const healthCheck = await fetch('http://localhost:5000/', { 
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'include'
-                });
-                if (!healthCheck.ok) {
-                    throw new Error('Backend server is not responding');
-                }
-            } catch (healthError) {
-                console.error('Backend health check failed:', healthError);
-                showAlert('Backend server is not reachable. Please check if the server is running.', 'error');
-                return;
-            }
+            // Skip health check - proceed directly with booking operation
+            console.log('Proceeding with booking confirmation...');
             
-            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/confirm`, {
+            const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}/confirm`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2769,23 +2768,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
-            // Check if backend is reachable first
-            try {
-                const healthCheck = await fetch('http://localhost:5000/', { 
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'include'
-                });
-                if (!healthCheck.ok) {
-                    throw new Error('Backend server is not responding');
-                }
-            } catch (healthError) {
-                console.error('Backend health check failed:', healthError);
-                showAlert('Backend server is not reachable. Please check if the server is running.', 'error');
-                return;
-            }
+            // Skip health check - proceed directly with booking operation
+            console.log('Proceeding with booking rejection...');
             
-            const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/reject`, {
+            const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}/reject`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2889,7 +2875,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // API call
             const token = localStorage.getItem('token');
             try {
-                const response = await fetch('http://localhost:5000/api/users/me/password', {
+                const response = await fetch(`${getBackendUrl()}/api/users/me/password`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -3232,7 +3218,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       const today = new Date().toISOString().slice(0, 10);
       numberSelect.innerHTML = '<option value="">Loading...</option>';
-      fetch(`http://localhost:5000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(type)}&bookingDate=${encodeURIComponent(today)}&bookingTime=08:00`)
+      fetch(`${getBackendUrl()}/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(type)}&bookingDate=${encodeURIComponent(today)}&bookingTime=08:00`)
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.availableNumbers)) {

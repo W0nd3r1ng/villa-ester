@@ -77,43 +77,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 password: password
             }));
             
-            // Try multiple backend URLs in case of issues
-            const backendUrls = [
-                'http://localhost:5000/api/users/login', // Local development (prioritized)
-                'https://villa-ester-backend.onrender.com/api/users/login' // Production fallback
-            ];
+            // Use dynamic backend URL based on environment
+            function getBackendUrl() {
+                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    return 'https://villa-ester-backend.onrender.com';
+                } else {
+                    return 'http://localhost:5000';
+                }
+            }
+            
+            const loginUrl = `${getBackendUrl()}/api/users/login`;
             
             let response;
-            let lastError;
             
-            for (const url of backendUrls) {
-                try {
-                    console.log(`Trying backend URL: ${url}`);
-                    response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email: email,
-                            password: password
-                        }),
-                        signal: controller.signal
-                    });
-                    
-                    console.log(`Success with URL: ${url}`);
-                    break; // Success, exit the loop
-                    
-                } catch (error) {
-                    console.log(`Failed with URL ${url}:`, error.message);
-                    lastError = error;
-                    
-                    if (url === backendUrls[backendUrls.length - 1]) {
-                        // This was the last URL, throw the error
-                        throw lastError;
-                    }
-                    // Continue to next URL
-                }
+            try {
+                console.log(`Using backend URL: ${loginUrl}`);
+                response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                    signal: controller.signal
+                });
+                
+                console.log(`Success with URL: ${loginUrl}`);
+                
+            } catch (error) {
+                console.log(`Failed with URL ${loginUrl}:`, error.message);
+                throw error;
             }
             
             clearTimeout(timeoutId);

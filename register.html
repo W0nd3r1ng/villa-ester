@@ -129,38 +129,23 @@
         }
         // Send registration to backend
         try {
-            // Try local server first, then production as fallback
-            const backendUrls = [
-                'http://localhost:5000/api/users/register',
-                'https://villa-ester-backend.onrender.com/api/users/register'
-            ];
-            
-            let response;
-            let lastError;
-            
-            for (const url of backendUrls) {
-                try {
-                    console.log(`Trying registration with URL: ${url}`);
-                    response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, email, phone, password })
-                    });
-                    
-                    console.log(`Registration successful with URL: ${url}`);
-                    break; // Success, exit the loop
-                    
-                } catch (error) {
-                    console.log(`Failed with URL ${url}:`, error.message);
-                    lastError = error;
-                    
-                    if (url === backendUrls[backendUrls.length - 1]) {
-                        // This was the last URL, throw the error
-                        throw lastError;
-                    }
-                    // Continue to next URL
+            // Use dynamic backend URL based on environment
+            function getBackendUrl() {
+                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    return 'https://villa-ester-backend.onrender.com';
+                } else {
+                    return 'http://localhost:5000';
                 }
             }
+            
+            const registerUrl = `${getBackendUrl()}/api/users/register`;
+            
+            console.log(`Using registration URL: ${registerUrl}`);
+            const response = await fetch(registerUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone, password })
+            });
             const result = await response.json();
             if (response.ok && result.success) {
                 successDiv.textContent = 'Registration successful! Redirecting to homepage...';
