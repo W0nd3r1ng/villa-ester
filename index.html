@@ -478,6 +478,7 @@
                 <ul>
                     <li><a href="#rooms">Cottages</a></li>
                     <li><a href="#gallery" id="footer-gallery-link">Gallery</a></li>
+                    <li><a href="#about">About</a></li>
                 </ul>
             </div>
             <div class="footer-section">
@@ -1293,15 +1294,44 @@ document.addEventListener('DOMContentLoaded', function() {
         updateAllPhotoDisplays(savedPhoto);
     }
     
+    // Function to reset page to home state
+    function resetToHome() {
+        const heroSection = document.querySelector('.hero');
+        const bookingSection = document.querySelector('.booking-section');
+        const recommendSection = document.querySelector('.recommend-section');
+        const featuredRoomsSection = document.querySelector('.featured-rooms-section');
+        const reviewsSection = document.querySelector('.reviews-section');
+        const userSettingsSection = document.getElementById('user-settings-section');
+        const gallerySection = document.getElementById('gallery-section');
+        const aboutSection = document.getElementById('about-section');
+        
+        if (heroSection) {
+            heroSection.style.display = 'block';
+            // Reset any inline styles that might have been applied
+            heroSection.style.height = '';
+            heroSection.style.background = '';
+        }
+        if (bookingSection) bookingSection.style.display = 'block';
+        if (recommendSection) recommendSection.style.display = 'block';
+        if (featuredRoomsSection) featuredRoomsSection.style.display = 'block';
+        if (reviewsSection) reviewsSection.style.display = 'block';
+        if (userSettingsSection) userSettingsSection.style.display = 'none';
+        if (gallerySection) gallerySection.style.display = 'none';
+        if (aboutSection) aboutSection.style.display = 'none';
+    }
+    
+    // Reset to home state on page load
+    resetToHome();
+    
     // Add click functionality to navbar logo
     const navbarLogo = document.getElementById('navbar-logo');
     if (navbarLogo) {
         navbarLogo.onclick = function() {
-            // Scroll to top of the page (home section)
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            // Reset to home state
+            resetToHome();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
     }
     
@@ -1376,6 +1406,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Navbar about link
     if (aboutNavLink) {
         aboutNavLink.onclick = function(e) {
+            e.preventDefault();
+            showAbout();
+        };
+    }
+    
+    // Footer about link
+    const footerAboutLink = document.querySelector('.footer-section a[href="#about"]');
+    if (footerAboutLink) {
+        footerAboutLink.onclick = function(e) {
             e.preventDefault();
             showAbout();
         };
@@ -1580,7 +1619,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const userSettingsSection = document.getElementById('user-settings-section');
             const gallerySection = document.getElementById('gallery-section');
             
-            if (heroSection) heroSection.style.display = 'block';
+            if (heroSection) {
+                heroSection.style.display = 'block';
+                // Reset any inline styles that might have been applied
+                heroSection.style.height = '';
+                heroSection.style.background = '';
+            }
             if (bookingSection) bookingSection.style.display = 'block';
             if (recommendSection) recommendSection.style.display = 'block';
             if (featuredRoomsSection) featuredRoomsSection.style.display = 'block';

@@ -100,6 +100,8 @@ body {
     justify-content: center;
     position: relative;
     transition: background-image 1s ease-in-out;
+    margin-top: -80px;
+    padding-top: 80px;
 }
 .hero::after {
     content: '';
@@ -108,11 +110,13 @@ body {
     background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%);
 }
 .hero-content {
-    position: relative;
+    position: absolute;
+    bottom: 120px;
+    left: 0;
+    right: 0;
     z-index: 1;
     text-align: center;
-    margin-bottom: 0;
-    padding-bottom: 120px;
+    padding-bottom: 0;
 }
 .hero-title {
     font-size: 3.5rem;
@@ -1224,6 +1228,8 @@ body {
     max-width: 1200px;
     margin: 48px auto 0 auto;
     padding: 0 24px;
+    height: auto !important;
+    min-height: auto !important;
 }
 
 .gallery-section h2 {
@@ -1438,4 +1444,16 @@ body {
     .image-title {
         font-size: 0.9rem;
     }
+}
+
+/* Settings section height fix */
+.settings-section {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+/* About section height fix */
+.about-section {
+    height: auto !important;
+    min-height: auto !important;
 }
