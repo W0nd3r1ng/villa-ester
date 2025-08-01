@@ -1,7 +1,7 @@
 // Utility function to get backend URL
 function getBackendUrl() {
-    // For development, prioritize localhost
-    return 'http://localhost:5000';
+    // Use production URL for deployed version
+    return 'https://villa-ester-backend.onrender.com';
 }
 
 // Socket.IO connection - Try local server first, then production
@@ -1536,7 +1536,7 @@ function updateAvailableCottageNumbers(cottageType, bookingDate, bookingTime) {
   
   numberSelect.innerHTML = '<option value="">Loading...</option>';
   
-          const url = `http://localhost:5000/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(cottageType)}&bookingDate=${encodeURIComponent(bookingDate)}&bookingTime=${encodeURIComponent(bookingTime)}`;
+          const url = `${getBackendUrl()}/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(cottageType)}&bookingDate=${encodeURIComponent(bookingDate)}&bookingTime=${encodeURIComponent(bookingTime)}`;
   console.log('Fetching from URL:', url);
   
   // Get user token if available
