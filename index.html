@@ -31,7 +31,7 @@
                 <div id="user-dropdown-menu" style="display:none; position:absolute; right:0; top:40px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.15); border-radius:8px; min-width:200px; z-index:1000;">
                     <ul style="list-style:none; margin:0; padding:0;">
                         <li><button class="dropdown-item" id="open-booking-history" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;">Booking History</button></li>
-                        <li><button class="dropdown-item" id="open-user-settings" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;">User Settings</button></li>
+                        <li><button class="dropdown-item" id="open-user-settings" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer;"> Settings</button></li>
                         <li><button class="dropdown-item" id="sign-out-btn" style="width:100%; text-align:left; padding:12px 16px; border:none; background:none; cursor:pointer; color:#e74c3c;">Sign Out</button></li>
                     </ul>
                 </div>
@@ -122,14 +122,10 @@
     </section>
     
     <!-- User Settings Section (hidden initially) -->
-    <section id="user-settings-section" class="settings-section" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8f9fa; z-index: 9999; overflow-y: auto;">
+    <section id="user-settings-section" class="settings-section" style="display: none; padding: 60px 20px; background: #f8f9fa; min-height: calc(100vh - 80px); margin-top: 80px;">
         <div class="container" style="max-width: 1200px; margin: 0 auto;">
             <!-- Page Header -->
             <div style="text-align: center; margin-bottom: 40px;">
-                <button id="back-to-home" style="background: #6c63ff; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; margin: 0 auto 20px auto;">
-                    <span class="material-icons" style="margin-right: 8px;">arrow_back</span>
-                    Back to Home
-                </button>
                 <h1 style="color: #333; font-size: 2.5em; margin-bottom: 10px;">Profile Settings</h1>
                 <p style="color: #666; font-size: 1.1em;">Manage your account and preferences</p>
             </div>
@@ -289,9 +285,15 @@
             <div id="cottage-details-body"></div>
         </div>
     </div>
-    <section class="gallery-section" id="gallery">
-        <h2>Photo Gallery</h2>
-        <p class="gallery-subtitle">Explore the beauty and comfort of Villa Ester Resort</p>
+    
+    <!-- Gallery Section (hidden initially) -->
+    <section id="gallery-section" class="gallery-section" style="display: none; padding: 60px 20px; background: #f8f9fa; min-height: 100vh;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Page Header -->
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h1 style="color: #333; font-size: 2.5em; margin-bottom: 10px;">Photo Gallery</h1>
+                <p style="color: #666; font-size: 1.1em;">Explore the beauty and comfort of Villa Ester Resort</p>
+            </div>
         
         <div class="photo-collage">
             <div class="collage-item">
@@ -375,6 +377,7 @@
             <div class="lightbox-caption" id="lightbox-caption"></div>
             <button class="lightbox-nav prev" onclick="changeImage(-1)"></button>
             <button class="lightbox-nav next" onclick="changeImage(1)"></button>
+            </div>
         </div>
     </section>
     <section class="reviews-section">
@@ -1046,12 +1049,26 @@ const openUserSettings = document.getElementById('open-user-settings');
 const userSettingsSection = document.getElementById('user-settings-section');
 const bookingSection = document.querySelector('.booking-section');
 const recommendSection = document.querySelector('.recommend-section');
+const gallerySection = document.getElementById('gallery-section');
 
 if (openUserSettings) {
     openUserSettings.onclick = async function(e) {
         e.preventDefault();
         
-        // Show settings section as full overlay
+        // Hide all other content sections (but keep navbar visible)
+        const heroSection = document.querySelector('.hero');
+        const recommendSection = document.querySelector('.recommend-section');
+        const featuredRoomsSection = document.querySelector('.featured-rooms-section');
+        const reviewsSection = document.querySelector('.reviews-section');
+        
+        if (heroSection) heroSection.style.display = 'none';
+        if (bookingSection) bookingSection.style.display = 'none';
+        if (recommendSection) recommendSection.style.display = 'none';
+        if (featuredRoomsSection) featuredRoomsSection.style.display = 'none';
+        if (reviewsSection) reviewsSection.style.display = 'none';
+        if (gallerySection) gallerySection.style.display = 'none';
+        
+        // Show settings section
         userSettingsSection.style.display = 'block';
         
         // Load user info into tab interface
@@ -1062,19 +1079,12 @@ if (openUserSettings) {
             document.getElementById('tab-user-phone').textContent = profile.phone || '';
         }
         
-        // Scroll to top of settings
-        userSettingsSection.scrollTo(0, 0);
+        // Scroll to top
+        window.scrollTo(0, 0);
     };
 }
 
-// Back to Home Button
-const backToHomeBtn = document.getElementById('back-to-home');
-if (backToHomeBtn) {
-    backToHomeBtn.onclick = function() {
-        // Hide settings section overlay
-        userSettingsSection.style.display = 'none';
-    };
-}
+
 
 // User Settings Tab Switching Function
 window.showUserSettingsTab = function(tabName) {
@@ -1255,6 +1265,34 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
     }
+    
+    // Gallery navigation functionality
+    const galleryNavLink = document.querySelector('a[href="#gallery"]');
+    
+    if (galleryNavLink) {
+        galleryNavLink.onclick = function(e) {
+            e.preventDefault();
+            
+            // Hide all other content sections
+            const heroSection = document.querySelector('.hero');
+            const recommendSection = document.querySelector('.recommend-section');
+            const featuredRoomsSection = document.querySelector('.featured-rooms-section');
+            const reviewsSection = document.querySelector('.reviews-section');
+            
+            if (heroSection) heroSection.style.display = 'none';
+            if (bookingSection) bookingSection.style.display = 'none';
+            if (recommendSection) recommendSection.style.display = 'none';
+            if (featuredRoomsSection) featuredRoomsSection.style.display = 'none';
+            if (reviewsSection) reviewsSection.style.display = 'none';
+            if (userSettingsSection) userSettingsSection.style.display = 'none';
+            
+            // Show gallery section
+            gallerySection.style.display = 'block';
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        };
+    }
 });
 
 
@@ -1420,6 +1458,42 @@ if (!isUserLoggedIn()) {
         window.location.href = 'login.html';
     };
 }
+// --- Cottages Navigation Smooth Scrolling ---
+document.addEventListener('DOMContentLoaded', function() {
+    const cottagesLink = document.querySelector('a[href="#rooms"]');
+    if (cottagesLink) {
+        cottagesLink.onclick = function(e) {
+            e.preventDefault();
+            
+            // Show all sections first (in case they were hidden)
+            const heroSection = document.querySelector('.hero');
+            const bookingSection = document.querySelector('.booking-section');
+            const recommendSection = document.querySelector('.recommend-section');
+            const featuredRoomsSection = document.querySelector('.featured-rooms-section');
+            const reviewsSection = document.querySelector('.reviews-section');
+            const userSettingsSection = document.getElementById('user-settings-section');
+            const gallerySection = document.getElementById('gallery-section');
+            
+            if (heroSection) heroSection.style.display = 'block';
+            if (bookingSection) bookingSection.style.display = 'block';
+            if (recommendSection) recommendSection.style.display = 'block';
+            if (featuredRoomsSection) featuredRoomsSection.style.display = 'block';
+            if (reviewsSection) reviewsSection.style.display = 'block';
+            if (userSettingsSection) userSettingsSection.style.display = 'none';
+            if (gallerySection) gallerySection.style.display = 'none';
+            
+            // Smooth scroll to the Featured Rooms section
+            const roomsSection = document.getElementById('rooms');
+            if (roomsSection) {
+                roomsSection.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        };
+    }
+});
+
 // --- Redirect admin/clerk to clerk.html ---
 document.addEventListener('DOMContentLoaded', async function() {
     if (isUserLoggedIn()) {
