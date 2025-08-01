@@ -20,7 +20,14 @@ const server = http.createServer(app);
 // Socket.IO setup with CORS
 const io = socketIo(server, {
   cors: {
-    origin: '*', // Allow all origins for development
+    origin: [
+      'https://villa-ester-resort.onrender.com',
+      'https://villa-ester-frontend.onrender.com',
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000'
+    ],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -28,7 +35,27 @@ const io = socketIo(server, {
 
 // CORS configuration
 app.use(cors({
-  origin: '*', // Allow all origins for development
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow specific origins
+    const allowedOrigins = [
+      'https://villa-ester-resort.onrender.com',
+      'https://villa-ester-frontend.onrender.com',
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,

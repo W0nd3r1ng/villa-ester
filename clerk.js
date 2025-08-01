@@ -2725,8 +2725,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     'Authorization': 'Bearer ' + token,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                mode: 'cors',
-                credentials: 'include'
+                mode: 'cors'
             });
             
             console.log('Response status:', response.status);
@@ -2779,7 +2778,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 mode: 'cors',
-                credentials: 'include',
                 body: JSON.stringify({ reason: 'Booking rejected by staff' })
             });
             
