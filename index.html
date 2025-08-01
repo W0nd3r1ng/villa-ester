@@ -933,11 +933,16 @@ async function updateNavbarUserName() {
         const profile = await fetchUserProfile();
         const nameSpan = document.getElementById('navbar-user-name');
         if (profile && nameSpan) {
-            // Check if there's a saved photo
+            // Clear any old photo displays first
+            resetAllPhotoDisplays();
+            
+            // Check if there's a saved photo for this user
             const savedPhoto = loadPhotoFromStorage();
             if (savedPhoto) {
                 // Use the saved photo
                 nameSpan.innerHTML = `<div style="width: 32px; height: 32px; border-radius: 50%; background-image: url(${savedPhoto}); background-size: cover; background-position: center; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"></div>`;
+                // Update all photo displays
+                updateAllPhotoDisplays(savedPhoto);
             } else {
                 // Use default icon
                 nameSpan.innerHTML = `<i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">person</i>`;
@@ -1223,17 +1228,30 @@ let selectedFile = null;
 
 // Function to save photo to localStorage
 function savePhotoToStorage(photoData) {
-    localStorage.setItem('userProfilePhoto', photoData);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user.id || user._id;
+    if (userId) {
+        localStorage.setItem(`userProfilePhoto_${userId}`, photoData);
+    }
 }
 
 // Function to load photo from localStorage
 function loadPhotoFromStorage() {
-    return localStorage.getItem('userProfilePhoto');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user.id || user._id;
+    if (userId) {
+        return localStorage.getItem(`userProfilePhoto_${userId}`);
+    }
+    return null;
 }
 
 // Function to remove photo from localStorage
 function removePhotoFromStorage() {
-    localStorage.removeItem('userProfilePhoto');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user.id || user._id;
+    if (userId) {
+        localStorage.removeItem(`userProfilePhoto_${userId}`);
+    }
 }
 
 // Function to update all photo displays
@@ -1289,9 +1307,12 @@ function resetAllPhotoDisplays() {
 
 // Load saved photo on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const savedPhoto = loadPhotoFromStorage();
-    if (savedPhoto) {
-        updateAllPhotoDisplays(savedPhoto);
+    // Only load photo if user is logged in
+    if (isUserLoggedIn()) {
+        const savedPhoto = loadPhotoFromStorage();
+        if (savedPhoto) {
+            updateAllPhotoDisplays(savedPhoto);
+        }
     }
     
     // Function to reset page to home state
