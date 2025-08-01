@@ -13,7 +13,7 @@
 <body>
     <nav class="navbar">
         <div class="navbar-left">
-            <img src="images/logo.png" alt="Villa Ester Resort" class="navbar-logo">
+            <img src="images/logo.png" alt="Villa Ester Resort" class="navbar-logo" id="navbar-logo" style="cursor: pointer;">
             <div class="navbar-menu">
                 <a href="#rooms">Cottages</a>
                 <a href="#gallery">Gallery</a>
@@ -120,6 +120,126 @@
             <p>Searching for available cottages...</p>
         </div>
     </section>
+    
+    <!-- User Settings Section (hidden initially) -->
+    <section id="user-settings-section" class="settings-section" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8f9fa; z-index: 9999; overflow-y: auto;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Page Header -->
+            <div style="text-align: center; margin-bottom: 40px;">
+                <button id="back-to-home" style="background: #6c63ff; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; margin: 0 auto 20px auto;">
+                    <span class="material-icons" style="margin-right: 8px;">arrow_back</span>
+                    Back to Home
+                </button>
+                <h1 style="color: #333; font-size: 2.5em; margin-bottom: 10px;">Profile Settings</h1>
+                <p style="color: #666; font-size: 1.1em;">Manage your account and preferences</p>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div style="display: flex; justify-content: center; border-bottom: 2px solid #e0e0e0; margin-bottom: 40px;">
+                <div id="profile-tab-btn" style="padding: 15px 30px; background: #6c63ff; color: white; border-radius: 8px 8px 0 0; font-weight: 600; cursor: pointer; margin: 0 5px;" onclick="showUserSettingsTab('profile')">Profile</div>
+                <div id="security-tab-btn" style="padding: 15px 30px; background: #f8f9fa; color: #666; border-radius: 8px 8px 0 0; font-weight: 600; cursor: pointer; margin: 0 5px;" onclick="showUserSettingsTab('security')">Security</div>
+                <div id="preferences-tab-btn" style="padding: 15px 30px; background: #f8f9fa; color: #666; border-radius: 8px 8px 0 0; font-weight: 600; cursor: pointer; margin: 0 5px;" onclick="showUserSettingsTab('preferences')">Preferences</div>
+            </div>
+            
+            <!-- Profile Tab Content -->
+            <div id="profile-tab-content" class="settings-tab-content" style="display: block; background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 40px;">
+                    <div style="width: 100px; height: 100px; background: #6c63ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 30px;">
+                        <span class="material-icons" style="color: white; font-size: 50px;">person</span>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0 0 10px 0; color: #333; font-size: 1.8em;">Profile Information</h3>
+                        <p style="margin: 0; color: #666; font-size: 1.1em;">Manage your account details and personal information</p>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px;">
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; border-left: 4px solid #6c63ff;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 12px; font-size: 1.1em;">Name</div>
+                        <div id="tab-user-name" style="color: #666; font-size: 1.1em;">Loading...</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; border-left: 4px solid #6c63ff;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 12px; font-size: 1.1em;">Email</div>
+                        <div id="tab-user-email" style="color: #666; font-size: 1.1em;">Loading...</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; border-left: 4px solid #6c63ff;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 12px; font-size: 1.1em;">Phone</div>
+                        <div id="tab-user-phone" style="color: #666; font-size: 1.1em;">Loading...</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; border-left: 4px solid #6c63ff;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 12px; font-size: 1.1em;">Account Type</div>
+                        <div style="color: #666; font-size: 1.1em;">Customer</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <!-- Profile information is read-only -->
+                </div>
+            </div>
+            
+            <!-- Security Tab Content -->
+            <div id="security-tab-content" class="settings-tab-content" style="display: none; background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0 0 30px 0; color: #333; font-size: 1.8em;">Security Settings</h3>
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; border-left: 4px solid #dc3545;">
+                    <h4 style="margin: 0 0 20px 0; color: #dc3545; font-size: 1.4em;">Change Password</h4>
+                    <p style="margin: 0 0 25px 0; color: #666; font-size: 1.1em;">Update your password to keep your account secure.</p>
+                    <form id="tab-password-form">
+                        <div style="margin-bottom: 20px;">
+                            <label for="tab-current-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em;">Current Password</label>
+                            <input type="password" id="tab-current-password" placeholder="Enter current password" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label for="tab-new-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em;">New Password</label>
+                            <input type="password" id="tab-new-password" placeholder="Enter new password" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                        </div>
+                        <div style="margin-bottom: 25px;">
+                            <label for="tab-confirm-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em;">Confirm New Password</label>
+                            <input type="password" id="tab-confirm-password" placeholder="Confirm new password" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                        </div>
+                        <small style="color: #666; font-size: 1em; margin-bottom: 20px; display: block;">
+                            Password must be at least 6 characters with letters and numbers.
+                        </small>
+                        <button type="submit" class="btn btn-danger" style="padding: 12px 25px; font-size: 1.1em;">Change Password</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Preferences Tab Content -->
+            <div id="preferences-tab-content" class="settings-tab-content" style="display: none; background: white; border-radius: 15px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <h3 style="margin: 0 0 30px 0; color: #333; font-size: 1.8em;">Preferences</h3>
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; border-left: 4px solid #28a745;">
+                    <h4 style="margin: 0 0 20px 0; color: #28a745; font-size: 1.4em;">Profile Photo</h4>
+                    <p style="margin: 0 0 25px 0; color: #666; font-size: 1.1em;">Upload a profile photo to personalize your account.</p>
+                    
+                    <!-- Current Photo Display -->
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div id="current-photo-container" style="width: 120px; height: 120px; background: #6c63ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                            <span class="material-icons" style="color: white; font-size: 50px;">person</span>
+                        </div>
+                        <div id="photo-preview" style="display: none; width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 15px auto; background-size: cover; background-position: center; border: 3px solid #28a745;"></div>
+                        <p id="current-photo-text" style="color: #666; font-size: 0.9em; margin: 0;">No photo uploaded</p>
+                    </div>
+                    
+                    <!-- File Upload -->
+                    <div style="text-align: center;">
+                        <input type="file" id="photo-upload-input" accept="image/*" style="display: none;">
+                        <button class="btn btn-secondary" id="upload-photo-tab-btn" style="padding: 12px 25px; font-size: 1.1em; margin-right: 10px;">Choose Photo</button>
+                        <button class="btn btn-primary" id="save-photo-btn" style="padding: 12px 25px; font-size: 1.1em; display: none;">Save Photo</button>
+                        <button class="btn btn-danger" id="remove-photo-btn" style="padding: 12px 25px; font-size: 1.1em; display: none;">Remove Photo</button>
+                    </div>
+                    
+                    <!-- Upload Progress -->
+                    <div id="upload-progress" style="display: none; margin-top: 20px;">
+                        <div style="background: #e9ecef; border-radius: 10px; height: 8px; overflow: hidden;">
+                            <div id="progress-bar" style="background: #28a745; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <p id="progress-text" style="text-align: center; margin-top: 8px; color: #666; font-size: 0.9em;">Uploading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     <section class="recommend-section">
         <h2>AI Recommended for You</h2>
         <div class="recommend-cards">
@@ -315,7 +435,7 @@
             <div class="footer-section">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="#rooms">Rooms & Suites</a></li>
+                    <li><a href="#rooms">Cottages</a></li>
                     <li><a href="#gallery">Gallery</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
@@ -486,7 +606,7 @@
     <div id="user-settings-modal" class="booking-modal-overlay" style="display:none; align-items: flex-start;">
         <div class="booking-modal-content" style="max-width: 400px; background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(44,62,80,0.13); padding: 32px 28px 24px 28px;">
             <span class="close-booking-modal" id="close-user-settings-modal">&times;</span>
-            <h2 style="margin-bottom: 18px; color: #6c63ff; font-size: 1.5em; font-weight: 700; letter-spacing: 0.5px;">User Settings</h2>
+            <h2 style="margin-bottom: 18px; color: #6c63ff; font-size: 1.5em; font-weight: 700; letter-spacing: 0.5px;">Profile Settings</h2>
             <form id="user-settings-form">
                 <!-- User Info Display -->
                 <div class="modal-form-group" id="user-info-display" style="margin-bottom: 22px; background: #f4f7fa; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(44,62,80,0.06);">
@@ -772,8 +892,15 @@ async function updateNavbarUserName() {
         const profile = await fetchUserProfile();
         const nameSpan = document.getElementById('navbar-user-name');
         if (profile && nameSpan) {
-            // Keep just the icon, no text
-            nameSpan.innerHTML = `<i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">person</i>`;
+            // Check if there's a saved photo
+            const savedPhoto = loadPhotoFromStorage();
+            if (savedPhoto) {
+                // Use the saved photo
+                nameSpan.innerHTML = `<div style="width: 32px; height: 32px; border-radius: 50%; background-image: url(${savedPhoto}); background-size: cover; background-position: center; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"></div>`;
+            } else {
+                // Use default icon
+                nameSpan.innerHTML = `<i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">person</i>`;
+            }
         }
     }
 }
@@ -914,29 +1041,335 @@ async function loadBookingHistory() {
         historyList.innerHTML = '<div style="text-align: center; color: #e74c3c; padding: 20px;">Error loading booking history. Please try again.</div>';
     }
 }
-// Open User Settings Modal
+// Open User Settings Section
 const openUserSettings = document.getElementById('open-user-settings');
-const userSettingsModal = document.getElementById('user-settings-modal');
-const closeUserSettingsModal = document.getElementById('close-user-settings-modal');
+const userSettingsSection = document.getElementById('user-settings-section');
+const bookingSection = document.querySelector('.booking-section');
+const recommendSection = document.querySelector('.recommend-section');
+
 if (openUserSettings) {
     openUserSettings.onclick = async function(e) {
         e.preventDefault();
-        userSettingsModal.style.display = 'flex';
-        // Prefill user info
+        
+        // Show settings section as full overlay
+        userSettingsSection.style.display = 'block';
+        
+        // Load user info into tab interface
         const profile = await fetchUserProfile();
         if (profile) {
-            document.getElementById('settings-email').value = profile.email || '';
-            document.getElementById('settings-number').value = profile.phone || '';
-            // Show user info at the top
-            document.getElementById('user-info-name').textContent = profile.name || '';
-            document.getElementById('user-info-email').textContent = profile.email || '';
-            document.getElementById('user-info-phone').textContent = profile.phone || '';
+            document.getElementById('tab-user-name').textContent = profile.name || '';
+            document.getElementById('tab-user-email').textContent = profile.email || '';
+            document.getElementById('tab-user-phone').textContent = profile.phone || '';
+        }
+        
+        // Scroll to top of settings
+        userSettingsSection.scrollTo(0, 0);
+    };
+}
+
+// Back to Home Button
+const backToHomeBtn = document.getElementById('back-to-home');
+if (backToHomeBtn) {
+    backToHomeBtn.onclick = function() {
+        // Hide settings section overlay
+        userSettingsSection.style.display = 'none';
+    };
+}
+
+// User Settings Tab Switching Function
+window.showUserSettingsTab = function(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.settings-tab-content');
+    tabContents.forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Show selected tab content
+    const selectedTab = document.getElementById(tabName + '-tab-content');
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    }
+    
+    // Update tab navigation styling
+    const tabButtons = ['profile-tab-btn', 'security-tab-btn', 'preferences-tab-btn'];
+    tabButtons.forEach((btnId, index) => {
+        const button = document.getElementById(btnId);
+        if (button) {
+            if ((index === 0 && tabName === 'profile') || 
+                (index === 1 && tabName === 'security') || 
+                (index === 2 && tabName === 'preferences')) {
+                button.style.background = '#6c63ff';
+                button.style.color = 'white';
+            } else {
+                button.style.background = '#f8f9fa';
+                button.style.color = '#666';
+            }
+        }
+    });
+};
+
+// Tab Password Form Submit
+const tabPasswordForm = document.getElementById('tab-password-form');
+if (tabPasswordForm) {
+    tabPasswordForm.onsubmit = async function(e) {
+        e.preventDefault();
+        
+        // Check if user is logged in and token is valid
+        if (!isUserLoggedIn()) {
+            alert('You are not logged in. Please log in again.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const tokenValid = await isTokenValid();
+        if (!tokenValid) {
+            alert('Your session has expired. Please log in again.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        const currentPassword = document.getElementById('tab-current-password').value;
+        const newPassword = document.getElementById('tab-new-password').value;
+        const confirmPassword = document.getElementById('tab-confirm-password').value;
+        
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('Please fill in all password fields.');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            alert('New password and confirm password do not match.');
+            return;
+        }
+        
+        try {
+            await changeUserPassword(currentPassword, newPassword);
+            alert('Password changed successfully!');
+            // Clear form
+            document.getElementById('tab-current-password').value = '';
+            document.getElementById('tab-new-password').value = '';
+            document.getElementById('tab-confirm-password').value = '';
+        } catch (error) {
+            alert('Error changing password: ' + error.message);
         }
     };
 }
-if (closeUserSettingsModal) {
-    closeUserSettingsModal.onclick = function() {
-        userSettingsModal.style.display = 'none';
+
+// Photo Upload Functionality
+const photoUploadBtn = document.getElementById('upload-photo-tab-btn');
+const photoUploadInput = document.getElementById('photo-upload-input');
+const savePhotoBtn = document.getElementById('save-photo-btn');
+const removePhotoBtn = document.getElementById('remove-photo-btn');
+const currentPhotoContainer = document.getElementById('current-photo-container');
+const photoPreview = document.getElementById('photo-preview');
+const currentPhotoText = document.getElementById('current-photo-text');
+const uploadProgress = document.getElementById('upload-progress');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+
+let selectedFile = null;
+
+// Function to save photo to localStorage
+function savePhotoToStorage(photoData) {
+    localStorage.setItem('userProfilePhoto', photoData);
+}
+
+// Function to load photo from localStorage
+function loadPhotoFromStorage() {
+    return localStorage.getItem('userProfilePhoto');
+}
+
+// Function to remove photo from localStorage
+function removePhotoFromStorage() {
+    localStorage.removeItem('userProfilePhoto');
+}
+
+// Function to update all photo displays
+function updateAllPhotoDisplays(photoData) {
+    // Update profile tab avatar
+    const profileAvatar = document.querySelector('#profile-tab-content .material-icons').parentElement;
+    if (profileAvatar) {
+        profileAvatar.style.backgroundImage = `url(${photoData})`;
+        profileAvatar.style.backgroundSize = 'cover';
+        profileAvatar.style.backgroundPosition = 'center';
+        const icon = profileAvatar.querySelector('.material-icons');
+        if (icon) icon.style.display = 'none';
+    }
+    
+    // Update navbar user icon
+    const navbarUserSpan = document.getElementById('navbar-user-name');
+    if (navbarUserSpan) {
+        navbarUserSpan.innerHTML = `<div style="width: 32px; height: 32px; border-radius: 50%; background-image: url(${photoData}); background-size: cover; background-position: center; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"></div>`;
+    }
+    
+    // Update preferences tab preview
+    if (photoPreview && currentPhotoContainer) {
+        photoPreview.style.backgroundImage = `url(${photoData})`;
+        photoPreview.style.display = 'block';
+        currentPhotoContainer.style.display = 'none';
+        currentPhotoText.textContent = 'Photo uploaded';
+    }
+}
+
+// Function to reset all photo displays to default
+function resetAllPhotoDisplays() {
+    // Reset profile tab avatar
+    const profileAvatar = document.querySelector('#profile-tab-content .material-icons').parentElement;
+    if (profileAvatar) {
+        profileAvatar.style.backgroundImage = 'none';
+        const icon = profileAvatar.querySelector('.material-icons');
+        if (icon) icon.style.display = 'block';
+    }
+    
+    // Reset navbar user icon
+    const navbarUserSpan = document.getElementById('navbar-user-name');
+    if (navbarUserSpan) {
+        navbarUserSpan.innerHTML = `<i class="material-icons" style="font-size: 1.2em; vertical-align: middle;">person</i>`;
+    }
+    
+    // Reset preferences tab preview
+    if (photoPreview && currentPhotoContainer) {
+        photoPreview.style.display = 'none';
+        currentPhotoContainer.style.display = 'flex';
+        currentPhotoText.textContent = 'No photo uploaded';
+    }
+}
+
+// Load saved photo on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedPhoto = loadPhotoFromStorage();
+    if (savedPhoto) {
+        updateAllPhotoDisplays(savedPhoto);
+    }
+    
+    // Add click functionality to navbar logo
+    const navbarLogo = document.getElementById('navbar-logo');
+    if (navbarLogo) {
+        navbarLogo.onclick = function() {
+            // Scroll to top of the page (home section)
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        };
+    }
+});
+
+
+
+if (photoUploadBtn) {
+    photoUploadBtn.onclick = function() {
+        photoUploadInput.click();
+    };
+}
+
+if (photoUploadInput) {
+    photoUploadInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB.');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.style.backgroundImage = `url(${e.target.result})`;
+                photoPreview.style.display = 'block';
+                currentPhotoContainer.style.display = 'none';
+                currentPhotoText.textContent = file.name;
+                savePhotoBtn.style.display = 'inline-block';
+                removePhotoBtn.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+}
+
+if (savePhotoBtn) {
+    savePhotoBtn.onclick = async function() {
+        if (!selectedFile) {
+            alert('Please select a photo first.');
+            return;
+        }
+        
+        if (!isUserLoggedIn()) {
+            alert('You are not logged in. Please log in again.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        try {
+            // Show progress
+            uploadProgress.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Uploading...';
+            
+            // Simulate upload progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    progressText.textContent = 'Upload complete!';
+                    
+                    // Hide progress after a delay
+                    setTimeout(() => {
+                        uploadProgress.style.display = 'none';
+                        alert('Photo uploaded successfully!');
+                        
+                        // Convert file to base64 and save to localStorage
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const photoData = e.target.result;
+                            savePhotoToStorage(photoData);
+                            updateAllPhotoDisplays(photoData);
+                        };
+                        reader.readAsDataURL(selectedFile);
+                        
+                        // Reset the upload interface
+                        photoUploadInput.value = '';
+                        selectedFile = null;
+                        savePhotoBtn.style.display = 'none';
+                        removePhotoBtn.style.display = 'none';
+                    }, 1000);
+                }
+            }, 100);
+            
+        } catch (error) {
+            uploadProgress.style.display = 'none';
+            alert('Error uploading photo: ' + error.message);
+        }
+    };
+}
+
+if (removePhotoBtn) {
+    removePhotoBtn.onclick = function() {
+        // Reset to default state
+        photoPreview.style.display = 'none';
+        currentPhotoContainer.style.display = 'flex';
+        currentPhotoText.textContent = 'No photo uploaded';
+        photoUploadInput.value = '';
+        selectedFile = null;
+        savePhotoBtn.style.display = 'none';
+        removePhotoBtn.style.display = 'none';
+        
+        // Remove from localStorage and reset all displays
+        removePhotoFromStorage();
+        resetAllPhotoDisplays();
     };
 }
 // Sign Out
@@ -975,43 +1408,8 @@ window.testBookingHistory = async function() {
         return null;
     }
 };
-// User Settings Form Submit
-const userSettingsForm = document.getElementById('user-settings-form');
-if (userSettingsForm) {
-    userSettingsForm.onsubmit = async function(e) {
-        e.preventDefault();
-        
-        // Check if user is logged in and token is valid
-        if (!isUserLoggedIn()) {
-            alert('You are not logged in. Please log in again.');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        const tokenValid = await isTokenValid();
-        if (!tokenValid) {
-            alert('Your session has expired. Please log in again.');
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        const email = document.getElementById('settings-email').value;
-        const phone = document.getElementById('settings-number').value;
-        const currentPassword = document.getElementById('settings-current-password').value;
-        const newPassword = document.getElementById('settings-new-password').value;
-        
-        if (email || phone) await updateUserSettings(email, phone);
-        if (currentPassword && newPassword) {
-            await changeUserPassword(currentPassword, newPassword);
-        } else if (currentPassword || newPassword) {
-            alert('Please provide both current password and new password to change your password.');
-            return;
-        }
-        userSettingsModal.style.display = 'none';
-    };
-}
+// Old User Settings Form Submit (removed - now using tab interface)
+// The old modal form submit handler has been replaced with the tab interface
 // For demo: simulate login (remove this block in production)
 if (!isUserLoggedIn()) {
     document.getElementById('login-btn').onclick = function() {

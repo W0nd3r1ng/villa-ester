@@ -2984,11 +2984,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             const time = booking.bookingTime || '';
             
             cottageHtml += `
-              <div class="cottage-detail-badge occupied" style="display: inline-block; margin: 4px; padding: 8px 12px; border-radius: 6px; background: #ffebee; border: 1px solid #f44336; color: #d32f2f; min-width: 120px; text-align: center;">
+              <div class="cottage-detail-badge occupied" 
+                   style="display: inline-block; margin: 4px; padding: 8px 12px; border-radius: 6px; background: #ffebee; border: 1px solid #f44336; color: #d32f2f; min-width: 120px; text-align: center; cursor: pointer;"
+                   onclick="showCottageDetails('${name} #${i}', '${guestName}', '${bookingType}', '${numberOfPeople}', '${time}', '${booking._id}')">
                 <div style="font-weight: bold; font-size: 14px;">${name} #${i}</div>
                 <div style="font-size: 12px; margin-top: 2px;"><strong>${guestName}</strong></div>
                 <div style="font-size: 11px; color: #666;">${bookingType} • ${numberOfPeople} guests</div>
                 ${time ? `<div style="font-size: 11px; color: #666;">${time}</div>` : ''}
+                <div style="font-size: 10px; color: #999; margin-top: 4px;">Click for details</div>
               </div>
             `;
           } else {
@@ -3013,10 +3016,155 @@ document.addEventListener('DOMContentLoaded', async function() {
         `;
       });
     }
+
+    // Function to show detailed cottage information
+    window.showCottageDetails = function(cottageName, guestName, bookingType, numberOfPeople, time, bookingId) {
+        // Find the full booking details from the bookingsData
+        const booking = bookingsData.find(b => b._id === bookingId);
+        
+        let detailsHtml = `
+            <div style="padding: 20px;">
+                <h3 style="color: #d32f2f; margin-bottom: 20px; border-bottom: 2px solid #d32f2f; padding-bottom: 10px;">${cottageName} - Occupied</h3>
+                
+                <!-- Tab Navigation -->
+                <div style="display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+                    <div style="padding: 10px 20px; background: #d32f2f; color: white; border-radius: 5px 5px 0 0; font-weight: 600;">Guest Info</div>
+                    ${booking?.specialRequests ? `<div style="padding: 10px 20px; background: #f8f9fa; color: #666; border-radius: 5px 5px 0 0; margin-left: 5px;">Requests</div>` : ''}
+                    ${booking?.notes ? `<div style="padding: 10px 20px; background: #f8f9fa; color: #666; border-radius: 5px 5px 0 0; margin-left: 5px;">Notes</div>` : ''}
+                </div>
+                
+                <!-- Tab Content -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 0 8px 8px 8px; margin-bottom: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Guest Name</div>
+                            <div style="color: #666;">${guestName}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Phone</div>
+                            <div style="color: #666;">${booking?.contactPhone || 'N/A'}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Email</div>
+                            <div style="color: #666;">${booking?.contactEmail || 'N/A'}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Number of People</div>
+                            <div style="color: #666;">${numberOfPeople}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Type</div>
+                            <div style="color: #666;">${bookingType}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Time</div>
+                            <div style="color: #666;">${time || 'N/A'}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Date</div>
+                            <div style="color: #666;">${booking?.bookingDate ? new Date(booking.bookingDate).toLocaleDateString() : 'N/A'}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Status</div>
+                            <div style="color: ${booking?.status === 'completed' ? '#4caf50' : '#ff9800'}; font-weight: 600;">${booking?.status || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${booking?.specialRequests ? `
+                <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                    <h4 style="color: #856404; margin-bottom: 10px; font-size: 16px;">Special Requests</h4>
+                    <p style="color: #856404; margin: 0; line-height: 1.5;">${booking.specialRequests}</p>
+                </div>
+                ` : ''}
+                
+                ${booking?.notes ? `
+                <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2196f3;">
+                    <h4 style="color: #1976d2; margin-bottom: 10px; font-size: 16px;">Notes</h4>
+                    <p style="color: #1976d2; margin: 0; line-height: 1.5;">${booking.notes}</p>
+                </div>
+                ` : ''}
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <button onclick="closeCottageDetailsModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: 600;">Close</button>
+                    ${booking?.status === 'pending' ? `
+                    <button onclick="confirmBookingFromDetails('${bookingId}')" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: 600;">Confirm Booking</button>
+                    ` : ''}
+                    ${booking?.status === 'confirmed' ? `
+                    <button onclick="completeBookingFromDetails('${bookingId}')" style="background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: 600;">Check In</button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        showDashboardModal('Cottage Details', detailsHtml);
+    };
+
+    // Function to close cottage details modal
+    window.closeCottageDetailsModal = function() {
+        const modal = document.getElementById('dashboard-info-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    // Function to confirm booking from details modal
+    window.confirmBookingFromDetails = async function(bookingId) {
+        try {
+            await confirmBooking(bookingId);
+            closeCottageDetailsModal();
+        } catch (error) {
+            console.error('Error confirming booking:', error);
+        }
+    };
+
+    // Function to complete booking from details modal
+    window.completeBookingFromDetails = async function(bookingId) {
+        try {
+            await markBookingAsCompleted(bookingId);
+            closeCottageDetailsModal();
+        } catch (error) {
+            console.error('Error completing booking:', error);
+        }
+    };
+
     // Call this after updating bookings/cottages
     // ... existing code ...
 
     renderCottageNumberStatus();
+
+    // Settings tab switching function
+    window.showSettingsTab = function(tabName) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.settings-tab-content');
+        tabContents.forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Show selected tab content
+        const selectedTab = document.getElementById(tabName + '-tab');
+        if (selectedTab) {
+            selectedTab.style.display = 'block';
+        }
+        
+        // Update tab navigation styling
+        const tabButtons = document.querySelectorAll('#settings-panel > div:first-child + div > div');
+        tabButtons.forEach((button, index) => {
+            if (index === 0 && tabName === 'profile') {
+                button.style.background = '#6c63ff';
+                button.style.color = 'white';
+            } else if (index === 1 && tabName === 'security') {
+                button.style.background = '#6c63ff';
+                button.style.color = 'white';
+            } else if (index === 2 && tabName === 'preferences') {
+                button.style.background = '#6c63ff';
+                button.style.color = 'white';
+            } else {
+                button.style.background = '#f8f9fa';
+                button.style.color = '#666';
+            }
+        });
+    };
     // ... existing code ...
 
     // Add after walk-in/quick booking form cottage type selection
