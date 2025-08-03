@@ -39,8 +39,8 @@
             <!-- Place Refresh Data button here, below TOOLS -->
             <button id="refresh-data-btn" class="btn btn-primary" style="width:90%;margin:18px auto 0 auto;display:block;"><span class="material-icons" style="font-size:1.1em;vertical-align:middle;">refresh</span> Refresh Data</button>
             <div class="sidebar-footer">
-                 <button class="btn btn-danger" id="sidebar-signout-btn" style="width:90%;margin:0 auto 10px auto;display:block;">Sign Out</button>
-                 <div class="profile-info">
+                 <button class="btn btn-danger" id="sidebar-signout-btn" style="width:90%;margin:0 auto 15px auto;display:block;">Sign Out</button>
+                 <div class="profile-info" style="margin-top: 10px;">
                     <!-- <img src="https://via.placeholder.com/30" alt="Profile Pic" class="profile-pic"> -->
                     <div>
                         <p class="profile-name">Front Desk Clerk</p>
@@ -476,7 +476,12 @@
                             <option value="admin">Admin</option>
                         </select>
                         <label for="create-user-password">Password</label>
-                        <input type="password" id="create-user-password" required>
+                        <div style="position: relative;">
+                            <input type="password" id="create-user-password" required style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="password-toggle" onclick="togglePassword('create-user-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
                         <button type="submit" class="btn btn-primary">Create User</button>
                     </form>
                 </div>
@@ -513,9 +518,19 @@
                     <form id="change-user-password-form">
                         <input type="hidden" id="change-password-user-id">
                         <label for="change-user-new-password">New Password</label>
-                        <input type="password" id="change-user-new-password" required>
+                        <div style="position: relative;">
+                            <input type="password" id="change-user-new-password" required style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="password-toggle" onclick="togglePassword('change-user-new-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
                         <label for="change-user-confirm-password">Confirm New Password</label>
-                        <input type="password" id="change-user-confirm-password" required>
+                        <div style="position: relative;">
+                            <input type="password" id="change-user-confirm-password" required style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="password-toggle" onclick="togglePassword('change-user-confirm-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
                         <button type="submit" class="btn btn-primary">Change Password</button>
                     </form>
                 </div>
@@ -530,12 +545,27 @@
             <span class="close-modal" id="close-change-own-password-modal">&times;</span>
             <h3>Change Password</h3>
             <form id="change-own-password-form">
-                <label for="current-password">Current Password</label>
-                <input type="password" id="current-password" required>
-                <label for="new-password">New Password</label>
-                <input type="password" id="new-password" required>
-                <label for="confirm-new-password">Confirm New Password</label>
-                <input type="password" id="confirm-new-password" required>
+                                        <label for="current-password">Current Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="current-password" required style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="password-toggle" onclick="togglePassword('current-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
+                        <label for="new-password">New Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="new-password" required style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="password-toggle" onclick="togglePassword('new-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
+                        <label for="confirm-new-password">Confirm New Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="confirm-new-password" required style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirm-new-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
                 <div class="password-requirements">
                     <strong>Password Requirements:</strong>
                     <ul>

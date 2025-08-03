@@ -886,8 +886,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.body.appendChild(alert);
         }
         alert.textContent = msg;
-        alert.style.background = type === 'success' ? '#6c63ff' : '#e74c3c';
-        alert.style.color = '#fff';
+        alert.style.background = 'transparent';
+        alert.style.color = type === 'success' ? '#4CAF50' : '#dc3545';
         alert.style.display = 'block';
         setTimeout(() => { alert.style.display = 'none'; }, 2200);
     }
@@ -907,6 +907,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (!bookingType) {
                 if (quickBookingAlert) {
                     quickBookingAlert.style.display = 'block';
+                    quickBookingAlert.style.background = 'transparent';
                     quickBookingAlert.style.color = '#dc3545';
                     quickBookingAlert.textContent = 'Please select a booking type.';
                     setTimeout(() => { quickBookingAlert.style.display = 'none'; }, 4000);
@@ -944,6 +945,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (cottageCapacity && numberOfPeople > cottageCapacity.max) {
                 if (quickBookingAlert) {
                     quickBookingAlert.style.display = 'block';
+                    quickBookingAlert.style.background = 'transparent';
                     quickBookingAlert.style.color = '#dc3545';
                     quickBookingAlert.textContent = 'The number of guests exceeds the allowed limit for this cottage. Please consider choosing a bigger cottage for a more comfortable experience.';
                     setTimeout(() => { quickBookingAlert.style.display = 'none'; }, 5000);
@@ -991,6 +993,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     quickBookingForm.reset();
                     if (quickBookingAlert) {
                         quickBookingAlert.style.display = 'block';
+                        quickBookingAlert.style.background = 'transparent';
                         quickBookingAlert.style.color = '#4CAF50';
                         quickBookingAlert.textContent = 'Walk-in booking successful! Guest automatically checked in.';
                         setTimeout(() => { quickBookingAlert.style.display = 'none'; }, 3000);
@@ -1626,8 +1629,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function markBookingAsCheckedOut(bookingId) {
         try {
+            const token = localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            
             // First, get the booking details to find the cottage number
-            const bookingResponse = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`);
+            const bookingResponse = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
+                headers: headers
+            });
             if (!bookingResponse.ok) {
                 showAlert('Failed to get booking details.', 'error');
                 return;
@@ -1639,7 +1648,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Update booking status to checked_out
             const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify({ status: 'checked_out' })
             });
             
@@ -1649,7 +1658,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     try {
                         const cottageResponse = await fetch(`${getBackendUrl()}/api/cottages/update-status`, {
                             method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: headers,
                             body: JSON.stringify({ 
                                 cottageNumber: cottageNumber,
                                 status: 'Available'
@@ -3285,6 +3294,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (qbCottageType) {
       qbCottageType.addEventListener('change', updateQuickBookingCottageNumbers);
     }
+    
+    // Password toggle functionality
+    window.togglePassword = function(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.parentElement.querySelector('.password-toggle .material-icons');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            button.textContent = 'visibility_off';
+        }
+    };
+    
     // ... existing code ...
     // In quick booking form submit logic, add:
     // const selectedNumber = document.getElementById('qb-cottage-number').value;

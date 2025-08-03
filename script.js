@@ -1673,4 +1673,18 @@ document.addEventListener('DOMContentLoaded', function() {
     bookingTypeSelect.addEventListener('change', updateCottageNumbers);
     console.log('Added change listener to booking type select');
   }
+  
+  // Password toggle functionality
+  window.togglePassword = function(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.parentElement.querySelector('.password-toggle .material-icons');
+    
+    if (input.type === 'password') {
+      input.type = 'text';
+      button.textContent = 'visibility';
+    } else {
+      input.type = 'password';
+      button.textContent = 'visibility_off';
+    }
+  };
 }); 

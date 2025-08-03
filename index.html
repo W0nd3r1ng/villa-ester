@@ -183,15 +183,30 @@
                     <form id="tab-password-form">
                         <div style="margin-bottom: 20px;">
                             <label for="tab-current-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em;">Current Password</label>
-                            <input type="password" id="tab-current-password" placeholder="Enter current password" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                            <div style="position: relative;">
+                    <input type="password" id="tab-current-password" placeholder="Enter current password" style="width: 100%; padding: 15px; padding-right: 50px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('tab-current-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                        <span class="material-icons">visibility_off</span>
+                    </button>
+                </div>
                         </div>
                         <div style="margin-bottom: 20px;">
                             <label for="tab-new-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em;">New Password</label>
-                            <input type="password" id="tab-new-password" placeholder="Enter new password" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                            <div style="position: relative;">
+                    <input type="password" id="tab-new-password" placeholder="Enter new password" style="width: 100%; padding: 15px; padding-right: 50px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('tab-new-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                        <span class="material-icons">visibility_off</span>
+                    </button>
+                </div>
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label for="tab-confirm-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 1.1em;">Confirm New Password</label>
-                            <input type="password" id="tab-confirm-password" placeholder="Confirm new password" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                            <div style="position: relative;">
+                    <input type="password" id="tab-confirm-password" placeholder="Confirm new password" style="width: 100%; padding: 15px; padding-right: 50px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.1em;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('tab-confirm-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                        <span class="material-icons">visibility_off</span>
+                    </button>
+                </div>
                         </div>
                         <small style="color: #666; font-size: 1em; margin-bottom: 20px; display: block;">
                             Password must be at least 6 characters with letters and numbers.
@@ -665,11 +680,21 @@
                 </div>
                 <div class="modal-form-group">
                     <label for="settings-current-password">Current Password</label>
-                    <input type="password" id="settings-current-password" placeholder="Enter current password" style="border-radius:7px;">
+                    <div style="position: relative;">
+                    <input type="password" id="settings-current-password" placeholder="Enter current password" style="border-radius:7px; width: 100%; padding-right: 40px;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('settings-current-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                        <span class="material-icons">visibility_off</span>
+                    </button>
+                </div>
                 </div>
                 <div class="modal-form-group">
                     <label for="settings-new-password">New Password</label>
-                    <input type="password" id="settings-new-password" placeholder="Enter new password" style="border-radius:7px;">
+                    <div style="position: relative;">
+                    <input type="password" id="settings-new-password" placeholder="Enter new password" style="border-radius:7px; width: 100%; padding-right: 40px;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('settings-new-password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                        <span class="material-icons">visibility_off</span>
+                    </button>
+                </div>
                     <small style="color: #666; font-size: 0.9em; margin-top: 4px; display: block;">
                         Password must be at least 6 characters with letters and numbers.
                     </small>
