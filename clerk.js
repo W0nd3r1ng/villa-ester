@@ -1633,18 +1633,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = 'Bearer ' + token;
             
-            // First, get the booking details to find the cottage number
-            const bookingResponse = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
-                headers: headers
-            });
-            if (!bookingResponse.ok) {
-                showAlert('Failed to get booking details.', 'error');
-                return;
-            }
-            
-            const bookingData = await bookingResponse.json();
-            const cottageNumber = bookingData.data?.cottageNumber;
-            
             // Update booking status to checked_out
             const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
                 method: 'PUT',
@@ -1653,28 +1641,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
             
             if (response.ok) {
-                // If there's a cottage number, update the cottage status to Available
-                if (cottageNumber) {
-                    try {
-                        const cottageResponse = await fetch(`${getBackendUrl()}/api/cottages/update-status`, {
-                            method: 'PUT',
-                            headers: headers,
-                            body: JSON.stringify({ 
-                                cottageNumber: cottageNumber,
-                                status: 'Available'
-                            })
-                        });
-                        
-                        if (cottageResponse.ok) {
-                            console.log(`Cottage ${cottageNumber} status updated to Available`);
-                        } else {
-                            console.warn(`Failed to update cottage ${cottageNumber} status`);
-                        }
-                    } catch (cottageErr) {
-                        console.warn('Error updating cottage status:', cottageErr);
-                    }
-                }
-                
                 await fetchBookings();
                 await fetchCottages(); // Refresh cottage data
                 renderCheckoutList();
@@ -3308,6 +3274,43 @@ document.addEventListener('DOMContentLoaded', async function() {
             button.textContent = 'visibility_off';
         }
     };
+    
+    // Real-time cottage status updates
+    function setupRealTimeUpdates() {
+        // Set up periodic refresh of cottage status
+        setInterval(async () => {
+            try {
+                await fetchBookings();
+                renderCottageNumberStatus();
+            } catch (error) {
+                console.log('Real-time update error:', error);
+            }
+        }, 30000); // Update every 30 seconds
+        
+        // Also update when user becomes active after being idle
+        let activityTimeout;
+        const resetActivityTimer = () => {
+            clearTimeout(activityTimeout);
+            activityTimeout = setTimeout(async () => {
+                try {
+                    await fetchBookings();
+                    renderCottageNumberStatus();
+                } catch (error) {
+                    console.log('Activity-based update error:', error);
+                }
+            }, 60000); // Update after 1 minute of inactivity
+        };
+        
+        // Listen for user activity
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetActivityTimer, true);
+        });
+        
+        resetActivityTimer(); // Start the timer
+    }
+    
+    // Initialize real-time updates
+    setupRealTimeUpdates();
     
     // ... existing code ...
     // In quick booking form submit logic, add:

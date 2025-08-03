@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Villa Ester Resort</title>
     <link rel="stylesheet" href="login-style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="login.js" defer></script>
 </head>
 <body>
@@ -18,8 +19,11 @@
             <div class="input-container">
                 <input type="email" id="username" name="email" required autocomplete="email" placeholder="Enter your email">
             </div>
-            <div class="input-container">
-                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+            <div class="input-container" style="position: relative;">
+                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" style="padding-right: 50px;">
+                <button type="button" class="password-toggle" onclick="togglePassword('password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                    <span class="material-icons">visibility_off</span>
+                </button>
             </div>
             <button type="submit" class="submit">Login</button>
         </form>
@@ -30,7 +34,19 @@
         </div>
     </div>
     <script>
-// Remove the old button click handler since we're using a link now
-</script>
+        // Password toggle functionality
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.parentElement.querySelector('.password-toggle .material-icons');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                button.textContent = 'visibility_off';
+            }
+        }
+    </script>
 </body>
 </html> 
