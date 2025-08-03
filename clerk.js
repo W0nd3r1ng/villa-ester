@@ -1004,6 +1004,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     renderBookingList();
                     renderCheckoutList && renderCheckoutList();
                     
+                    // Refresh cottage numbers immediately after successful booking
+                    refreshCottageNumbersAfterBooking();
+                    
                     // Automatically redirect to Check-in & Check-out panel and show checkout tab
                     const checkInOutLink = document.querySelector('.sidebar-nav ul li a[data-panel="check-in-out-panel"]');
                     if (checkInOutLink) {
@@ -1645,6 +1648,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 await fetchCottages(); // Refresh cottage data
                 renderCheckoutList();
                 renderCottageNumberStatus(); // Update cottage status display
+                updateQuickBookingCottageNumbers(); // Update walk-in form cottage numbers
                 showAlert('Guest checked out successfully!', 'success');
                 
                 // Automatically switch to Guest Management > Completed tab
@@ -3188,6 +3192,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.confirmBookingFromDetails = async function(bookingId) {
         try {
             await confirmBooking(bookingId);
+            refreshCottageNumbersAfterBooking();
             closeCottageDetailsModal();
         } catch (error) {
             console.error('Error confirming booking:', error);
@@ -3198,6 +3203,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.completeBookingFromDetails = async function(bookingId) {
         try {
             await markBookingAsCompleted(bookingId);
+            refreshCottageNumbersAfterBooking();
             closeCottageDetailsModal();
         } catch (error) {
             console.error('Error completing booking:', error);
@@ -3251,20 +3257,56 @@ document.addEventListener('DOMContentLoaded', async function() {
         numberSelect.innerHTML = '<option value="">Select a type first</option>';
         return;
       }
+      
       const today = new Date().toISOString().slice(0, 10);
       numberSelect.innerHTML = '<option value="">Loading...</option>';
-      fetch(`${getBackendUrl()}/api/bookings/get-cottage-numbers?cottageType=${encodeURIComponent(type)}&bookingDate=${encodeURIComponent(today)}&bookingTime=08:00`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.availableNumbers)) {
-            numberSelect.innerHTML = data.availableNumbers.map(n => `<option value="${n}">${n}</option>`).join('');
-          } else {
-            numberSelect.innerHTML = '<option value="">No available numbers</option>';
-          }
-        })
-        .catch(() => {
-          numberSelect.innerHTML = '<option value="">Error loading numbers</option>';
-        });
+      
+      // Use local booking data to determine available cottage numbers
+      const cottageTypes = {
+        'kubo': { total: 8 },
+        'With Videoke': { total: 2 },
+        'Without Videoke': { total: 2 },
+        'garden': { total: 10 }
+      };
+      
+      const cottageType = cottageTypes[type];
+      if (!cottageType) {
+        numberSelect.innerHTML = '<option value="">Invalid cottage type</option>';
+        return;
+      }
+      
+      // Get today's bookings for this cottage type (excluding checked out, cancelled, and rejected)
+      const todayBookings = bookingsData.filter(b => 
+        b.cottageType === type && 
+        b.bookingDate && 
+        b.bookingDate.slice(0, 10) === today && 
+        b.status !== 'cancelled' && 
+        b.status !== 'rejected' &&
+        b.status !== 'checked_out'
+      );
+      
+      // Create a set of occupied cottage numbers
+      const occupiedNumbers = new Set();
+      todayBookings.forEach(booking => {
+        if (booking.cottageNumber) {
+          occupiedNumbers.add(booking.cottageNumber);
+        }
+      });
+      
+      // Generate available cottage numbers
+      const availableNumbers = [];
+      for (let i = 1; i <= cottageType.total; i++) {
+        if (!occupiedNumbers.has(i)) {
+          availableNumbers.push(i);
+        }
+      }
+      
+      if (availableNumbers.length > 0) {
+        numberSelect.innerHTML = '<option value="">Select a cottage number</option>' + 
+          availableNumbers.map(n => `<option value="${n}">${n}</option>`).join('');
+      } else {
+        numberSelect.innerHTML = '<option value="">No available numbers</option>';
+      }
     }
     // ... existing code ...
     // Add event listeners for cottage type selection in walk-in form
@@ -3294,6 +3336,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             try {
                 await fetchBookings();
                 renderCottageNumberStatus();
+                updateQuickBookingCottageNumbers(); // Update walk-in form cottage numbers
             } catch (error) {
                 console.log('Real-time update error:', error);
             }
@@ -3307,6 +3350,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 try {
                     await fetchBookings();
                     renderCottageNumberStatus();
+                    updateQuickBookingCottageNumbers(); // Update walk-in form cottage numbers
                 } catch (error) {
                     console.log('Activity-based update error:', error);
                 }
@@ -3319,6 +3363,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         
         resetActivityTimer(); // Start the timer
+    }
+    
+    // Function to refresh cottage numbers after booking operations
+    window.refreshCottageNumbersAfterBooking = function() {
+        updateQuickBookingCottageNumbers();
+        renderCottageNumberStatus();
     }
     
     // Initialize real-time updates

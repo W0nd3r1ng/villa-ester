@@ -215,9 +215,14 @@
                                 <option value="garden">Garden Table - ₱300 (5 guests)</option>
                             </select>
                             <label for="qb-cottage-number">Cottage Number</label>
-                            <select id="qb-cottage-number" required>
-                                <option value="">Select a number</option>
-                            </select>
+                            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                <select id="qb-cottage-number" required style="flex: 1;">
+                                    <option value="">Select a number</option>
+                                </select>
+                                <button type="button" onclick="refreshCottageNumbersAfterBooking()" style="background: #6c63ff; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                                    <span class="material-icons" style="font-size: 16px;">refresh</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="quick-booking-form-row">
