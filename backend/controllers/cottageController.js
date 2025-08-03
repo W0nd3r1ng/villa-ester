@@ -56,4 +56,43 @@ exports.updateCottage = async (req, res) => {
       error: err.message
     });
   }
+};
+
+exports.updateCottageStatus = async (req, res) => {
+  try {
+    const { cottageNumber, status } = req.body;
+    
+    if (!cottageNumber || !status) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cottage number and status are required' 
+      });
+    }
+    
+    const cottage = await Cottage.findOneAndUpdate(
+      { cottageNumber: cottageNumber },
+      { status: status },
+      { new: true }
+    );
+    
+    if (!cottage) {
+      return res.status(404).json({ 
+        success: false, 
+        message: `Cottage number ${cottageNumber} not found` 
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: cottage,
+      message: `Cottage ${cottageNumber} status updated to ${status}`
+    });
+  } catch (err) {
+    console.error('Error updating cottage status:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update cottage status',
+      error: err.message
+    });
+  }
 }; 

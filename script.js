@@ -309,6 +309,20 @@ if (modalBookingForm) {
             alert('Please select a cottage type');
             return;
         }
+        
+        // Guest capacity validation
+        const capacityLimits = {
+            'garden': { base: 5, max: 8 },
+            'kubo': { base: 15, max: 20 },
+            'With Videoke': { base: 25, max: 30 },
+            'Without Videoke': { base: 25, max: 30 }
+        };
+        
+        const cottageCapacity = capacityLimits[cottageType];
+        if (cottageCapacity && numberOfPeople > cottageCapacity.max) {
+            alert('The number of guests exceeds the allowed limit for this cottage. Please consider choosing a bigger cottage for a more comfortable experience.');
+            return;
+        }
         // Validate phone number format (11 digits, no +63)
         if (!/^[0-9]{11}$/.test(phone)) {
             alert('Phone number must be exactly 11 digits (e.g., 09171234567)');

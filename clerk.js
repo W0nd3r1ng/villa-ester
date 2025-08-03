@@ -930,6 +930,26 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             const adults = parseInt(document.getElementById('qb-adults').value, 10) || 1;
             const children = parseInt(document.getElementById('qb-children').value, 10) || 0;
+            const numberOfPeople = adults + children;
+            
+            // Guest capacity validation
+            const capacityLimits = {
+                'garden': { base: 5, max: 8 },
+                'kubo': { base: 15, max: 20 },
+                'With Videoke': { base: 25, max: 30 },
+                'Without Videoke': { base: 25, max: 30 }
+            };
+            
+            const cottageCapacity = capacityLimits[cottageType];
+            if (cottageCapacity && numberOfPeople > cottageCapacity.max) {
+                if (quickBookingAlert) {
+                    quickBookingAlert.style.display = 'block';
+                    quickBookingAlert.style.color = '#dc3545';
+                    quickBookingAlert.textContent = 'The number of guests exceeds the allowed limit for this cottage. Please consider choosing a bigger cottage for a more comfortable experience.';
+                    setTimeout(() => { quickBookingAlert.style.display = 'none'; }, 5000);
+                }
+                return;
+            }
             // Prepare booking data
             const now = new Date();
             const dateString = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
@@ -1364,47 +1384,40 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Call on load
     fetchUserProfile();
 
-    // Change Number logic
-    const changeNumberBtn = document.getElementById('change-number-btn');
-    if (changeNumberBtn && phoneInput) {
-        changeNumberBtn.addEventListener('click', async function() {
-            if (phoneInput.readOnly) {
-                phoneInput.readOnly = false;
-                phoneInput.focus();
-                changeNumberBtn.textContent = 'Save Number';
-            } else {
-                const newPhone = phoneInput.value.trim();
-                if (!/^\+?\d[\d\s-]{7,}$/.test(newPhone)) {
-                    showAlert('Please enter a valid phone number.', 'error');
-                    return;
+    // Save Changes logic
+    const saveChangesBtn = document.getElementById('save-changes-btn');
+    if (saveChangesBtn && phoneInput) {
+        saveChangesBtn.addEventListener('click', async function() {
+            const newPhone = phoneInput.value.trim();
+            if (!/^\+?\d[\d\s-]{7,}$/.test(newPhone)) {
+                showAlert('Please enter a valid phone number.', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${getBackendUrl()}/api/users/me`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ phone: newPhone })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('Profile updated successfully!', 'success');
+                } else {
+                    showAlert(data.message || 'Failed to update profile.', 'error');
                 }
-                try {
-                    const res = await fetch(`${getBackendUrl()}/api/users/me`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        },
-                        body: JSON.stringify({ phone: newPhone })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        phoneInput.readOnly = true;
-                        changeNumberBtn.textContent = 'Change Number';
-                        showAlert('Phone number updated!', 'success');
-                    } else {
-                        showAlert(data.message || 'Failed to update phone.', 'error');
-                    }
-                } catch (err) {
-                    showAlert('Failed to update phone.', 'error');
-                }
+            } catch (err) {
+                showAlert('Failed to update profile.', 'error');
             }
         });
     }
-    // Sign Out logic
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-        signoutBtn.addEventListener('click', function() {
+    
+    // Sidebar Sign Out logic
+    const sidebarSignoutBtn = document.getElementById('sidebar-signout-btn');
+    if (sidebarSignoutBtn) {
+        sidebarSignoutBtn.addEventListener('click', function() {
             // Clear authentication data
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -1613,15 +1626,52 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function markBookingAsCheckedOut(bookingId) {
         try {
+            // First, get the booking details to find the cottage number
+            const bookingResponse = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`);
+            if (!bookingResponse.ok) {
+                showAlert('Failed to get booking details.', 'error');
+                return;
+            }
+            
+            const bookingData = await bookingResponse.json();
+            const cottageNumber = bookingData.data?.cottageNumber;
+            
+            // Update booking status to checked_out
             const response = await fetch(`${getBackendUrl()}/api/bookings/${bookingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'checked_out' })
             });
+            
             if (response.ok) {
+                // If there's a cottage number, update the cottage status to Available
+                if (cottageNumber) {
+                    try {
+                        const cottageResponse = await fetch(`${getBackendUrl()}/api/cottages/update-status`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                cottageNumber: cottageNumber,
+                                status: 'Available'
+                            })
+                        });
+                        
+                        if (cottageResponse.ok) {
+                            console.log(`Cottage ${cottageNumber} status updated to Available`);
+                        } else {
+                            console.warn(`Failed to update cottage ${cottageNumber} status`);
+                        }
+                    } catch (cottageErr) {
+                        console.warn('Error updating cottage status:', cottageErr);
+                    }
+                }
+                
                 await fetchBookings();
+                await fetchCottages(); // Refresh cottage data
                 renderCheckoutList();
+                renderCottageNumberStatus(); // Update cottage status display
                 showAlert('Guest checked out successfully!', 'success');
+                
                 // Automatically switch to Guest Management > Completed tab
                 const guestManagementLink = document.querySelector('.sidebar-nav ul li a[data-panel="guest-management-panel"]');
                 if (guestManagementLink) {
