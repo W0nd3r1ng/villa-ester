@@ -3301,6 +3301,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
       }
       
+
+      
       if (availableNumbers.length > 0) {
         numberSelect.innerHTML = '<option value="">Select a cottage number</option>' + 
           availableNumbers.map(n => `<option value="${n}">${n}</option>`).join('');
