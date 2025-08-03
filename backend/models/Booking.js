@@ -191,7 +191,7 @@ bookingSchema.statics.checkAvailability = async function(cottageId, bookingDate,
     cottageId,
     bookingDate: new Date(bookingDate),
     bookingTime,
-    status: { $nin: ['cancelled', 'rejected'] }
+    status: { $nin: ['cancelled', 'rejected', 'checked_out'] }
   };
 
   if (excludeBookingId) {
@@ -225,7 +225,7 @@ bookingSchema.statics.checkAvailabilityByType = async function(cottageType, book
     cottageType,
     bookingDate: new Date(bookingDate),
     bookingTime,
-    status: { $nin: ['cancelled', 'rejected'] }
+    status: { $nin: ['cancelled', 'rejected', 'checked_out'] }
   };
 
   if (excludeBookingId) {
@@ -263,7 +263,7 @@ bookingSchema.statics.getAvailableQuantity = async function(cottageType, booking
     cottageType,
     bookingDate: new Date(bookingDate),
     bookingTime,
-    status: { $nin: ['cancelled', 'rejected'] }
+    status: { $nin: ['cancelled', 'rejected', 'checked_out'] }
   };
 
   const existingBookings = await this.countDocuments(filter);
@@ -279,7 +279,7 @@ bookingSchema.statics.getBookingsByDateRange = async function(startDate, endDate
       $gte: new Date(startDate),
       $lte: new Date(endDate)
     },
-    status: { $nin: ['cancelled', 'rejected'] }
+    status: { $nin: ['cancelled', 'rejected', 'checked_out'] }
   };
 
   if (cottageId) {

@@ -108,7 +108,7 @@ router.get('/get-cottage-numbers', async (req, res) => {
       cottageType,
       bookingDate: { $gte: bookingDateStart, $lte: bookingDateEnd },
       bookingTime,
-      status: { $nin: ['cancelled', 'rejected'] }
+      status: { $nin: ['cancelled', 'rejected', 'checked_out'] }
     }, null, queryOptions).exec();
     
     console.log('Existing bookings for this date/time:', existingBookings.length);

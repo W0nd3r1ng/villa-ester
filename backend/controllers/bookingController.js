@@ -257,12 +257,12 @@ exports.createBooking = async (req, res) => {
       cottageType,
       bookingDate: { $gte: bookingDateStart, $lte: bookingDateEnd },
       bookingTime,
-      status: { $nin: ['cancelled', 'rejected'] }
+      status: { $nin: ['cancelled', 'rejected', 'checked_out'] }
     }, null, queryOptions).exec();
     
     console.log('=== EXISTING BOOKINGS DEBUG ===');
     console.log('Date range:', { start: bookingDateStart.toISOString(), end: bookingDateEnd.toISOString() });
-    console.log('Query criteria:', { cottageType, bookingTime, status: { $nin: ['cancelled', 'rejected'] } });
+    console.log('Query criteria:', { cottageType, bookingTime, status: { $nin: ['cancelled', 'rejected', 'checked_out'] } });
     console.log('Found existing bookings:', existingBookings.length);
     existingBookings.forEach((booking, index) => {
       console.log(`  ${index + 1}. ${booking.cottageType} #${booking.cottageNumber} - ${booking.bookingDate.toISOString()} at ${booking.bookingTime} (${booking.status})`);
