@@ -1068,6 +1068,48 @@ body {
     #cottage-details-modal img {
         max-height: 200px !important;
     }
+    
+    /* Dashboard cottage details modal responsive styles */
+    #dashboard-info-modal .booking-modal-content {
+        max-width: 95vw !important;
+        width: 95vw !important;
+        max-height: 90vh !important;
+        margin: 10px;
+        padding: 20px !important;
+        overflow-y: auto !important;
+    }
+    
+    #dashboard-info-modal h3 {
+        font-size: 1.4em !important;
+        margin-bottom: 15px !important;
+        padding-right: 50px !important;
+    }
+    
+    #dashboard-info-modal .close-button {
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        z-index: 1000 !important;
+    }
+    
+    /* Landscape layout adjustments for small screens */
+    @media (max-width: 768px) {
+        #dashboard-info-modal .booking-modal-content {
+            padding: 15px !important;
+        }
+        
+        #dashboard-info-modal .landscape-layout {
+            flex-direction: column !important;
+        }
+        
+        #dashboard-info-modal .landscape-layout > div {
+            min-width: 100% !important;
+        }
+        
+        #dashboard-info-modal .grid-layout {
+            grid-template-columns: 1fr !important;
+        }
+    }
 }
 
 .booking-form {

@@ -3019,13 +3019,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       Object.keys(cottageTypes).forEach(type => {
         const { name, total } = cottageTypes[type];
         
-        // Get today's bookings for this cottage type
+        // Get today's bookings for this cottage type (excluding checked out, cancelled, and rejected)
         const todayBookings = bookingsData.filter(b => 
           b.cottageType === type && 
           b.bookingDate && 
           b.bookingDate.slice(0,10) === today && 
           b.status !== 'cancelled' && 
-          b.status !== 'rejected'
+          b.status !== 'rejected' &&
+          b.status !== 'checked_out'
         );
         
         // Create a map of cottage numbers to booking details
@@ -3087,76 +3088,87 @@ document.addEventListener('DOMContentLoaded', async function() {
         const booking = bookingsData.find(b => b._id === bookingId);
         
         let detailsHtml = `
-            <div style="padding: 20px;">
-                <h3 style="color: #d32f2f; margin-bottom: 20px; border-bottom: 2px solid #d32f2f; padding-bottom: 10px;">${cottageName} - Occupied</h3>
-                
-                <!-- Tab Navigation -->
-                <div style="display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
-                    <div style="padding: 10px 20px; background: #d32f2f; color: white; border-radius: 5px 5px 0 0; font-weight: 600;">Guest Info</div>
-                    ${booking?.specialRequests ? `<div style="padding: 10px 20px; background: #f8f9fa; color: #666; border-radius: 5px 5px 0 0; margin-left: 5px;">Requests</div>` : ''}
-                    ${booking?.notes ? `<div style="padding: 10px 20px; background: #f8f9fa; color: #666; border-radius: 5px 5px 0 0; margin-left: 5px;">Notes</div>` : ''}
+            <div style="padding: 20px; max-height: 80vh; overflow-y: auto;">
+                <div style="position: relative; margin-bottom: 20px;">
+                    <h3 style="color: #d32f2f; margin-bottom: 20px; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; padding-right: 50px;">${cottageName} - Occupied</h3>
+                    <button onclick="closeCottageDetailsModal()" style="position: absolute; top: 0; right: 0; background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">×</button>
                 </div>
                 
-                <!-- Tab Content -->
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 0 8px 8px 8px; margin-bottom: 15px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Guest Name</div>
-                            <div style="color: #666;">${guestName}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Phone</div>
-                            <div style="color: #666;">${booking?.contactPhone || 'N/A'}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Email</div>
-                            <div style="color: #666;">${booking?.contactEmail || 'N/A'}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Number of People</div>
-                            <div style="color: #666;">${numberOfPeople}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Type</div>
-                            <div style="color: #666;">${bookingType}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Time</div>
-                            <div style="color: #666;">${time || 'N/A'}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Date</div>
-                            <div style="color: #666;">${booking?.bookingDate ? new Date(booking.bookingDate).toLocaleDateString() : 'N/A'}</div>
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
-                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Status</div>
-                            <div style="color: ${booking?.status === 'completed' ? '#4caf50' : '#ff9800'}; font-weight: 600;">${booking?.status || 'N/A'}</div>
+                <!-- Landscape Layout -->
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <!-- Left Column - Guest Info -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <h4 style="color: #d32f2f; margin-bottom: 15px; font-size: 18px;">Guest Information</h4>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Guest Name</div>
+                                    <div style="color: #666;">${guestName}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Phone</div>
+                                    <div style="color: #666;">${booking?.contactPhone || 'N/A'}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Email</div>
+                                    <div style="color: #666;">${booking?.contactEmail || 'N/A'}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Number of People</div>
+                                    <div style="color: #666;">${numberOfPeople}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Type</div>
+                                    <div style="color: #666;">${bookingType}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Time</div>
+                                    <div style="color: #666;">${time || 'N/A'}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Booking Date</div>
+                                    <div style="color: #666;">${booking?.bookingDate ? new Date(booking.bookingDate).toLocaleDateString() : 'N/A'}</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #d32f2f;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px;">Status</div>
+                                    <div style="color: ${booking?.status === 'completed' ? '#4caf50' : '#ff9800'}; font-weight: 600;">${booking?.status || 'N/A'}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                ${booking?.specialRequests ? `
-                <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
-                    <h4 style="color: #856404; margin-bottom: 10px; font-size: 16px;">Special Requests</h4>
-                    <p style="color: #856404; margin: 0; line-height: 1.5;">${booking.specialRequests}</p>
-                </div>
-                ` : ''}
-                
-                ${booking?.notes ? `
-                <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2196f3;">
-                    <h4 style="color: #1976d2; margin-bottom: 10px; font-size: 16px;">Notes</h4>
-                    <p style="color: #1976d2; margin: 0; line-height: 1.5;">${booking.notes}</p>
-                </div>
-                ` : ''}
-                
-                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
-                    <button onclick="closeCottageDetailsModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: 600;">Close</button>
-                    ${booking?.status === 'pending' ? `
-                    <button onclick="confirmBookingFromDetails('${bookingId}')" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: 600;">Confirm Booking</button>
-                    ` : ''}
-                    ${booking?.status === 'confirmed' ? `
-                    <button onclick="completeBookingFromDetails('${bookingId}')" style="background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: 600;">Check In</button>
-                    ` : ''}
+                    
+                    <!-- Right Column - Additional Info -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <h4 style="color: #d32f2f; margin-bottom: 15px; font-size: 18px;">Additional Information</h4>
+                        
+                        ${booking?.specialRequests ? `
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                            <h5 style="color: #856404; margin-bottom: 10px; font-size: 16px;">Special Requests</h5>
+                            <p style="color: #856404; margin: 0; line-height: 1.5;">${booking.specialRequests}</p>
+                        </div>
+                        ` : ''}
+                        
+                        ${booking?.notes ? `
+                        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2196f3;">
+                            <h5 style="color: #1976d2; margin-bottom: 10px; font-size: 16px;">Notes</h5>
+                            <p style="color: #1976d2; margin: 0; line-height: 1.5;">${booking.notes}</p>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Action Buttons -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                            <h5 style="color: #333; margin-bottom: 15px; font-size: 16px;">Actions</h5>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button onclick="closeCottageDetailsModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">Close</button>
+                                ${booking?.status === 'pending' ? `
+                                <button onclick="confirmBookingFromDetails('${bookingId}')" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">Confirm Booking</button>
+                                ` : ''}
+                                ${booking?.status === 'confirmed' ? `
+                                <button onclick="completeBookingFromDetails('${bookingId}')" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">Check In</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
