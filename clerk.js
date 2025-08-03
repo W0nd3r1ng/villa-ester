@@ -774,6 +774,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <span style="font-weight:600;">${guestName}</span>
                     ${isWalkIn ? '<span style="color: #e67e22; font-size: 0.8em; font-weight: 600; margin-left: 8px; padding: 2px 6px; background: #fdf2e9; border-radius: 4px;">WALK-IN</span>' : ''}
                 </div>
+                ${booking.specialRequests ? `<div style="margin-left:32px;margin-top:8px;min-width:200px;"><strong style="color:#666;">Client Notes:</strong><br><span style="font-size:0.95em;color:#555;font-style:italic;">${booking.specialRequests}</span></div>` : ''}
                 <div style="margin-left:32px;min-width:180px;">${fullRoomInfo}<br><span style="font-size:0.95em;color:#888;">Check-in: ${checkin}<br>Check-out: ${checkout}</span></div>
                 <div style="margin-left:32px;min-width:120px;">${adults} Adult${adults>1?'s':''}, ${children} Child${children!==1?'ren':''}</div>
                 <div style="margin-left:32px;min-width:120px;">Status: <span style="font-weight:600;">${booking.status.charAt(0).toUpperCase()+booking.status.slice(1)}</span></div>
@@ -782,8 +783,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                     ${proofUrl ? `<a href="${proofUrl}" target="_blank" title="View Proof of Payment"><img src="${proofUrl}" alt="Proof of Payment" style="max-width:60px;max-height:40px;border-radius:4px;box-shadow:0 1px 4px #ccc;vertical-align:middle;"></a>` : '<span style="color:#888;font-size:0.95em;">No proof uploaded</span>'}
                 </div>
                 <div style="margin-left:auto;display:flex;gap:16px;">
-                    ${(booking.status === 'pending') ? `<button class="btn-approve" title="Approve" style="color:#43a047;background:none;border:none;cursor:pointer;font-size:1.1em;display:flex;align-items:center;"><i class="material-icons">check_circle</i> Approve</button>
-                    <button class="btn-reject" title="Reject" style="color:#1976d2;background:none;border:none;cursor:pointer;font-size:1.1em;display:flex;align-items:center;"><i class="material-icons">cancel</i> Reject</button>` : ''}
+                    ${(booking.status === 'pending') ? `<button class="btn-approve" title="Approve">Approve</button>
+                    <button class="btn-reject" title="Reject">Reject</button>` : ''}
                 </div>
             `;
             if (booking.status === 'pending') {
