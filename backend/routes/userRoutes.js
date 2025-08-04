@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getProfile, updateProfile, changePassword, getAllUsers, login, createUser, updateUser, adminChangePassword, deleteUser } = require('../controllers/userController');
+const { getProfile, updateProfile, changePassword, getAllUsers, login, createUser, updateUser, adminChangePassword, deleteUser, checkEmail, resetPassword } = require('../controllers/userController');
 const { auth } = require('../middleware/auth');
 const { admin } = require('../middleware/admin');
 
@@ -9,6 +9,10 @@ router.post('/login', login);
 
 // Public registration route
 router.post('/register', require('../controllers/userController').register);
+
+// Forgot password routes (public - no authentication required)
+router.post('/check-email', checkEmail);
+router.post('/reset-password', resetPassword);
 
 // Get current user's profile
 router.get('/me', auth, getProfile);

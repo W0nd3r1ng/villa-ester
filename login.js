@@ -177,4 +177,201 @@ document.addEventListener('DOMContentLoaded', function() {
     inputs.forEach(input => {
         input.addEventListener('input', clearError);
     });
+
+    // ===== FORGOT PASSWORD FUNCTIONALITY =====
+    
+    // Modal elements
+    const modal = document.getElementById('forgot-password-modal');
+    const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+    const closeModalBtn = document.getElementById('close-modal');
+    const emailForm = document.getElementById('email-form');
+    const passwordForm = document.getElementById('password-form');
+    const modalError = document.getElementById('modal-error');
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    const successStep = document.getElementById('success-step');
+    const modalTitle = document.getElementById('modal-title');
+    
+    let resetEmail = '';
+    
+    // Show modal
+    function showModal() {
+        modal.style.display = 'flex';
+        resetModal();
+    }
+    
+    // Hide modal
+    function hideModal() {
+        modal.style.display = 'none';
+        resetModal();
+    }
+    
+    // Reset modal to initial state
+    function resetModal() {
+        step1.style.display = 'block';
+        step2.style.display = 'none';
+        successStep.style.display = 'none';
+        modalTitle.textContent = 'Forgot Password';
+        clearModalError();
+        emailForm.reset();
+        passwordForm.reset();
+        resetEmail = '';
+    }
+    
+    // Show modal error
+    function showModalError(message) {
+        modalError.textContent = message;
+        modalError.style.display = 'block';
+    }
+    
+    // Clear modal error
+    function clearModalError() {
+        modalError.textContent = '';
+        modalError.style.display = 'none';
+    }
+    
+    // Get backend URL
+    function getBackendUrl() {
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            return 'https://villa-ester-backend.onrender.com';
+        } else {
+            return 'http://localhost:5000';
+        }
+    }
+    
+    // Event listeners
+    forgotPasswordBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showModal();
+    });
+    
+    closeModalBtn.addEventListener('click', hideModal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            hideModal();
+        }
+    });
+    
+    // Email form submission
+    emailForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearModalError();
+        
+        const email = document.getElementById('reset-email').value.trim();
+        
+        if (!email) {
+            showModalError('Please enter your email address.');
+            return;
+        }
+        
+        if (!email.includes('@')) {
+            showModalError('Please enter a valid email address.');
+            return;
+        }
+        
+        const submitBtn = emailForm.querySelector('.submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Checking...';
+        
+        try {
+            const response = await fetch(`${getBackendUrl()}/api/users/check-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email.toLowerCase() })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                resetEmail = email.toLowerCase();
+                step1.style.display = 'none';
+                step2.style.display = 'block';
+                modalTitle.textContent = 'Set New Password';
+            } else {
+                showModalError(data.message || 'Email not found. Please check your email address.');
+            }
+        } catch (error) {
+            console.error('Email check error:', error);
+            showModalError('Network error. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+    
+    // Password form submission
+    passwordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearModalError();
+        
+        const password = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        
+        if (!password || !confirmPassword) {
+            showModalError('Please fill in all fields.');
+            return;
+        }
+        
+        if (password.length < 6) {
+            showModalError('Password must be at least 6 characters long.');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            showModalError('Passwords do not match.');
+            return;
+        }
+        
+        const submitBtn = passwordForm.querySelector('.submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+        
+        try {
+            const response = await fetch(`${getBackendUrl()}/api/users/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: resetEmail,
+                    password: password
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                step2.style.display = 'none';
+                successStep.style.display = 'block';
+                modalTitle.textContent = 'Success';
+            } else {
+                showModalError(data.message || 'Failed to update password. Please try again.');
+            }
+        } catch (error) {
+            console.error('Password reset error:', error);
+            showModalError('Network error. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+    
+    // Close modal and redirect to login
+    window.closeModalAndRedirect = function() {
+        hideModal();
+        // Optionally refresh the page to clear any cached data
+        window.location.reload();
+    };
+    
+    // Clear modal errors when typing
+    const modalInputs = modal.querySelectorAll('input');
+    modalInputs.forEach(input => {
+        input.addEventListener('input', clearModalError);
+    });
 }); 

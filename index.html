@@ -438,11 +438,15 @@
             <!-- Reviews will be dynamically loaded here -->
         </div>
         <div class="review-carousel-controls">
-            <button class="carousel-btn prev-btn" onclick="prevReviewSet()"></button>
+            <button class="carousel-btn prev-btn" onclick="prevReviewSet()">
+                <span class="carousel-arrow">‹</span>
+            </button>
             <div class="carousel-indicators" id="review-indicators">
                 <!-- Indicators will be generated here -->
             </div>
-            <button class="carousel-btn next-btn" onclick="nextReviewSet()"></button>
+            <button class="carousel-btn next-btn" onclick="nextReviewSet()">
+                <span class="carousel-arrow">›</span>
+            </button>
         </div>
         <button id="open-review-modal" class="btn btn-primary" style="margin: 24px auto 0 auto; display: block;">Share Your Experience</button>
     </section>

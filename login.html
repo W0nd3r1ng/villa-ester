@@ -29,10 +29,68 @@
         </form>
         <div id="login-error" class="error-message"></div>
         
+        <div class="forgot-password-link">
+            <a href="#" id="forgot-password-btn">Forgot Password?</a>
+        </div>
+        
         <div class="signup-link">
             Don't have an account? <a href="register.html">Sign up</a>
         </div>
     </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Forgot Password</h3>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            
+            <!-- Step 1: Email Input -->
+            <div id="step-1" class="modal-step">
+                <p class="modal-description">Enter your email address to reset your password.</p>
+                <form id="email-form" class="modal-form">
+                    <div class="input-container">
+                        <input type="email" id="reset-email" name="email" required placeholder="Enter your email">
+                    </div>
+                    <button type="submit" class="submit">Continue</button>
+                </form>
+            </div>
+            
+            <!-- Step 2: New Password -->
+            <div id="step-2" class="modal-step" style="display: none;">
+                <p class="modal-description">Enter your new password.</p>
+                <form id="password-form" class="modal-form">
+                    <div class="input-container" style="position: relative;">
+                        <input type="password" id="new-password" name="password" required placeholder="New password" style="padding-right: 50px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword('new-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                            <span class="material-icons">visibility_off</span>
+                        </button>
+                    </div>
+                    <div class="input-container" style="position: relative;">
+                        <input type="password" id="confirm-password" name="confirmPassword" required placeholder="Confirm new password" style="padding-right: 50px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                            <span class="material-icons">visibility_off</span>
+                        </button>
+                    </div>
+                    <button type="submit" class="submit">Save Password</button>
+                </form>
+            </div>
+            
+            <!-- Success Message -->
+            <div id="success-step" class="modal-step" style="display: none;">
+                <div class="success-content">
+                    <div class="success-icon">✓</div>
+                    <h4>Password Updated Successfully!</h4>
+                    <p>Your password has been reset. You can now log in with your new password.</p>
+                    <button type="button" class="submit" onclick="closeModalAndRedirect()">Continue to Login</button>
+                </div>
+            </div>
+            
+            <div id="modal-error" class="error-message"></div>
+        </div>
+    </div>
+
     <script>
         // Password toggle functionality
         function togglePassword(inputId) {
