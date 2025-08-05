@@ -1670,6 +1670,7 @@ body {
         gap: 10px !important;
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
+        margin-bottom: 20px !important;
     }
     
     .gallery-item {
@@ -1678,6 +1679,10 @@ body {
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
+        display: block !important;
+        width: 100% !important;
+        height: 140px !important;
+        background-color: #f0f0f0 !important;
     }
     
     #about-book-now-btn {
