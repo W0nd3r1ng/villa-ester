@@ -1671,6 +1671,13 @@ body {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
         margin-bottom: 20px !important;
+        display: none !important;
+    }
+    
+    .mobile-about-image {
+        order: 1 !important;
+        display: block !important;
+        margin-bottom: 20px !important;
     }
     
     .gallery-item {
