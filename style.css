@@ -1623,3 +1623,60 @@ body {
     height: auto !important;
     min-height: auto !important;
 }
+
+/* About Section Responsive Design */
+@media (max-width: 600px) {
+    .about-section {
+        padding: 40px 15px !important;
+    }
+    
+    .about-title {
+        font-size: 2rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .about-subtitle {
+        font-size: 1rem !important;
+    }
+    
+    .about-content {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 30px !important;
+    }
+    
+    .about-text {
+        order: 2 !important;
+        padding: 25px !important;
+    }
+    
+    .about-heading {
+        font-size: 1.5em !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .about-description {
+        font-size: 1em !important;
+        line-height: 1.6 !important;
+    }
+    
+    .about-description p {
+        margin-bottom: 15px !important;
+    }
+    
+    .about-gallery {
+        order: 1 !important;
+        height: 300px !important;
+        gap: 10px !important;
+    }
+    
+    .gallery-item {
+        border-radius: 8px !important;
+    }
+    
+    #about-book-now-btn {
+        padding: 10px 20px !important;
+        font-size: 1em !important;
+        width: 100% !important;
+    }
+}
