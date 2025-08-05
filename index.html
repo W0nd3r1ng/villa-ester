@@ -1380,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gallery navigation functionality
     const galleryNavLink = document.querySelector('a[href="#gallery"]');
-    const footerGalleryLink = document.getElementById('footer-gallery-link');
+    const footerGalleryLink = document.querySelector('a[href="#gallery-section"]');
     const aboutNavLink = document.querySelector('a[href="#about"]');
     const aboutSection = document.getElementById('about-section');
     
@@ -1455,7 +1455,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Footer about link
-    const footerAboutLink = document.querySelector('.footer-section a[href="#about"]');
+    const footerAboutLink = document.querySelector('a[href="#about-section"]');
     if (footerAboutLink) {
         footerAboutLink.onclick = function(e) {
             e.preventDefault();
