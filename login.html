@@ -57,25 +57,7 @@
                 </form>
             </div>
             
-            <!-- Step 2: New Password -->
-            <div id="step-2" class="modal-step" style="display: none;">
-                <p class="modal-description">Enter your new password.</p>
-                <form id="password-form" class="modal-form">
-                    <div class="input-container" style="position: relative;">
-                        <input type="password" id="new-password" name="password" required placeholder="New password" style="padding-right: 50px;">
-                        <button type="button" class="password-toggle" onclick="togglePassword('new-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
-                            <span class="material-icons">visibility_off</span>
-                        </button>
-                    </div>
-                    <div class="input-container" style="position: relative;">
-                        <input type="password" id="confirm-password" name="confirmPassword" required placeholder="Confirm new password" style="padding-right: 50px;">
-                        <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
-                            <span class="material-icons">visibility_off</span>
-                        </button>
-                    </div>
-                    <button type="submit" class="submit">Save Password</button>
-                </form>
-            </div>
+            <!-- Step 2: New Password - REMOVED (now handled on separate reset page) -->
             
             <!-- Success Message -->
             <div id="success-step" class="modal-step" style="display: none;">

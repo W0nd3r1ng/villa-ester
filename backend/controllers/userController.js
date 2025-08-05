@@ -1,6 +1,10 @@
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+// In-memory storage for password reset tokens
+const passwordResetTokens = new Map();
 
 // Login user
 exports.login = async (req, res) => {
@@ -286,7 +290,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Check if email exists (for forgot password)
+// Check if email exists and send reset link (for forgot password)
 exports.checkEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -311,30 +315,48 @@ exports.checkEmail = async (req, res) => {
       });
     }
     
-    // Return success without revealing if email exists (security best practice)
+    // Generate secure random token (32 bytes)
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    // Store token with expiration (1 hour)
+    const expirationTime = Date.now() + (60 * 60 * 1000); // 1 hour
+    passwordResetTokens.set(token, {
+      email: email.toLowerCase(),
+      expirationTime: expirationTime
+    });
+    
+    // Create reset link
+    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    
+    // Log the reset link (in production, you would send this via email)
+    console.log(`Password reset link for ${email}: ${resetLink}`);
+    
+    // For now, we'll return the link in the response
+    // In production, you would send this via email service
     res.json({ 
       success: true, 
-      message: 'Email verified successfully' 
+      message: 'Password reset link sent to your email',
+      resetLink: resetLink // Remove this in production
     });
     
   } catch (error) {
     console.error('Check email error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Server error while checking email' 
+      message: 'Server error while processing request' 
     });
   }
 };
 
-// Reset password (for forgot password)
+// Reset password with token (for forgot password)
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { token, password } = req.body;
     
-    if (!email || !password) {
+    if (!token || !password) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Email and password are required' 
+        message: 'Token and password are required' 
       });
     }
     
@@ -345,9 +367,27 @@ exports.resetPassword = async (req, res) => {
       });
     }
     
+    // Check if token exists and is not expired
+    const tokenData = passwordResetTokens.get(token);
+    if (!tokenData) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid or expired reset token' 
+      });
+    }
+    
+    // Check if token is expired
+    if (Date.now() > tokenData.expirationTime) {
+      passwordResetTokens.delete(token);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Reset token has expired' 
+      });
+    }
+    
     // Find user by email
     const user = await User.findOne({ 
-      email: email.toLowerCase(),
+      email: tokenData.email,
       isActive: true 
     });
     
@@ -364,6 +404,9 @@ exports.resetPassword = async (req, res) => {
     // Update user's password
     user.password = hashedPassword;
     await user.save();
+    
+    // Delete the token after successful use
+    passwordResetTokens.delete(token);
     
     // Log the password reset for security
     console.log(`Password reset for user: ${user.email} at ${new Date().toISOString()}`);

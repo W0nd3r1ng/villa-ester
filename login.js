@@ -185,10 +185,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const forgotPasswordBtn = document.getElementById('forgot-password-btn');
     const closeModalBtn = document.getElementById('close-modal');
     const emailForm = document.getElementById('email-form');
-    const passwordForm = document.getElementById('password-form');
     const modalError = document.getElementById('modal-error');
     const step1 = document.getElementById('step-1');
-    const step2 = document.getElementById('step-2');
     const successStep = document.getElementById('success-step');
     const modalTitle = document.getElementById('modal-title');
     
@@ -209,13 +207,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset modal to initial state
     function resetModal() {
         step1.style.display = 'block';
-        step2.style.display = 'none';
         successStep.style.display = 'none';
         modalTitle.textContent = 'Forgot Password';
         clearModalError();
         emailForm.reset();
-        passwordForm.reset();
         resetEmail = '';
+        
+        // Remove reset link step if it exists
+        const resetLinkStep = document.getElementById('reset-link-step');
+        if (resetLinkStep) {
+            resetLinkStep.remove();
+        }
+        
+        // Remove any existing step2
+        const existingStep2 = document.querySelector('#step-2');
+        if (existingStep2) {
+            existingStep2.remove();
+        }
     }
     
     // Show modal error
@@ -274,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = emailForm.querySelector('.submit');
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Checking...';
+        submitBtn.textContent = 'Sending...';
         
         try {
             const response = await fetch(`${getBackendUrl()}/api/users/check-email`, {
@@ -288,10 +296,46 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (response.ok && data.success) {
-                resetEmail = email.toLowerCase();
+                // Show the reset link to the user (in production, this would be sent via email)
+                const resetLink = data.resetLink;
                 step1.style.display = 'none';
-                step2.style.display = 'block';
-                modalTitle.textContent = 'Set New Password';
+                
+                // Create a new step to show the reset link
+                const resetLinkStep = document.createElement('div');
+                resetLinkStep.id = 'reset-link-step';
+                resetLinkStep.className = 'modal-step';
+                resetLinkStep.innerHTML = `
+                    <div class="success-content">
+                        <div class="success-icon">✓</div>
+                        <h4>Reset Link Generated!</h4>
+                        <p>Your password reset link has been created. Click the link below to reset your password:</p>
+                        <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 5px; word-break: break-all;">
+                            <a href="${resetLink}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: bold;">${resetLink}</a>
+                        </div>
+                        <p style="font-size: 0.9em; color: #666;">This link will expire in 1 hour.</p>
+                        <button type="button" class="submit" onclick="hideModal()">Close</button>
+                    </div>
+                `;
+                
+                // Replace step2 with the reset link step
+                const modalContent = document.querySelector('.modal-content');
+                if (modalContent) {
+                    // Remove existing step2 if it exists
+                    const existingStep2 = modalContent.querySelector('#step-2');
+                    if (existingStep2) {
+                        existingStep2.remove();
+                    }
+                    
+                    // Insert the reset link step before the success step
+                    const successStep = modalContent.querySelector('#success-step');
+                    if (successStep) {
+                        modalContent.insertBefore(resetLinkStep, successStep);
+                    } else {
+                        modalContent.appendChild(resetLinkStep);
+                    }
+                }
+                
+                modalTitle.textContent = 'Reset Link Sent';
             } else {
                 showModalError(data.message || 'Email not found. Please check your email address.');
             }
@@ -304,63 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Password form submission
-    passwordForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        clearModalError();
-        
-        const password = document.getElementById('new-password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-        
-        if (!password || !confirmPassword) {
-            showModalError('Please fill in all fields.');
-            return;
-        }
-        
-        if (password.length < 6) {
-            showModalError('Password must be at least 6 characters long.');
-            return;
-        }
-        
-        if (password !== confirmPassword) {
-            showModalError('Passwords do not match.');
-            return;
-        }
-        
-        const submitBtn = passwordForm.querySelector('.submit');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Updating...';
-        
-        try {
-            const response = await fetch(`${getBackendUrl()}/api/users/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: resetEmail,
-                    password: password
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok && data.success) {
-                step2.style.display = 'none';
-                successStep.style.display = 'block';
-                modalTitle.textContent = 'Success';
-            } else {
-                showModalError(data.message || 'Failed to update password. Please try again.');
-            }
-        } catch (error) {
-            console.error('Password reset error:', error);
-            showModalError('Network error. Please try again.');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        }
-    });
+    // Password form submission - REMOVED since we now use token-based reset
+    // The password reset is now handled on the separate reset-password page
     
     // Close modal and redirect to login
     window.closeModalAndRedirect = function() {
