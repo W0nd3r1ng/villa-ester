@@ -1668,10 +1668,16 @@ body {
         order: 1 !important;
         height: 300px !important;
         gap: 10px !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
     }
     
     .gallery-item {
         border-radius: 8px !important;
+        min-height: 140px !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
     }
     
     #about-book-now-btn {
