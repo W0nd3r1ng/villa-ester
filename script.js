@@ -1,7 +1,7 @@
 // Utility function to get backend URL
 function getBackendUrl() {
     // Use production URL for deployed version
-    return 'https://villa-ester-backend.onrender.com';
+    return 'https://villa-ester-resort.onrender.com';
 }
 
 // Socket.IO connection - Try local server first, then production
@@ -14,7 +14,7 @@ try {
     console.log('Connected to local Socket.IO server');
 } catch (error) {
     console.log('Local Socket.IO failed, trying production server');
-    socket = io('https://villa-ester-backend.onrender.com', {
+    socket = io('https://villa-ester-resort.onrender.com', {
         transports: ['websocket', 'polling']
     });
     console.log('Connected to production Socket.IO server');

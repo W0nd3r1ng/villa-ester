@@ -130,13 +130,13 @@
         // Send registration to backend
         try {
             // Use dynamic backend URL based on environment
-            function getBackendUrl() {
-                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    return 'https://villa-ester-backend.onrender.com';
-                } else {
-                    return 'http://localhost:5000';
-                }
+                    function getBackendUrl() {
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                return 'https://villa-ester-resort.onrender.com';
+            } else {
+                return 'http://localhost:5000';
             }
+        }
             
             const registerUrl = `${getBackendUrl()}/api/users/register`;
             

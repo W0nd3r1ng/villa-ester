@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Use dynamic backend URL based on environment
             function getBackendUrl() {
                 if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    return 'https://villa-ester-backend.onrender.com';
+                    return 'https://villa-ester-resort.onrender.com';
                 } else {
                     return 'http://localhost:5000';
                 }
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get backend URL
     function getBackendUrl() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            return 'https://villa-ester-backend.onrender.com';
+            return 'https://villa-ester-resort.onrender.com';
         } else {
             return 'http://localhost:5000';
         }
