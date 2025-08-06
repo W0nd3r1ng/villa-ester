@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+git adddocument.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     const loginError = document.getElementById('login-error');
     const loginButton = document.querySelector('.submit');
@@ -68,13 +68,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             for (const backend of backends) {
                 try {
+                    console.log(`Testing backend: ${backend}`);
                     const healthResponse = await fetch(`${backend}/`, {
                         method: 'GET',
                         signal: AbortSignal.timeout(5000) // 5 second timeout
                     });
-                    console.log(`Backend ${backend} health check:`, healthResponse.status);
+                    console.log(`Backend ${backend} health check:`, healthResponse.status, healthResponse.statusText);
+                    
                     if (healthResponse.ok) {
+                        const healthText = await healthResponse.text();
+                        console.log(`Backend ${backend} response:`, healthText.substring(0, 100));
                         return backend;
+                    } else {
+                        console.log(`Backend ${backend} returned error status:`, healthResponse.status);
                     }
                 } catch (error) {
                     console.log(`Backend ${backend} health check failed:`, error.message);
@@ -87,6 +93,31 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Testing backend health...');
             const workingBackend = await testBackendHealth();
             console.log('Working backend:', workingBackend);
+
+            if (!workingBackend) {
+                throw new Error('No backend servers are responding. Please try again later or contact support.');
+            }
+
+            // Test the login endpoint specifically
+            console.log('Testing login endpoint...');
+            try {
+                const loginTestResponse = await fetch(`${workingBackend}/api/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'test'
+                    }),
+                    signal: AbortSignal.timeout(5000)
+                });
+                console.log('Login endpoint test status:', loginTestResponse.status);
+                const loginTestText = await loginTestResponse.text();
+                console.log('Login endpoint test response:', loginTestText.substring(0, 100));
+            } catch (error) {
+                console.log('Login endpoint test failed:', error.message);
+            }
 
             console.log('Making API call to login endpoint...');
             const controller = new AbortController();
@@ -183,7 +214,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Get response text first to debug
             const responseText = await response.text();
+            console.log('Raw response text length:', responseText.length);
             console.log('Raw response text:', responseText);
+            console.log('Response content-type:', response.headers.get('content-type'));
+            
+            if (!responseText || responseText.trim() === '') {
+                throw new Error('Server returned empty response. The backend might be down or not responding properly.');
+            }
             
             let data;
             try {
@@ -192,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (parseError) {
                 console.error('JSON parse error:', parseError);
                 console.error('Response text was:', responseText);
+                if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html>')) {
+                    throw new Error('Server returned HTML instead of JSON. The backend might be returning an error page.');
+                }
                 throw new Error(`Invalid JSON response from server: ${responseText.substring(0, 100)}...`);
             }
 
