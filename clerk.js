@@ -5,7 +5,7 @@ function getBackendUrl() {
     // Check if we're in production (live) or development (localhost)
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         // We're in production - use the live backend URL
-        return 'https://villa-ester-resort.onrender.com';
+        return 'https://villa-ester-backend.onrender.com';
     } else {
         // We're in development - use localhost
         return 'http://localhost:5000';

@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Use dynamic backend URL based on environment
             function getBackendUrl() {
                 if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    // Try the main resort URL first, fallback to backend URL
                     return 'https://villa-ester-resort.onrender.com';
                 } else {
                     return 'http://localhost:5000';
@@ -89,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const loginUrl = `${getBackendUrl()}/api/users/login`;
             
             let response;
+            let usedFallback = false;
             
             try {
                 console.log(`Using backend URL: ${loginUrl}`);
@@ -108,7 +110,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             } catch (error) {
                 console.log(`Failed with URL ${loginUrl}:`, error.message);
-                throw error;
+                
+                // Try fallback URL if first attempt fails
+                if (!usedFallback && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    const fallbackUrl = 'https://villa-ester-backend.onrender.com/api/users/login';
+                    console.log(`Trying fallback URL: ${fallbackUrl}`);
+                    
+                    try {
+                        response = await fetch(fallbackUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: email,
+                                password: password
+                            }),
+                            signal: controller.signal
+                        });
+                        
+                        usedFallback = true;
+                        console.log(`Success with fallback URL: ${fallbackUrl}`);
+                    } catch (fallbackError) {
+                        console.log(`Failed with fallback URL ${fallbackUrl}:`, fallbackError.message);
+                        throw error; // Throw original error
+                    }
+                } else {
+                    throw error;
+                }
             }
             
             clearTimeout(timeoutId);
@@ -241,6 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get backend URL
     function getBackendUrl() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            // Try the main resort URL first, fallback to backend URL
             return 'https://villa-ester-resort.onrender.com';
         } else {
             return 'http://localhost:5000';
