@@ -59,7 +59,35 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading state
         setLoading(true);
 
+        // Health check - test which backend is responding
+        async function testBackendHealth() {
+            const backends = [
+                'https://villa-ester-resort.onrender.com',
+                'https://villa-ester-backend.onrender.com'
+            ];
+            
+            for (const backend of backends) {
+                try {
+                    const healthResponse = await fetch(`${backend}/`, {
+                        method: 'GET',
+                        signal: AbortSignal.timeout(5000) // 5 second timeout
+                    });
+                    console.log(`Backend ${backend} health check:`, healthResponse.status);
+                    if (healthResponse.ok) {
+                        return backend;
+                    }
+                } catch (error) {
+                    console.log(`Backend ${backend} health check failed:`, error.message);
+                }
+            }
+            return null;
+        }
+
         try {
+            console.log('Testing backend health...');
+            const workingBackend = await testBackendHealth();
+            console.log('Working backend:', workingBackend);
+
             console.log('Making API call to login endpoint...');
             const controller = new AbortController();
             const timeoutId = setTimeout(() => {
@@ -77,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 password: password
             }));
             
-            // Use dynamic backend URL based on environment
+            // Use the working backend from health check, or fallback to dynamic URL
             function getBackendUrl() {
                 if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
                     // Try the main resort URL first, fallback to backend URL
@@ -87,7 +115,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            const loginUrl = `${getBackendUrl()}/api/users/login`;
+            const baseUrl = workingBackend || getBackendUrl();
+            const loginUrl = `${baseUrl}/api/users/login`;
             
             let response;
             let usedFallback = false;
@@ -131,6 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         usedFallback = true;
                         console.log(`Success with fallback URL: ${fallbackUrl}`);
+                        console.log('Fallback response status:', response.status);
+                        console.log('Fallback response ok:', response.ok);
                     } catch (fallbackError) {
                         console.log(`Failed with fallback URL ${fallbackUrl}:`, fallbackError.message);
                         throw error; // Throw original error
@@ -150,8 +181,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const data = await response.json();
-            console.log('Response data:', data);
+            // Get response text first to debug
+            const responseText = await response.text();
+            console.log('Raw response text:', responseText);
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+                console.log('Response data:', data);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                console.error('Response text was:', responseText);
+                throw new Error(`Invalid JSON response from server: ${responseText.substring(0, 100)}...`);
+            }
 
             if (data && (data.token || (data.data && data.data.token))) {
                 // Support both {token, user} and {data: {token, user}} response
