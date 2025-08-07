@@ -91,6 +91,96 @@ exports.login = async (req, res) => {
   }
 };
 
+// Public user registration
+exports.register = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'All fields are required' 
+      });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Password must be at least 6 characters long' 
+      });
+    }
+    
+    // Check for existing user with same email
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
+      return res.status(409).json({ 
+        success: false, 
+        message: 'Email already exists' 
+      });
+    }
+    
+    // Check for existing user with same phone
+    const existingPhone = await User.findOne({ phone: phone });
+    if (existingPhone) {
+      return res.status(409).json({ 
+        success: false, 
+        message: 'Phone number already exists' 
+      });
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create new user
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      password: hashedPassword,
+      role: 'customer',
+      isActive: true
+    });
+    
+    await user.save();
+    
+    // Emit real-time event for new user registration
+    const io = req.app && req.app.get && req.app.get('io');
+    if (io) {
+      io.emit('user-created', {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isActive: user.isActive
+        },
+        message: 'New user registered',
+        timestamp: new Date()
+      });
+      console.log('Emitted user-created event for:', user.email, user.phone);
+    }
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Registration successful', 
+      data: { 
+        id: user._id, 
+        email: user.email, 
+        name: user.name, 
+        phone: user.phone 
+      } 
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to register', 
+      error: error.message 
+    });
+  }
+};
+
 // Get current user's profile
 exports.getProfile = async (req, res) => {
   try {
@@ -397,9 +487,12 @@ exports.checkEmail = async (req, res) => {
     
   } catch (error) {
     console.error('Check email error:', error);
+    
+    // Return a proper error response even if email fails
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to send OTP. Please try again.' 
+      message: 'Failed to send OTP. Please try again.',
+      error: error.message
     });
   }
 };

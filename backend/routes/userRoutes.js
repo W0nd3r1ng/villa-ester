@@ -7,8 +7,8 @@ const { admin } = require('../middleware/admin');
 // Login route (public - no authentication required)
 router.post('/login', login);
 
-// Public registration route - removed since we simplified the system
-// router.post('/register', require('../controllers/userController').register);
+// Public registration route
+router.post('/register', require('../controllers/userController').register);
 
 // Forgot password routes (public - no authentication required)
 router.post('/check-email', checkEmail);
