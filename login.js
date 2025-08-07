@@ -401,7 +401,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ email: email.toLowerCase() })
             });
             
-            const data = await response.json();
+            // Get response text first to debug
+            const responseText = await response.text();
+            console.log('Forgot password response text:', responseText);
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                console.error('Response text was:', responseText);
+                showModalError('Server returned invalid response. Please try again.');
+                return;
+            }
             
             if (response.ok && data.success) {
                 // Show OTP input step
@@ -494,7 +506,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             })
                         });
                         
-                        const resetData = await resetResponse.json();
+                        // Get response text first to debug
+                        const resetResponseText = await resetResponse.text();
+                        console.log('Reset password response text:', resetResponseText);
+                        
+                        let resetData;
+                        try {
+                            resetData = JSON.parse(resetResponseText);
+                        } catch (parseError) {
+                            console.error('Reset password JSON parse error:', parseError);
+                            console.error('Response text was:', resetResponseText);
+                            showModalError('Server returned invalid response. Please try again.');
+                            return;
+                        }
                         
                         if (resetResponse.ok && resetData.success) {
                             // Show success message
@@ -527,7 +551,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             body: JSON.stringify({ email: email.toLowerCase() })
                         });
                         
-                        const resendData = await resendResponse.json();
+                        // Get response text first to debug
+                        const resendResponseText = await resendResponse.text();
+                        console.log('Resend OTP response text:', resendResponseText);
+                        
+                        let resendData;
+                        try {
+                            resendData = JSON.parse(resendResponseText);
+                        } catch (parseError) {
+                            console.error('Resend OTP JSON parse error:', parseError);
+                            console.error('Response text was:', resendResponseText);
+                            showModalError('Server returned invalid response. Please try again.');
+                            return;
+                        }
                         
                         if (resendResponse.ok && resendData.success) {
                             showModalError('New OTP sent to your email address.');
