@@ -1,4 +1,4 @@
-git adddocument.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     const loginError = document.getElementById('login-error');
     const loginButton = document.querySelector('.submit');

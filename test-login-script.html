@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Script</title>
+</head>
+<body>
+    <h1>Testing Login Script</h1>
+    <div id="test-result"></div>
+    
+    <script>
+        // Test if the script loads
+        console.log('Testing login.js script...');
+        
+        // Create a script element and load login.js
+        const script = document.createElement('script');
+        script.src = 'login.js';
+        script.onload = function() {
+            console.log('login.js loaded successfully');
+            document.getElementById('test-result').innerHTML = '<p style="color: green;">✅ login.js loaded successfully</p>';
+        };
+        script.onerror = function() {
+            console.error('Failed to load login.js');
+            document.getElementById('test-result').innerHTML = '<p style="color: red;">❌ Failed to load login.js</p>';
+        };
+        
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
