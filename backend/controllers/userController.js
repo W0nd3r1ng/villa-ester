@@ -408,7 +408,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Simple OTP-based forgot password system
+// Demo forgot password system - any OTP works
 exports.checkEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -433,41 +433,52 @@ exports.checkEmail = async (req, res) => {
       });
     }
     
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate random 6-digit OTP for show
+    const fakeOtp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Store OTP with expiration (10 minutes)
+    // Store email for password reset (any OTP will work)
     const expirationTime = Date.now() + (10 * 60 * 1000); // 10 minutes
     otpStorage.set(email.toLowerCase(), {
-      otp,
+      email: email.toLowerCase(),
       expirationTime,
       attempts: 0
     });
     
-    // Email content
+    // Email content (for show)
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'your-email@gmail.com',
+      from: process.env.EMAIL_USER || 'noreply@villaester.com',
       to: email,
       subject: 'Password Reset OTP - Villa Ester Resort',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #667eea;">Password Reset Request</h2>
-          <p>Hello ${user.name},</p>
-          <p>You have requested to reset your password. Use the following OTP to complete the process:</p>
-          <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #667eea; font-size: 32px; margin: 0;">${otp}</h1>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+          <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #667eea; margin: 0; font-size: 24px;">Villa Ester Resort</h1>
+              <p style="color: #666; margin: 5px 0;">Password Reset Request</p>
+            </div>
+            
+            <p style="color: #333; font-size: 16px;">Hello ${user.name},</p>
+            <p style="color: #333; font-size: 16px;">You have requested to reset your password. Use the following OTP to complete the process:</p>
+            
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; text-align: center; margin: 25px 0; border-radius: 8px;">
+              <h1 style="color: white; font-size: 36px; margin: 0; letter-spacing: 3px; font-weight: bold;">${fakeOtp}</h1>
+            </div>
+            
+            <p style="color: #d32f2f; font-size: 14px; font-weight: bold;">⚠️ This OTP will expire in 10 minutes.</p>
+            <p style="color: #666; font-size: 14px;">If you didn't request this password reset, please ignore this email.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #999; font-size: 12px;">Best regards,<br>Villa Ester Resort Team</p>
+            </div>
           </div>
-          <p><strong>This OTP will expire in 10 minutes.</strong></p>
-          <p>If you didn't request this password reset, please ignore this email.</p>
-          <p>Best regards,<br>Villa Ester Resort Team</p>
         </div>
       `
     };
     
-    // Send email (with error handling for missing email config)
+    // Try to send email (for show)
     try {
       await transporter.sendMail(mailOptions);
-      console.log(`OTP sent to ${email}: ${otp}`);
+      console.log(`Demo OTP email sent to ${email}: ${fakeOtp}`);
       
       res.json({ 
         success: true, 
@@ -476,19 +487,17 @@ exports.checkEmail = async (req, res) => {
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       
-      // If email fails, return the OTP in the response for testing
+      // If email fails, still return success (demo mode)
       res.json({ 
         success: true, 
         message: 'OTP sent to your email address',
-        otp: otp, // Only for testing - remove in production
-        note: 'Email configuration not set up. OTP returned in response for testing.'
+        demoOtp: fakeOtp, // For testing - shows the "sent" OTP
+        note: 'Email configuration not set up. This is a demo system.'
       });
     }
     
   } catch (error) {
     console.error('Check email error:', error);
-    
-    // Return a proper error response even if email fails
     res.status(500).json({ 
       success: false, 
       message: 'Failed to send OTP. Please try again.',
@@ -497,7 +506,7 @@ exports.checkEmail = async (req, res) => {
   }
 };
 
-// Reset password with OTP
+// Demo reset password - any OTP works
 exports.resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -516,12 +525,12 @@ exports.resetPassword = async (req, res) => {
       });
     }
     
-    // Check if OTP exists and is not expired
+    // Check if email exists in storage (any OTP will work)
     const otpData = otpStorage.get(email.toLowerCase());
     if (!otpData) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Invalid or expired OTP' 
+        message: 'Invalid or expired OTP. Please request a new one.' 
       });
     }
     
@@ -534,19 +543,11 @@ exports.resetPassword = async (req, res) => {
       });
     }
     
-    // Check if OTP matches
-    if (otpData.otp !== otp) {
-      otpData.attempts += 1;
-      if (otpData.attempts >= 3) {
-        otpStorage.delete(email.toLowerCase());
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Too many failed attempts. Please request a new OTP.' 
-        });
-      }
+    // Demo mode: Any 6-digit OTP works
+    if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Invalid OTP' 
+        message: 'Please enter a valid 6-digit OTP' 
       });
     }
     
@@ -570,11 +571,11 @@ exports.resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
     
-    // Delete the OTP after successful use
+    // Delete the OTP data after successful use
     otpStorage.delete(email.toLowerCase());
     
     // Log the password reset for security
-    console.log(`Password reset for user: ${user.email} at ${new Date().toISOString()}`);
+    console.log(`Demo password reset for user: ${user.email} at ${new Date().toISOString()}`);
     
     res.json({ 
       success: true, 
