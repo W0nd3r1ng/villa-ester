@@ -139,8 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Use the working backend from health check, or fallback to dynamic URL
             function getBackendUrl() {
                 if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    // Try the main resort URL first, fallback to backend URL
-                    return 'https://villa-ester-resort.onrender.com';
+                    // Use the backend URL directly
+                    return 'https://villa-ester-backend.onrender.com';
                 } else {
                     return 'http://localhost:5000';
                 }
