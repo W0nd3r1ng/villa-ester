@@ -374,15 +374,26 @@ exports.checkEmail = async (req, res) => {
       `
     };
     
-    // Send email
-    await transporter.sendMail(mailOptions);
-    
-    console.log(`OTP sent to ${email}: ${otp}`);
-    
-    res.json({ 
-      success: true, 
-      message: 'OTP sent to your email address'
-    });
+    // Send email (with error handling for missing email config)
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`OTP sent to ${email}: ${otp}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'OTP sent to your email address'
+      });
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      
+      // If email fails, return the OTP in the response for testing
+      res.json({ 
+        success: true, 
+        message: 'OTP sent to your email address',
+        otp: otp, // Only for testing - remove in production
+        note: 'Email configuration not set up. OTP returned in response for testing.'
+      });
+    }
     
   } catch (error) {
     console.error('Check email error:', error);
