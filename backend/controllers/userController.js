@@ -2,9 +2,19 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
-// In-memory storage for password reset tokens
-const passwordResetTokens = new Map();
+// Simple OTP storage (in production, use Redis or database)
+const otpStorage = new Map();
+
+// Email transporter setup
+const transporter = nodemailer.createTransporter({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'your-email@gmail.com',
+    pass: process.env.EMAIL_PASS || 'your-app-password'
+  }
+});
 
 // Login user
 exports.login = async (req, res) => {
@@ -19,7 +29,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Find user by email
+    // Find user by email (case insensitive)
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(401).json({
@@ -98,14 +108,36 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { email, phone } = req.body;
+    
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    if (email) user.email = email;
-    if (phone) user.phone = phone;
+    
+    // Check if email is already taken by another user
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return res.status(400).json({ success: false, message: 'Email is already taken' });
+      }
+      user.email = email.toLowerCase();
+    }
+    
+    if (phone) {
+      user.phone = phone;
+    }
+    
     await user.save();
-    res.json({ success: true, message: 'Profile updated', data: { name: user.name, email: user.email, phone: user.phone } });
+    
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      data: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to update profile', error: error.message });
   }
@@ -115,104 +147,141 @@ exports.updateProfile = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Current password and new password are required' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters long' });
+    }
+    
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+    
+    // Verify current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
     }
-    user.password = await bcrypt.hash(newPassword, 10);
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
     await user.save();
+    
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to change password', error: error.message });
   }
 };
 
-// Get all users (for admin/clerk dashboard)
+// Get all users (admin only)
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, 'name email phone role isActive _id');
+    const users = await User.find({}).select('-password');
     res.json({ success: true, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch users', error: error.message });
   }
-}; 
+};
 
-// Admin: Create a new user
+// Create new user (admin only)
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role, phone } = req.body;
-    if (!email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'Email, password, and role are required' });
+    const { name, email, password, phone, role } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
     }
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) {
-      return res.status(409).json({ success: false, message: 'Email already exists' });
+    
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
     }
-    const hashed = await bcrypt.hash(password, 10);
+    
+    // Check if email already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email is already registered' });
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create user
     const user = new User({
-      name: name || '',
+      name,
       email: email.toLowerCase(),
-      password: hashed,
-      role,
-      phone: phone || '',
+      password: hashedPassword,
+      phone,
+      role: role || 'customer',
       isActive: true
     });
+    
     await user.save();
-    res.status(201).json({ success: true, message: 'User created', data: { id: user._id, email: user.email, role: user.role } });
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'User created successfully',
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to create user', error: error.message });
   }
 };
 
-// Admin: Update user email/role/phone
+// Update user (admin only)
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, role, phone, name, isActive } = req.body;
+    const { name, email, phone, role, isActive } = req.body;
+    
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    if (email) user.email = email;
-    if (role) user.role = role;
-    if (phone) user.phone = phone;
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
     if (name) user.name = name;
+    if (email) user.email = email.toLowerCase();
+    if (phone) user.phone = phone;
+    if (role) user.role = role;
     if (typeof isActive === 'boolean') user.isActive = isActive;
+    
     await user.save();
-    res.json({ success: true, message: 'User updated', data: { id: user._id, email: user.email, role: user.role, phone: user.phone, name: user.name, isActive: user.isActive } });
+    
+    res.json({ 
+      success: true, 
+      message: 'User updated successfully',
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        isActive: user.isActive
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to update user', error: error.message });
   }
 };
 
-// Admin: Change any user's password
+// Admin change user password (admin only)
 exports.adminChangePassword = async (req, res) => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 4) {
-      return res.status(400).json({ success: false, message: 'New password must be at least 4 characters' });
-    }
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
-    res.json({ success: true, message: 'Password changed for user', data: { id: user._id, email: user.email } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to change password', error: error.message });
-  }
-};
-
-// Admin: Delete a user
-exports.deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
     
-    // Prevent admin from deleting themselves
-    if (id === req.user._id.toString()) {
-      return res.status(400).json({ success: false, message: 'Cannot delete your own account' });
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters long' });
     }
     
     const user = await User.findById(id);
@@ -220,77 +289,36 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     
-    // Prevent deletion of the last admin
-    if (user.role === 'admin') {
-      const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
-      if (adminCount <= 1) {
-        return res.status(400).json({ success: false, message: 'Cannot delete the last admin user' });
-      }
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+    
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to change password', error: error.message });
+  }
+};
+
+// Delete user (admin only)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
     
     await User.findByIdAndDelete(id);
+    
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to delete user', error: error.message });
   }
-}; 
-
-// Public user registration
-exports.register = async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body;
-    if (!name || !email || !phone || !password) {
-      return res.status(400).json({ success: false, message: 'All fields are required' });
-    }
-    // Check for existing user with same email
-    const existingEmail = await User.findOne({ email: email.toLowerCase() });
-    if (existingEmail) {
-      return res.status(409).json({ success: false, message: 'Email already exists' });
-    }
-    // Check for existing user with same phone
-    const existingPhone = await User.findOne({ phone: phone });
-    if (existingPhone) {
-      return res.status(409).json({ success: false, message: 'Phone number already exists' });
-    }
-    // Check for existing user with same name and phone (optional, can be removed if not needed)
-    // const existingNamePhone = await User.findOne({ name: name, phone: phone });
-    // if (existingNamePhone) {
-    //   return res.status(409).json({ success: false, message: 'A user with this name and phone number already exists' });
-    // }
-    const hashed = await bcrypt.hash(password, 10);
-    const user = new User({
-      name,
-      email: email.toLowerCase(),
-      phone,
-      password: hashed,
-      role: 'customer',
-      isActive: true
-    });
-    await user.save();
-    // Emit real-time event for new user registration
-    const io = req.app && req.app.get && req.app.get('io');
-    if (io) {
-      io.emit('user-created', {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          isActive: user.isActive
-        },
-        message: 'New user registered',
-        timestamp: new Date()
-      });
-      console.log('Emitted user-created event for:', user.email, user.phone);
-    }
-    res.status(201).json({ success: true, message: 'Registration successful', data: { id: user._id, email: user.email, name: user.name, phone: user.phone } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to register', error: error.message });
-  }
 };
 
-// Check if email exists and send reset link (for forgot password)
+// Simple OTP-based forgot password system
 exports.checkEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -315,79 +343,112 @@ exports.checkEmail = async (req, res) => {
       });
     }
     
-    // Generate secure random token (32 bytes)
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Store token with expiration (1 hour)
-    const expirationTime = Date.now() + (60 * 60 * 1000); // 1 hour
-    passwordResetTokens.set(token, {
-      email: email.toLowerCase(),
-      expirationTime: expirationTime
+    // Store OTP with expiration (10 minutes)
+    const expirationTime = Date.now() + (10 * 60 * 1000); // 10 minutes
+    otpStorage.set(email.toLowerCase(), {
+      otp,
+      expirationTime,
+      attempts: 0
     });
     
-    // Create reset link
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    // Email content
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'your-email@gmail.com',
+      to: email,
+      subject: 'Password Reset OTP - Villa Ester Resort',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #667eea;">Password Reset Request</h2>
+          <p>Hello ${user.name},</p>
+          <p>You have requested to reset your password. Use the following OTP to complete the process:</p>
+          <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;">
+            <h1 style="color: #667eea; font-size: 32px; margin: 0;">${otp}</h1>
+          </div>
+          <p><strong>This OTP will expire in 10 minutes.</strong></p>
+          <p>If you didn't request this password reset, please ignore this email.</p>
+          <p>Best regards,<br>Villa Ester Resort Team</p>
+        </div>
+      `
+    };
     
-    // Log the reset link (in production, you would send this via email)
-    console.log(`Password reset link for ${email}: ${resetLink}`);
+    // Send email
+    await transporter.sendMail(mailOptions);
     
-    // For now, we'll return the link in the response
-    // In production, you would send this via email service
+    console.log(`OTP sent to ${email}: ${otp}`);
+    
     res.json({ 
       success: true, 
-      message: 'Password reset link sent to your email',
-      resetLink: resetLink // Remove this in production
+      message: 'OTP sent to your email address'
     });
     
   } catch (error) {
     console.error('Check email error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Server error while processing request' 
+      message: 'Failed to send OTP. Please try again.' 
     });
   }
 };
 
-// Reset password with token (for forgot password)
+// Reset password with OTP
 exports.resetPassword = async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const { email, otp, newPassword } = req.body;
     
-    if (!token || !password) {
+    if (!email || !otp || !newPassword) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Token and password are required' 
+        message: 'Email, OTP, and new password are required' 
       });
     }
     
-    if (password.length < 6) {
+    if (newPassword.length < 6) {
       return res.status(400).json({ 
         success: false, 
         message: 'Password must be at least 6 characters long' 
       });
     }
     
-    // Check if token exists and is not expired
-    const tokenData = passwordResetTokens.get(token);
-    if (!tokenData) {
+    // Check if OTP exists and is not expired
+    const otpData = otpStorage.get(email.toLowerCase());
+    if (!otpData) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Invalid or expired reset token' 
+        message: 'Invalid or expired OTP' 
       });
     }
     
-    // Check if token is expired
-    if (Date.now() > tokenData.expirationTime) {
-      passwordResetTokens.delete(token);
+    // Check if OTP is expired
+    if (Date.now() > otpData.expirationTime) {
+      otpStorage.delete(email.toLowerCase());
       return res.status(400).json({ 
         success: false, 
-        message: 'Reset token has expired' 
+        message: 'OTP has expired. Please request a new one.' 
+      });
+    }
+    
+    // Check if OTP matches
+    if (otpData.otp !== otp) {
+      otpData.attempts += 1;
+      if (otpData.attempts >= 3) {
+        otpStorage.delete(email.toLowerCase());
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Too many failed attempts. Please request a new OTP.' 
+        });
+      }
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid OTP' 
       });
     }
     
     // Find user by email
     const user = await User.findOne({ 
-      email: tokenData.email,
+      email: email.toLowerCase(),
       isActive: true 
     });
     
@@ -399,14 +460,14 @@ exports.resetPassword = async (req, res) => {
     }
     
     // Hash the new password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     
     // Update user's password
     user.password = hashedPassword;
     await user.save();
     
-    // Delete the token after successful use
-    passwordResetTokens.delete(token);
+    // Delete the OTP after successful use
+    otpStorage.delete(email.toLowerCase());
     
     // Log the password reset for security
     console.log(`Password reset for user: ${user.email} at ${new Date().toISOString()}`);

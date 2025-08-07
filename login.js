@@ -324,10 +324,10 @@ document.addEventListener('DOMContentLoaded', function() {
         emailForm.reset();
         resetEmail = '';
         
-        // Remove reset link step if it exists
-        const resetLinkStep = document.getElementById('reset-link-step');
-        if (resetLinkStep) {
-            resetLinkStep.remove();
+        // Remove OTP step if it exists
+        const otpStep = document.getElementById('otp-step');
+        if (otpStep) {
+            otpStep.remove();
         }
         
         // Remove any existing step2
@@ -408,28 +408,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (response.ok && data.success) {
-                // Show the reset link to the user (in production, this would be sent via email)
-                const resetLink = data.resetLink;
+                // Show OTP input step
                 step1.style.display = 'none';
                 
-                // Create a new step to show the reset link
-                const resetLinkStep = document.createElement('div');
-                resetLinkStep.id = 'reset-link-step';
-                resetLinkStep.className = 'modal-step';
-                resetLinkStep.innerHTML = `
+                // Create OTP input step
+                const otpStep = document.createElement('div');
+                otpStep.id = 'otp-step';
+                otpStep.className = 'modal-step';
+                otpStep.innerHTML = `
                     <div class="success-content">
                         <div class="success-icon">✓</div>
-                        <h4>Reset Link Generated!</h4>
-                        <p>Your password reset link has been created. Click the link below to reset your password:</p>
-                        <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 5px; word-break: break-all;">
-                            <a href="${resetLink}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: bold;">${resetLink}</a>
-                        </div>
-                        <p style="font-size: 0.9em; color: #666;">This link will expire in 1 hour.</p>
-                        <button type="button" class="submit" onclick="hideModal()">Close</button>
+                        <h4>OTP Sent!</h4>
+                        <p>We've sent a 6-digit OTP to your email address. Please check your inbox and enter the code below.</p>
+                        <form id="otp-form" class="modal-form">
+                            <div class="input-container">
+                                <input type="text" id="otp-input" name="otp" required maxlength="6" placeholder="Enter 6-digit OTP" style="text-align: center; font-size: 18px; letter-spacing: 2px;">
+                            </div>
+                            <div class="input-container">
+                                <input type="password" id="new-password" name="newPassword" required minlength="6" placeholder="Enter new password">
+                            </div>
+                            <div class="input-container">
+                                <input type="password" id="confirm-password" name="confirmPassword" required minlength="6" placeholder="Confirm new password">
+                            </div>
+                            <button type="submit" class="submit">Reset Password</button>
+                        </form>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 15px;">Didn't receive the OTP? <a href="#" id="resend-otp">Resend</a></p>
                     </div>
                 `;
                 
-                // Replace step2 with the reset link step
+                // Replace step2 with the OTP step
                 const modalContent = document.querySelector('.modal-content');
                 if (modalContent) {
                     // Remove existing step2 if it exists
@@ -438,16 +445,104 @@ document.addEventListener('DOMContentLoaded', function() {
                         existingStep2.remove();
                     }
                     
-                    // Insert the reset link step before the success step
+                    // Insert the OTP step before the success step
                     const successStep = modalContent.querySelector('#success-step');
                     if (successStep) {
-                        modalContent.insertBefore(resetLinkStep, successStep);
+                        modalContent.insertBefore(otpStep, successStep);
                     } else {
-                        modalContent.appendChild(resetLinkStep);
+                        modalContent.appendChild(otpStep);
                     }
                 }
                 
-                modalTitle.textContent = 'Reset Link Sent';
+                modalTitle.textContent = 'Enter OTP';
+                
+                // Handle OTP form submission
+                const otpForm = document.getElementById('otp-form');
+                otpForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const otp = document.getElementById('otp-input').value.trim();
+                    const newPassword = document.getElementById('new-password').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+                    
+                    if (!otp || otp.length !== 6) {
+                        showModalError('Please enter a valid 6-digit OTP.');
+                        return;
+                    }
+                    
+                    if (newPassword.length < 6) {
+                        showModalError('Password must be at least 6 characters long.');
+                        return;
+                    }
+                    
+                    if (newPassword !== confirmPassword) {
+                        showModalError('Passwords do not match.');
+                        return;
+                    }
+                    
+                    const otpSubmitBtn = otpForm.querySelector('.submit');
+                    const otpOriginalText = otpSubmitBtn.textContent;
+                    otpSubmitBtn.disabled = true;
+                    otpSubmitBtn.textContent = 'Resetting...';
+                    
+                    try {
+                        const resetResponse = await fetch(`${getBackendUrl()}/api/users/reset-password`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: email.toLowerCase(),
+                                otp: otp,
+                                newPassword: newPassword
+                            })
+                        });
+                        
+                        const resetData = await resetResponse.json();
+                        
+                        if (resetResponse.ok && resetData.success) {
+                            // Show success message
+                            otpStep.style.display = 'none';
+                            successStep.style.display = 'block';
+                            modalTitle.textContent = 'Password Reset Success';
+                        } else {
+                            showModalError(resetData.message || 'Failed to reset password. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Reset password error:', error);
+                        showModalError('Network error. Please try again.');
+                    } finally {
+                        otpSubmitBtn.disabled = false;
+                        otpSubmitBtn.textContent = otpOriginalText;
+                    }
+                });
+                
+                // Handle resend OTP
+                const resendLink = document.getElementById('resend-otp');
+                resendLink.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    try {
+                        const resendResponse = await fetch(`${getBackendUrl()}/api/users/check-email`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email: email.toLowerCase() })
+                        });
+                        
+                        const resendData = await resendResponse.json();
+                        
+                        if (resendResponse.ok && resendData.success) {
+                            showModalError('New OTP sent to your email address.');
+                        } else {
+                            showModalError(resendData.message || 'Failed to resend OTP.');
+                        }
+                    } catch (error) {
+                        showModalError('Network error. Please try again.');
+                    }
+                });
+                
             } else {
                 showModalError(data.message || 'Email not found. Please check your email address.');
             }
