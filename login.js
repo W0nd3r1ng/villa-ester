@@ -61,30 +61,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Health check - test which backend is responding
         async function testBackendHealth() {
-            const backends = [
-                'https://villa-ester-resort.onrender.com',
-                'https://villa-ester-backend.onrender.com'
-            ];
+            // Only test the actual backend URL
+            const backend = 'https://villa-ester-backend.onrender.com';
             
-            for (const backend of backends) {
-                try {
-                    console.log(`Testing backend: ${backend}`);
-                    const healthResponse = await fetch(`${backend}/`, {
-                        method: 'GET',
-                        signal: AbortSignal.timeout(5000) // 5 second timeout
-                    });
-                    console.log(`Backend ${backend} health check:`, healthResponse.status, healthResponse.statusText);
-                    
-                    if (healthResponse.ok) {
-                        const healthText = await healthResponse.text();
-                        console.log(`Backend ${backend} response:`, healthText.substring(0, 100));
-                        return backend;
-                    } else {
-                        console.log(`Backend ${backend} returned error status:`, healthResponse.status);
-                    }
-                } catch (error) {
-                    console.log(`Backend ${backend} health check failed:`, error.message);
+            try {
+                console.log(`Testing backend: ${backend}`);
+                const healthResponse = await fetch(`${backend}/`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
+                console.log(`Backend ${backend} health check:`, healthResponse.status, healthResponse.statusText);
+                
+                if (healthResponse.ok) {
+                    const healthText = await healthResponse.text();
+                    console.log(`Backend ${backend} response:`, healthText.substring(0, 100));
+                    return backend;
+                } else {
+                    console.log(`Backend ${backend} returned error status:`, healthResponse.status);
                 }
+            } catch (error) {
+                console.log(`Backend ${backend} health check failed:`, error.message);
             }
             return null;
         }
