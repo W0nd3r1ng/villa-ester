@@ -117,6 +117,17 @@ mongoose.connection.on('reconnected', () => {
 // Initial connection
 connectDB();
 
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // Add debug logging for all requests
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
@@ -615,28 +626,7 @@ io.on('connection', (socket) => {
 // Make io available to routes
 app.set('io', io);
 
-// Configure Nodemailer transporter for password reset emails
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-// In-memory OTP storage (in production, use Redis or database)
-const otpStorage = {};
-
-// Cleanup expired OTPs every 5 minutes
-setInterval(() => {
-  const now = new Date();
-  Object.keys(otpStorage).forEach(email => {
-    if (now > otpStorage[email].expires) {
-      delete otpStorage[email];
-      console.log(`Cleaned up expired OTP for ${email}`);
-    }
-  });
-}, 5 * 60 * 1000); // Run every 5 minutes
+// OTP storage is handled in userController.js
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -666,4 +656,12 @@ server.listen(PORT, HOST, () => {
   console.log(`Local access: http://localhost:${PORT}`);
   console.log(`Network access: http://[YOUR_LOCAL_IP]:${PORT}`);
   console.log(`Example: http://192.168.1.100:${PORT}`);
+  console.log('Environment variables:');
+  console.log('- MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+  console.log('- JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
+  console.log('- EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
+  console.log('- EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
+}).on('error', (err) => {
+  console.error('Server failed to start:', err);
+  process.exit(1);
 }); 
