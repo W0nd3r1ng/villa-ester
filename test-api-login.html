@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login API</title>
+</head>
+<body>
+    <h1>Testing Login API</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testLoginAPI() {
+            const resultsDiv = document.getElementById('results');
+            
+            // Test both backend URLs
+            const backends = [
+                'https://villa-ester-backend.onrender.com',
+                'https://villa-ester-resort.onrender.com'
+            ];
+            
+            for (const backend of backends) {
+                try {
+                    console.log(`Testing ${backend}/api/users/login`);
+                    
+                    const response = await fetch(`${backend}/api/users/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: 'test@test.com',
+                            password: 'test'
+                        })
+                    });
+                    
+                    console.log(`${backend} response status:`, response.status);
+                    console.log(`${backend} response headers:`, Object.fromEntries(response.headers.entries()));
+                    
+                    const responseText = await response.text();
+                    console.log(`${backend} response text length:`, responseText.length);
+                    console.log(`${backend} response text:`, responseText);
+                    
+                    resultsDiv.innerHTML += `
+                        <h3>${backend}</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Content-Length:</strong> ${response.headers.get('content-length')}</p>
+                        <p><strong>Response Length:</strong> ${responseText.length}</p>
+                        <p><strong>Response:</strong> ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}</p>
+                        <hr>
+                    `;
+                    
+                } catch (error) {
+                    console.error(`${backend} error:`, error);
+                    resultsDiv.innerHTML += `
+                        <h3>${backend}</h3>
+                        <p style="color: red;"><strong>Error:</strong> ${error.message}</p>
+                        <hr>
+                    `;
+                }
+            }
+        }
+        
+        // Run the test when page loads
+        testLoginAPI();
+    </script>
+</body>
+</html>
