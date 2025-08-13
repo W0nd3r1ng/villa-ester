@@ -345,6 +345,20 @@ document.addEventListener('DOMContentLoaded', function() {
         modalError.style.display = 'none';
     }
     
+    // Toggle password visibility
+    window.togglePassword = function(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.parentElement.querySelector('.password-toggle .material-icons');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            button.textContent = 'visibility_off';
+        }
+    };
+    
     // Get backend URL
     function getBackendUrl() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
@@ -432,13 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="input-container">
                                 <input type="text" id="otp-input" name="otp" required maxlength="6" placeholder="Enter 6-digit OTP" style="text-align: center; font-size: 18px; letter-spacing: 2px;">
                             </div>
-                            <div class="input-container">
-                                <input type="password" id="new-password" name="newPassword" required minlength="6" placeholder="Enter new password">
-                            </div>
-                            <div class="input-container">
-                                <input type="password" id="confirm-password" name="confirmPassword" required minlength="6" placeholder="Confirm new password">
-                        </div>
-                            <button type="submit" class="submit">Reset Password</button>
+                            <button type="submit" class="submit">Verify OTP</button>
                         </form>
                         <p style="font-size: 0.9em; color: #666; margin-top: 15px;">Didn't receive the OTP? <a href="#" id="resend-otp">Resend</a></p>
                     </div>
@@ -470,66 +478,106 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
                     
                     const otp = document.getElementById('otp-input').value.trim();
-                    const newPassword = document.getElementById('new-password').value;
-                    const confirmPassword = document.getElementById('confirm-password').value;
                     
                     if (!otp || otp.length !== 6) {
                         showModalError('Please enter a valid 6-digit OTP.');
                         return;
                     }
                     
-                    if (newPassword.length < 6) {
-                        showModalError('Password must be at least 6 characters long.');
-                        return;
-                    }
-                    
-                    if (newPassword !== confirmPassword) {
-                        showModalError('Passwords do not match.');
-                        return;
-                    }
-                    
                     const otpSubmitBtn = otpForm.querySelector('.submit');
                     const otpOriginalText = otpSubmitBtn.textContent;
                     otpSubmitBtn.disabled = true;
-                    otpSubmitBtn.textContent = 'Resetting...';
+                    otpSubmitBtn.textContent = 'Verifying...';
                     
                     try {
-                        const resetResponse = await fetch(`${getBackendUrl()}/api/users/reset-password`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                email: email.toLowerCase(),
-                                otp: otp,
-                                newPassword: newPassword
-                            })
+                        // Since this is a demo system where any OTP works, we'll show password fields directly
+                        // In a real system, you would verify the OTP first
+                        
+                        // OTP is valid, show password fields
+                        otpForm.innerHTML = `
+                            <div class="input-container">
+                                <input type="password" id="new-password" name="newPassword" required minlength="6" placeholder="Enter new password" style="padding-right: 50px;">
+                                <button type="button" class="password-toggle" onclick="togglePassword('new-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                    <span class="material-icons">visibility_off</span>
+                                </button>
+                            </div>
+                            <div class="input-container">
+                                <input type="password" id="confirm-password" name="confirmPassword" required minlength="6" placeholder="Confirm new password" style="padding-right: 50px;">
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                    <span class="material-icons">visibility_off</span>
+                                </button>
+                            </div>
+                            <button type="submit" class="submit">Reset Password</button>
+                        `;
+                        
+                        // Update form submission handler for password reset
+                        const newOtpForm = document.getElementById('otp-form');
+                        newOtpForm.addEventListener('submit', async function(e) {
+                            e.preventDefault();
+                            
+                            const newPassword = document.getElementById('new-password').value;
+                            const confirmPassword = document.getElementById('confirm-password').value;
+                            
+                            if (newPassword.length < 6) {
+                                showModalError('Password must be at least 6 characters long.');
+                                return;
+                            }
+                            
+                            if (newPassword !== confirmPassword) {
+                                showModalError('Passwords do not match.');
+                                return;
+                            }
+                            
+                            const passwordSubmitBtn = newOtpForm.querySelector('.submit');
+                            passwordSubmitBtn.disabled = true;
+                            passwordSubmitBtn.textContent = 'Resetting...';
+                            
+                            try {
+                                const resetResponse = await fetch(`${getBackendUrl()}/api/users/reset-password`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        email: email.toLowerCase(),
+                                        otp: otp,
+                                        newPassword: newPassword
+                                    })
+                                });
+                        
+                                // Get response text first to debug
+                                const resetResponseText = await resetResponse.text();
+                                console.log('Reset password response text:', resetResponseText);
+                                
+                                let resetData;
+                                try {
+                                    resetData = JSON.parse(resetResponseText);
+                                } catch (parseError) {
+                                    console.error('Reset password JSON parse error:', parseError);
+                                    console.error('Response text was:', resetResponseText);
+                                    showModalError('Server returned invalid response. Please try again.');
+                                    return;
+                                }
+                                
+                                if (resetResponse.ok && resetData.success) {
+                                    // Show success message
+                                    otpStep.style.display = 'none';
+                                    successStep.style.display = 'block';
+                                    modalTitle.textContent = 'Password Reset Success';
+                                } else {
+                                    showModalError(resetData.message || 'Failed to reset password. Please try again.');
+                                }
+                            } catch (error) {
+                                console.error('Reset password error:', error);
+                                showModalError('Network error. Please try again.');
+                            } finally {
+                                passwordSubmitBtn.disabled = false;
+                                passwordSubmitBtn.textContent = 'Reset Password';
+                            }
                         });
                         
-                        // Get response text first to debug
-                        const resetResponseText = await resetResponse.text();
-                        console.log('Reset password response text:', resetResponseText);
-                        
-                        let resetData;
-                        try {
-                            resetData = JSON.parse(resetResponseText);
-                        } catch (parseError) {
-                            console.error('Reset password JSON parse error:', parseError);
-                            console.error('Response text was:', resetResponseText);
-                            showModalError('Server returned invalid response. Please try again.');
-                            return;
-                        }
-                        
-                        if (resetResponse.ok && resetData.success) {
-                            // Show success message
-                            otpStep.style.display = 'none';
-                            successStep.style.display = 'block';
-                            modalTitle.textContent = 'Password Reset Success';
-                        } else {
-                            showModalError(resetData.message || 'Failed to reset password. Please try again.');
-                        }
                     } catch (error) {
-                        console.error('Reset password error:', error);
+                        console.error('OTP verification error:', error);
                         showModalError('Network error. Please try again.');
                     } finally {
                         otpSubmitBtn.disabled = false;

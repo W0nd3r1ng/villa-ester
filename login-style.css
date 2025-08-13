@@ -81,6 +81,29 @@ body::before {
     outline: none;
 }
 
+/* Password toggle button styles */
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.toggle-password:hover {
+    color: #4F46E5;
+}
+
+.toggle-password i {
+    font-size: 16px;
+}
+
 .submit {
     display: block;
     padding-top: 0.75rem;
