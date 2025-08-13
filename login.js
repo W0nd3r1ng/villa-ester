@@ -64,23 +64,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Only test the actual backend URL
             const backend = 'https://villa-ester-backend.onrender.com';
             
-            try {
-                console.log(`Testing backend: ${backend}`);
-                const healthResponse = await fetch(`${backend}/`, {
-                    method: 'GET',
-                    signal: AbortSignal.timeout(5000) // 5 second timeout
-                });
-                console.log(`Backend ${backend} health check:`, healthResponse.status, healthResponse.statusText);
-                
-                if (healthResponse.ok) {
-                    const healthText = await healthResponse.text();
-                    console.log(`Backend ${backend} response:`, healthText.substring(0, 100));
-                    return backend;
-                } else {
-                    console.log(`Backend ${backend} returned error status:`, healthResponse.status);
-                }
-            } catch (error) {
-                console.log(`Backend ${backend} health check failed:`, error.message);
+                try {
+                    console.log(`Testing backend: ${backend}`);
+                    const healthResponse = await fetch(`${backend}/`, {
+                        method: 'GET',
+                        signal: AbortSignal.timeout(5000) // 5 second timeout
+                    });
+                    console.log(`Backend ${backend} health check:`, healthResponse.status, healthResponse.statusText);
+                    
+                    if (healthResponse.ok) {
+                        const healthText = await healthResponse.text();
+                        console.log(`Backend ${backend} response:`, healthText.substring(0, 100));
+                        return backend;
+                    } else {
+                        console.log(`Backend ${backend} returned error status:`, healthResponse.status);
+                    }
+                } catch (error) {
+                    console.log(`Backend ${backend} health check failed:`, error.message);
             }
             return null;
         }
@@ -348,8 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get backend URL
     function getBackendUrl() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            // Try the main resort URL first, fallback to backend URL
-            return 'https://villa-ester-resort.onrender.com';
+            // Use the backend URL directly
+            return 'https://villa-ester-backend.onrender.com';
         } else {
             return 'http://localhost:5000';
         }
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="input-container">
                                 <input type="password" id="confirm-password" name="confirmPassword" required minlength="6" placeholder="Confirm new password">
-                            </div>
+                        </div>
                             <button type="submit" class="submit">Reset Password</button>
                         </form>
                         <p style="font-size: 0.9em; color: #666; margin-top: 15px;">Didn't receive the OTP? <a href="#" id="resend-otp">Resend</a></p>

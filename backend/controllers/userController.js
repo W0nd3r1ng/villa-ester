@@ -176,7 +176,7 @@ exports.register = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Failed to register', 
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -276,7 +276,7 @@ exports.getAllUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch users', error: error.message });
   }
-};
+}; 
 
 // Create new user (admin only)
 exports.createUser = async (req, res) => {
@@ -406,7 +406,7 @@ exports.deleteUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to delete user', error: error.message });
   }
-};
+}; 
 
 // Demo forgot password system - any OTP works
 exports.checkEmail = async (req, res) => {
@@ -488,12 +488,12 @@ exports.checkEmail = async (req, res) => {
       console.error('Email sending failed:', emailError);
       
       // If email fails, still return success (demo mode)
-      res.json({ 
-        success: true, 
+    res.json({ 
+      success: true, 
         message: 'OTP sent to your email address',
         demoOtp: fakeOtp, // For testing - shows the "sent" OTP
         note: 'Email configuration not set up. This is a demo system.'
-      });
+    });
     }
     
   } catch (error) {
